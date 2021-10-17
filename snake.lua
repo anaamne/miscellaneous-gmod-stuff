@@ -220,16 +220,20 @@ end)
 hook.Add("Tick", "awesomesnake_tick", function()
 	if lastscrw ~= ScrW() then -- Fix the window and grid to screen size
 		vars["window_w"] = ScrW() * (1200 / 1920)
-		vars["window_x"] = (ScrW() / 2) - (vars["window_w"] / 2)
 		vars["window_grid_w"] = math.floor(vars["window_w"] / 15)
+		vars["window_w"] = vars["window_grid_w"] * 15
+		
+		vars["window_x"] = (ScrW() / 2) - (vars["window_w"] / 2)
 		
 		lastscrw = ScrW()
 	end
 	
 	if lastscrh ~= ScrH() then
-		vars["window_h"] = ScrH() * (792 / 1080)
-		vars["window_y"] = (ScrH() / 2) - (vars["window_h"] / 2)
+		vars["window_h"] = ScrH() * (800 / 1080)
 		vars["window_grid_h"] = math.floor((vars["window_h"] - 40) / 15)
+		vars["window_h"] = (vars["window_grid_h"] * 15) + 40
+		
+		vars["window_y"] = (ScrH() / 2) - (vars["window_h"] / 2)
 		
 		lastscrh = ScrH()
 	end
