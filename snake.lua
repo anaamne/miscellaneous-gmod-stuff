@@ -144,7 +144,7 @@ local function appleCoroutine()
 	if vars["active"] and not vars["paused"] then
 		if not gamedata.apple_x then
 			local w, h = vars["window_w"], vars["window_h"]
-			local gw, gh = vars["window_grid_w"], vars["window_grid_h"]
+			local gw, gh = vars["window_grid_w"] -  1, vars["window_grid_h"] - 1
 		
 			local x, y = math.random(0, gw), math.random(0, gh)
 			
@@ -155,6 +155,8 @@ local function appleCoroutine()
 			gamedata.apple_x = x
 			gamedata.apple_y = y
 		end
+	else
+		coroutine.yield(nil)
 	end
 end
 
@@ -226,7 +228,7 @@ hook.Add("Tick", "awesomesnake_tick", function()
 		vars["window_x"] = (ScrW() / 2) - (vars["window_w"] / 2)
 		
 		if gamedata.apple_x then
-			gamedata.apple_x = gamedata.apple_x % vars["window_grid_w"]
+			gamedata.apple_x = math.Clamp(gamedata.apple_x, 0, vars["window_grid_w"] - 1)
 		end
 		
 		lastscrw = ScrW()
@@ -240,7 +242,7 @@ hook.Add("Tick", "awesomesnake_tick", function()
 		vars["window_y"] = (ScrH() / 2) - (vars["window_h"] / 2)
 		
 		if gamedata.apple_y then
-			gamedata.apple_y = gamedata.apple_y % vars["window_grid_h"]
+			gamedata.apple_y = math.Clamp(gamedata.apple_y, 0, vars["window_grid_h"] - 1)
 		end
 		
 		lastscrh = ScrH()
