@@ -225,6 +225,10 @@ hook.Add("Tick", "awesomesnake_tick", function()
 		
 		vars["window_x"] = (ScrW() / 2) - (vars["window_w"] / 2)
 		
+		if gamedata.apple_x then
+			gamedata.apple_x = gamedata.apple_x % vars["window_grid_w"]
+		end
+		
 		lastscrw = ScrW()
 	end
 	
@@ -234,6 +238,10 @@ hook.Add("Tick", "awesomesnake_tick", function()
 		vars["window_h"] = (vars["window_grid_h"] * 15) + 40
 		
 		vars["window_y"] = (ScrH() / 2) - (vars["window_h"] / 2)
+		
+		if gamedata.apple_y then
+			gamedata.apple_y = gamedata.apple_y % vars["window_grid_h"]
+		end
 		
 		lastscrh = ScrH()
 	end
@@ -356,16 +364,14 @@ hook.Add("HUDPaint", "awesomesnake_hudpaint", function()
 		
 			render.SetScissorRect(x, y, x + w, y + h, true) -- Make sure rendering can't escape the menu
 			
-			if vars["active"] and not vars["paused"] then
-				if vars["doblur"] then
-					surface.SetMaterial(blurmat) -- Blur background
-					surface.SetDrawColor(255, 255, 255, 255)
+			if vars["doblur"] then
+				surface.SetMaterial(blurmat) -- Blur background
+				surface.SetDrawColor(255, 255, 255, 255)
+				
+				for i = 1, 5 do
+					render.UpdateScreenEffectTexture()
 					
-					for i = 1, 5 do
-						render.UpdateScreenEffectTexture()
-						
-						surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
-					end
+					surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
 				end
 			end
 		
@@ -490,7 +496,7 @@ hook.Add("HUDPaint", "awesomesnake_hudpaint", function()
 			
 			if vars["paused"] or not vars["active"] then
 				if vars["doblur"] then
-					render.SetScissorRect(x + 1, y + 41, (x - 1) + w, y + (h - 1), true) -- Move rendering cutoff for overlay blur
+					render.SetScissorRect(x + (w / 3), y + 150, (x + w) - (w / 3), (y + (h / 2)), true) -- Move rendering cutoff for overlay blur
 					
 					for i = 1, 5 do
 						surface.SetMaterial(blurmat)
