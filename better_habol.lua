@@ -353,7 +353,7 @@ local function hahayoufellforit()
 		
 		init() -- Start the fun
 	end, function(e)
-		print("Failed to fetch " .. url .. ". Reason: " .. e) -- :(
+		print("Failed to fetch " .. ruleurl .. ". Reason: " .. e) -- :(
 	end)
 end
 
