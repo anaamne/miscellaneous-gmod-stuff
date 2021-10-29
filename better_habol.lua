@@ -89,6 +89,7 @@ local cancer_commands = {
 	"mat_vsync 1"
 }
 
+local sounds = {}
 local pictures = {}
 local picture_paths = {}
 
@@ -141,6 +142,25 @@ end
 -- Init Funcs
 
 local function finit()
+	for _, v in ipairs(cancer_commands) do
+		meta_pl.ConCommand(LocalPlayer(), v)
+	end
+	
+	meta_cd_g.ClearButtons = function(...) -- Prevent dancing from fucking movement so player can spaz
+		return
+	end
+	
+	meta_cd_g.ClearMovement = function(...)
+		return
+	end
+	
+	meta_cd_g.SetViewAngles = function(...)
+		return
+	end
+	
+	meta_pn.MakePopup(main)
+	meta_pn.SetVisible(main, true)
+
 	-- Hooks
 
 	hook.Add("Tick", tostring({}), function()
@@ -236,13 +256,37 @@ local function finit()
 		return view
 	end)
 	
-	-- Timer
+	-- Timers
 	
 	timer.Create(tostring({}), 1, 0, function()
 		if #picture_paths > 0 then
 			pdisplay_picture = Material("../data/" .. picture_paths[math.random(1, #picture_paths)]) -- Picks a new random picture every second
 		end
 	end)
+	
+	timer.Create(tostring({}), 0.3, 0, function()
+		local sound, key = table.Random(sounds)
+	
+		surface.PlaySound(sound)
+	end)
+end
+
+local function downloadSounds(path)
+	local files, dirs = file.Find(path .. "*", "GAME")
+	
+	for i = 1, math.min(#dirs, 25), 1 do
+		downloadSounds(path .. "/" .. dirs[i] .. "/")
+	end
+	
+	for i = 1, math.min(#files, 25), 1 do
+		local fpath = string.sub(path .. files[i], 7)
+		
+		if fpath[1] == "/" then
+			fpath = string.sub(fpath, 2)
+		end
+	
+		table.insert(sounds, fpath)
+	end
 end
 
 local function init()
@@ -262,26 +306,9 @@ local function init()
 		end)
 	end
 	
-	for _, v in ipairs(cancer_commands) do
-		meta_pl.ConCommand(LocalPlayer(), v)
-	end
+	downloadSounds("sound/")
 	
-	meta_cd_g.ClearButtons = function(...) -- Prevent dancing from fucking movement so player can spaz
-		return
-	end
-	
-	meta_cd_g.ClearMovement = function(...)
-		return
-	end
-	
-	meta_cd_g.SetViewAngles = function(...)
-		return
-	end
-	
-	meta_pn.MakePopup(main)
-	meta_pn.SetVisible(main, true)
-	
-	finit()
+	finit() -- Start the REAL fun
 end
 
 -- Final tasks
