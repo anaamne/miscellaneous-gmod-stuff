@@ -11,7 +11,7 @@
 
 local inang = 25
 local length = 15
-local color = Color(255, 255, 255, 75)
+local color = Color(255, 255, 0, 75)
 
 local function getHeadPos(ent)
 	if not ent:IsValid() then
