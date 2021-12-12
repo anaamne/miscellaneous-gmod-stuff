@@ -12,6 +12,13 @@
 local inang = 25
 local length = 15
 local color = Color(255, 255, 0, 75)
+local panic = false
+
+local ismeth = false
+
+if meth_lua_api and meth_lua_api.callbacks then
+	ismeth = true
+end
 
 local function getHeadPos(ent)
 	if not ent:IsValid() then
@@ -36,17 +43,37 @@ local function getHeadPos(ent)
 	return headpos
 end
 
-hook.Add("HUDPaint", "", function()
+local function drawHat()
 	if LocalPlayer():ShouldDrawLocalPlayer() then
 		local base = getHeadPos(LocalPlayer()) + Vector(0, 0, 10)
 		local ang = Angle(inang, 0, 0)
 		
 		cam.Start3D()
 			for i = 1, 360 do
+				if panic then
+					cam.End3D()
+				end
+			
 				render.DrawLine(base, base + (ang:Forward() * length), color, false)
 				ang.y = ang.y + 1
 			end
 		cam.End3D()
+	end
+end
+
+if ismeth then
+	meth_lua_api.callbacks.Add("OnHUDPaint", tostring({}), function()
+		panic = false
+		
+		drawHat()
+	end)
+end
+
+hook.Add("HUDPaint", tostring({}), function()
+	if ismeth then
+		panic = true
+	else
+		drawHat()
 	end
 end)
 
