@@ -4,12 +4,14 @@
 	Rice Mode: Activated
 	
 	Command(s):
-		rice_ang (int)  -  Changes the angle of the hat
-		rice_len (int)  -  Changes the length of the hat
+		rice_ang (int)     -  Changes the angle of the hat
+		rice_len (int)     -  Changes the length of the hat
+		rice_col (string)  -  Changes the color of the hat
 ]]
 
 local inang = 25
 local length = 15
+local color = Color(255, 255, 255, 75)
 
 local function getHeadPos(ent)
 	if not ent:IsValid() then
@@ -41,7 +43,7 @@ hook.Add("HUDPaint", "", function()
 		
 		cam.Start3D()
 			for i = 1, 360 do
-				render.DrawLine(base, base + (ang:Forward() * length), Color(255, 255, 255, 75), false)
+				render.DrawLine(base, base + (ang:Forward() * length), color, false)
 				ang.y = ang.y + 1
 			end
 		cam.End3D()
@@ -58,4 +60,10 @@ concommand.Add("rice_len", function(p, c, args)
 	args[1] = args[1] or 15
 	
 	length = tonumber(args[1])
+end)
+
+concommand.Add("rice_col", function(p, c, args, argstr)
+	argstr = argstr or "255 255 255 75"
+	
+	color = Color(unpack(string.Split(argstr, " ")))
 end)
