@@ -1159,7 +1159,8 @@ leBotCommands = {
                     tply:SetGravity(-1)
                     tply:ExitVehicle()
                     tply:SetMoveType(MOVETYPE_WALK)
-                    tply:ConCommand("gmod_cleanup")
+                    
+                    cleanup.CC_Cleanup(tply, "", {})
 
                     local tid = tply:SteamID()
 
