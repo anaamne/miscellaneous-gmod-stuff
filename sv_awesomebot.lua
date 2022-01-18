@@ -18,6 +18,7 @@ leBotCache = {
     fuckroseDelay = -1,
     killDelays = {},
     lagDelay = -1,
+    lastUrban = "",
     movetoDelays = {},
     sexDelays = {},
     storyDelay = -1
@@ -35,6 +36,7 @@ leBotConfig = {
     movetoDelay = 20, -- Delay in seconds before users can !moveto again
     sexDelay = 10, -- Delay in seconds before users can !sex again
     storyDelay = 15, -- Delay in seconds before users can !story again
+    explodebanAmount = 50, -- How many times to explode before banning
 
     farewells = {
         "Adios",
@@ -395,6 +397,7 @@ leBotCommands = {
         !dox - Doxxes a player
         !dupe (s) - Dupes something
         !explode (s) - Explodes a player via SteamID
+        !explodeban (s) - Explodes and bans a user with style!
         !fakeinfo - Gets you some fake information
         !flex - Makes you flex
         !flip - Flips a coin
@@ -417,6 +420,7 @@ leBotCommands = {
         !ping - Says your ping
         !players - Gives the player count (Alias: !playercount)
         !randomreport - Reports a random player
+        !rateit (x) - Gives a random rating out of 10 or provided number (Min:10, Max: 100)
         !report - Reports a player
         !respawnbot - Force respawns the bot
         !say - Says your message
@@ -531,7 +535,7 @@ leBotCommands = {
         end)
     end,
 
-    ddos = function(args)
+    ddos = function(args, ply, argstr)
         if argstr == "" then
             leBotSay("Unable to ddos this person")
 
@@ -541,7 +545,9 @@ leBotCommands = {
         leBotSay("Sending 65535 bytes (x128) of data to " .. argstr .. "...")
 
         timer.Simple(math.random(3, 6), function()
-            leBotSay("Success! " .. argstr .. "'s' internet is down. Ping results from last 3 seconds: " .. math.random(200, 400) .. "ms, " .. math.random(300, 650) .. "ms, " .. math.random(600, 800) .. "ms")
+            local last = string.sub(argstr, string.len(argstr))
+
+            leBotSay("Success! " .. argstr .. "'" .. (last ~= "s" and "s" or "") .. " internet is down. Ping results from last 3 seconds: " .. math.random(200, 400) .. "ms, " .. math.random(300, 650) .. "ms, " .. math.random(600, 800) .. "ms")
         end)
     end,
 
@@ -702,7 +708,7 @@ leBotCommands = {
 
         timer.Simple(delay, function()
             if IsValid(ply) then
-                leExplode(ply)
+                leExplode(ply, true)
             end
         end)
     end,
@@ -717,7 +723,7 @@ leBotCommands = {
             gravestone:Spawn()
         end
 
-        leExplode(ply, math.random(3, 5))
+        leExplode(ply, math.random(3, 5), true)
 
         leBotSay(table.Random(leBotConfig.die))
 
@@ -739,7 +745,7 @@ leBotCommands = {
             return
         end
 
-        leExplode(ply)
+        leExplode(ply, true)
         leBotSay(argstr .. " has been killed")
 
         leBotCache.killDelays[ply:SteamID64()] = SysTime()
@@ -811,7 +817,7 @@ leBotCommands = {
             if leBotCache.fuckroseDelay < 0 then
                 leBotSay("die you moth of fuck")
     
-                leExplode(rose)
+                leExplode(rose, true)
     
                 leBotCache.fuckroseDelay = SysTime()
             else
@@ -914,18 +920,27 @@ leBotCommands = {
                 local say = cur.word .. ": " .. cur.definition
 
                 if string.len(say) < 127 then
-                    leBotSay(string.gsub(string.gsub(say, "%]", ""), "%[", ""))
-
-                    return
+                    
                 end
             end
 
             local targ = table.Random(data.list)
-            local sections = leSplitString(string.gsub(string.gsub(targ.word .. ": " .. targ.definition, "%]", ""), "%[", ""))
+            local cur = string.gsub(string.gsub(string.gsub(targ.word .. ": " .. targ.definition, "%]", ""), "%[", ""), "\n", "")
+
+            if #data.list > 1 then
+                while cur == leBotCache.lastUrban do
+                    targ = table.Random(data.list)
+                    cur = string.gsub(string.gsub(string.gsub(targ.word .. ": " .. targ.definition, "%]", ""), "%[", ""), "\n", "")
+                end
+            end
+
+            local sections = leSplitString(cur)
 
             for _, v in ipairs(sections) do
-                leBotSay(string.gsub(string.Trim(v), "\n", ""))
+                leBotSay(v)
             end
+
+            leBotCache.lastUrban = cur
         end, function(error)
             leBotSay("Failed to fetch data :(")
         end)
@@ -1050,13 +1065,15 @@ leBotCommands = {
     explode = function(args, ply)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then
             leBotSay("You don't have permission to do this!")
+
+            return
         end
 
         if args[2] then
             if args[2] == "*" then
                 for _, v in ipairs(player.GetAll()) do
                     if not v:IsAdmin() and not v:IsSuperAdmin() then
-                        leExplode(v)
+                        leExplode(v, true)
                     end
                 end
 
@@ -1068,7 +1085,7 @@ leBotCommands = {
                     if tply:IsAdmin() or tply:IsSuperAdmin() then
                         leBotSay("That's an admin you " .. table.Random(leBotConfig.insults))
                     else
-                        leExplode(tply)
+                        leExplode(tply, true)
                         leBotSay("Boom!")
                     end
                 else
@@ -1076,8 +1093,75 @@ leBotCommands = {
                 end
             end
         else
-            leExplode(ply)
+            leExplode(ply, true)
             leBotSay("Boom!")
+        end
+    end,
+
+    explodeban = function(args, ply)
+        if not ply:IsAdmin() and not ply:IsSuperAdmin() then
+            leBotSay("You don't have permission to do this!")
+
+            return
+        end
+
+        if not args[2] then
+            leBotSay("Unable to explodeban this person")
+
+            return
+        end
+
+        local tply = player.GetBySteamID(args[2])
+
+        if IsValid(tply) then
+            if tply:IsAdmin() or tply:IsSuperAdmin() then
+                leBotSay("That's an admin you " .. table.Random(leBotConfig.insults))
+            else
+                if tply.explodeBanning then
+                    leBotSay("Already explodebanning this person!")
+                else
+                    leBotSay("Goodbye, " .. tply:GetName() .. "!!!")
+
+                    tply.explodeBanning = true
+
+                    if not tply:Alive() then
+                        tply:Spawn()
+                    end
+
+                    if not tply:HasGodMode() then
+                        tply:GodEnable()
+                    end
+
+                    ply:SetGravity(-1)
+                    tply:ExitVehicle()
+                    tply:SetMoveType(MOVETYPE_WALK)
+                    tply:ConCommand("gmod_cleanup")
+
+                    local tid = tply:SteamID()
+
+                    for i = 1, leBotConfig.explodebanAmount do
+                        timer.Simple(i / 10, function()
+                            if IsValid(tply) then
+                                tply:SetPos(tply:GetPos() + Vector(0, 0, 72))
+                                leExplode(tply, 1, false)
+
+                                if i == leBotConfig.explodebanAmount then
+                                    print("yay!")
+
+                                    if ULib and ULib.addBan then
+                                        ULib.addBan(tid, 0, "Kaboom!", IsValid(ply) and ply or nil)
+                                    else
+                                        tply:Kick("Kaboom!")
+                                        RunConsoleCommand("banid", 0, tid)
+                                    end
+                                end
+                            end
+                        end)
+                    end
+                end
+            end
+        else
+            leBotSay("Unable to explodeban this person")
         end
     end,
 
@@ -1093,6 +1177,12 @@ leBotCommands = {
             end
         end
     end,
+
+    rateit = function(args)
+        local outof = math.Clamp(tonumber(args[2]) or 10, 10, 100)
+
+        leBotSay("I rate this a " .. math.random(1, outof) .. "/" .. outof)
+    end
 }
 
 -- Command Aliases
@@ -1116,18 +1206,21 @@ end
 
 -- Useful stuff
 
-function leExplode(ply, times)
+function leExplode(ply, times, kill)
     if not IsValid(ply) then
         return
     end
 
     times = times or 1
+    kill = kill or false
 
     local pos = ply:GetPos()
 
-    ply:Kill()
-    ply:SetHealth(1)
-    ply:Ignite(math.huge)
+    if kill then
+        ply:Kill()
+        ply:SetHealth(1)
+        ply:Ignite(math.huge)
+    end
 
     local world = game.GetWorld()
 
@@ -1291,7 +1384,46 @@ end
 
 -- Hooks
 
+hook.Add("PlayerNoClip", "leme_awesomebot_playernoclip", function(ply)
+    if not IsValid(ply) then
+        return
+    end
+
+    if ply.explodeBanning then
+        return false
+    end
+end)
+
+hook.Add("CanPlayerEnterVehicle", "leme_awesomebot_canentervehicle", function(ply)
+    if not IsValid(ply) then
+        return
+    end
+
+    if ply.explodeBanning then
+        return false
+    end
+end)
+
+hook.Add("PlayerSpawnProp", "leme_awesomebot_playerspawnprop", function(ply)
+    if not IsValid(ply) then
+        return
+    end
+
+    if ply.explodeBanning then
+        return false
+    end
+end)
+
 hook.Add("PlayerDisconnected", "leme_awesomebot_playerdisconnected", function(ply)
+    if ply.explodeBanning then
+        if ULib and ULib.addBan then
+            ULib.addBan(ply:SteamID(), 0, "Kaboom!")
+        else
+            ply:Kick("Kaboom!")
+            RunConsoleCommand("banid", 0, ply:SteamID())
+        end
+    end
+
     local plycount = player.GetCount() - 1
 
     if ply == leGetBot() and plycount > 0 then
@@ -1414,6 +1546,16 @@ end)
 hook.Add("SetupMove", "leme_awesomebot_setupmove", function(ply, mv, cmd)
     if not IsValid(ply) then
         return
+    end
+
+    if ply.explodeBanning then
+        mv:SetButtons(0)
+        mv:SetMaxSpeed(0)
+        mv:SetSideSpeed(0)
+        mv:SetForwardSpeed(0)
+
+        cmd:ClearButtons()
+        cmd:ClearMovement()
     end
 
     if not ply:IsBot() or ply ~= leGetBot() then
