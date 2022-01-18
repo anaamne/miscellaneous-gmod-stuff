@@ -1319,7 +1319,7 @@ local function IsValidTarget(ent)
         return false
     end
 
-    return ent ~= bot and ent:Alive() and not ent:GetNoDraw() and not ent:IsDormant() and ent:GetObserverMode() == OBS_MODE_NONE and ent:Team() ~= TEAM_SPECTATOR and ent:GetColor().a > 0 and bot:GetNWBool("HVHER", false) == ent:GetNWBool("HVHER", false) and not bot:GetNWBool("has_god", false) and not ent:GetNWBool("has_god", false) and not bot:GetNWBool("BuildMode", false) and not ent:GetNWBool("BuildMode", false) and ent:GetNWInt("SH_SZ.Safe", 2) == 0
+    return ent ~= bot and ent:Alive() and not ent:GetNoDraw() and not ent:IsDormant() and ent:GetObserverMode() == OBS_MODE_NONE and ent:Team() ~= TEAM_SPECTATOR and ent:GetColor().a > 0 and bot:GetNWBool("HVHER", false) == ent:GetNWBool("HVHER", false) and not bot:GetNWBool("has_god", false) and not ent:GetNWBool("has_god", false) and not bot:GetNWBool("BuildMode", false) and not ent:GetNWBool("BuildMode", false) and ent:GetNWInt("SH_SZ.Safe", 0) == 0
 end
 
 local function GetAimPos(ent)
@@ -1354,11 +1354,13 @@ local function GetPlayers()
         players[#players + 1] = v
     end
 
-    local bpos = bot:GetPos()
-    
-    table.sort(players, function(a, b) 
-        return a:GetPos():DistToSqr(bpos) > b:GetPos():DistToSqr(bpos)
-    end)
+    if IsValid(bot) then
+        local bpos = bot:GetPos()
+        
+        table.sort(players, function(a, b) 
+            return a:GetPos():DistToSqr(bpos) > b:GetPos():DistToSqr(bpos)
+        end)
+    end
 
     return players
 end
@@ -1570,11 +1572,21 @@ hook.Add("SetupMove", "leme_awesomebot_setupmove", function(ply, mv, cmd)
         cmd:ClearMovement()
     end
 
-    if not ply:IsBot() or ply ~= bot then
+    if ply ~= bot then
         return
     end
 
     mv:SetButtons(0)
+
+    if not leBotCache.attacking and leBotCache.crouching then
+        mv:AddKey(IN_DUCK)
+    end
+end)
+
+hook.Add("StartCommand", "leme_awesomebot_startcommand", function(ply, cmd)
+    if not IsValid(ply) or not cmd or ply ~= bot then
+        return
+    end
 
     cmd:ClearMovement()
     cmd:ClearButtons()
@@ -1617,10 +1629,6 @@ hook.Add("SetupMove", "leme_awesomebot_setupmove", function(ply, mv, cmd)
             leBotCache.attatckTarg = GetClosest()
         end
     else
-        if leBotCache.crouching then
-            mv:AddKey(IN_DUCK)
-        end
-
         if leBotCache.changeDelay < 0 then
             ply:SetEyeAngles(Angle(math.random(-89, 89), math.random(-180, 180), 0))
 
@@ -1639,15 +1647,23 @@ hook.Add("SetupMove", "leme_awesomebot_setupmove", function(ply, mv, cmd)
     end
 end)
 
+-- Timers
+
 timer.Create("leme_awesomebot_respawn", 4, 0, function()
     if IsValid(bot) then
         if not bot:Alive() and not leBotCache.deathHandled then
             bot:Spawn()
         end
+    else
+        for _, v in ipairs(player.GetBots()) do
+            if v:GetName() == leBotConfig.botName then
+                bot = v
+            end
+        end
     end
 end)
 
-timer.Create("leme_awesomebot_update", 1, 0, function() -- "Hook"
+timer.Create("leme_awesomebot_update", 1, 0, function()
     local curtime = SysTime()
 
     for k, v in pairs(leBotCache.movetoDelays) do
