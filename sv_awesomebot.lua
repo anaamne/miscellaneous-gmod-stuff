@@ -1053,17 +1053,27 @@ leBotCommands = {
         end
 
         if args[2] then
-            local tply = player.GetBySteamID(args[2])
-
-            if IsValid(tply) then
-                if tply:IsAdmin() or tply:IsSuperAdmin() then
-                    leBotSay("That's an admin you " .. table.Random(leBotConfig.insults))
-                else
-                    leExplode(tply)
-                    leBotSay("Boom!")
+            if args[2] == "*" then
+                for _, v in ipairs(player.GetAll()) do
+                    if not v:IsAdmin() and not v:IsSuperAdmin() then
+                        leExplode(v)
+                    end
                 end
+
+                leBotSay("Boom! Boom! BOOM!")
             else
-                leBotSay("Unable to explode this person")
+                local tply = player.GetBySteamID(args[2])
+
+                if IsValid(tply) then
+                    if tply:IsAdmin() or tply:IsSuperAdmin() then
+                        leBotSay("That's an admin you " .. table.Random(leBotConfig.insults))
+                    else
+                        leExplode(tply)
+                        leBotSay("Boom!")
+                    end
+                else
+                    leBotSay("Unable to explode this person")
+                end
             end
         else
             leExplode(ply)
