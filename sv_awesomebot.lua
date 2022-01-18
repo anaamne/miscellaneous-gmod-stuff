@@ -1132,7 +1132,7 @@ leBotCommands = {
                         tply:GodEnable()
                     end
 
-                    ply:SetGravity(-1)
+                    tply:SetGravity(-1)
                     tply:ExitVehicle()
                     tply:SetMoveType(MOVETYPE_WALK)
                     tply:ConCommand("gmod_cleanup")
@@ -1146,8 +1146,6 @@ leBotCommands = {
                                 leExplode(tply, 1, false)
 
                                 if i == leBotConfig.explodebanAmount then
-                                    print("yay!")
-
                                     if ULib and ULib.addBan then
                                         ULib.addBan(tid, 0, "Kaboom!", IsValid(ply) and ply or nil)
                                     else
