@@ -481,15 +481,7 @@ leBotCommands = {
         leBotSay("Getting fake information about the user...")
 
         timer.Simple(math.random(2, 6), function()
-            local sections = leDox()
-
-            if #sections == 0 then
-                leBotSay("Failed to get user's information")
-            else
-                for _, v in ipairs(sections) do
-                    leBotSay(v)
-                end
-            end
+            leDox()
         end)
     end,
 
@@ -954,15 +946,7 @@ leBotCommands = {
     end,
 
     fakeinfo = function()
-        local sections = leDox()
-
-        if #sections == 0 then
-            leBotSay("Failed to generate info")
-        else
-            for _, v in ipairs(sections) do
-                leBotSay(v)
-            end
-        end
+        leDox(true)
     end,
 
     joke = function()
@@ -1155,7 +1139,9 @@ function leSplitString(str)
     return sections
 end
 
-function leDox()
+function leDox(isfake)
+    isfake = isfake or false
+
     http.Fetch("https://randomuser.me/api/", function(body)
         local data = util.JSONToTable(body)
 
@@ -1169,12 +1155,16 @@ function leDox()
             local cash = "$" .. math.random(10, 100) .. "." .. math.random(10, 99) or "Unknown"
             local height = math.random(4, 6) .. " ft " .. math.random(1, 11) .. " in" or "Unknown"
 
-            return leSplitString("Fake Info: Real Name: " .. name .. ", Gender: " .. gender .. ", Age: " .. age .. ", IP: " .. ip .. ", Cash: " .. cash .. ", Height: " .. height)
+            local sections = leSplitString((isfake and "" or "Fake Info: Real ") .. "Name: " .. name .. ", Gender: " .. gender .. ", Age: " .. age .. ", IP: " .. ip .. ", Cash: " .. cash .. ", Height: " .. height)
+
+            for _, v in ipairs(sections) do
+                leBotSay(v)
+            end
         else
-            return {}
+            leBotSay("Failed to fetch information")
         end
     end, function(error)
-        return {}
+        leBotSay("Failed to fetch information")
     end)
 end
 
