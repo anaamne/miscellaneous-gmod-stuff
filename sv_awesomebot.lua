@@ -1080,7 +1080,7 @@ leBotCommands = {
 
                 if not IsValid(tply) then
                     for _, v in ipairs(player.GetAll()) do
-                        if string.StartWith(v:GetName(), argstr) then
+                        if string.find(v:GetName(), argstr) then
                             tply = v
                             break
                         end
@@ -1121,7 +1121,7 @@ leBotCommands = {
 
         if not IsValid(tply) then
             for _, v in ipairs(player.GetAll()) do
-                if string.StartWith(v:GetName(), argstr) then
+                if string.find(v:GetName(), argstr) then
                     tply = v
                     break
                 end
