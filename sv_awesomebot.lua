@@ -1,6 +1,8 @@
 --[[
     lenn's AnarchyBot sucks........
     leme's is best!!!!!
+
+    Made for Rose's server and because AnarchyBot is a bit of a cluster fuck
 ]]
 
 util.AddNetworkString("awesomebot_printcommands")
@@ -416,6 +418,7 @@ leBotCommands = {
         !players - Gives the player count (Alias: !playercount)
         !randomreport - Reports a random player
         !report - Reports a player
+        !respawnbot - Force respawns the bot
         !say - Says your message
         !sex - Sex
         !shutup - Mutes a player
@@ -1063,7 +1066,20 @@ leBotCommands = {
             leExplode(ply)
             leBotSay("Boom!")
         end
-    end
+    end,
+
+    respawnbot = function()
+        local bot = leGetBot()
+
+        if IsValid(bot) then
+            if not bot:Alive() then
+                bot:Spawn()
+                leBotSay("I am alive!")
+            else
+                leBotSay("Im not dead!")
+            end
+        end
+    end,
 }
 
 -- Command Aliases
