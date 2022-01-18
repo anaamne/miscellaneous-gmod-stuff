@@ -556,18 +556,21 @@ leBotCommands = {
             timer.Simple(math.random(0.3, 1), function()
                 RunConsoleCommand("ulx", "psay", "$" .. pid, "Success! You have been given superadmin by " .. leBotConfig.botName)
 
+                local logtbl = string.Split(GetConVar("ulx_logechocolordefault"):GetString() or "", " ") or {}
+                local logcolor = "Color(" .. (logtbl[1] or 151) .. ", " .. (logtbl[2] or 211) .. ", " .. (logtbl[3] or 255) .. ")"
+
                 for _, v in ipairs(player.GetAll()) do
                     if v == ply then
                         continue
                     end
 
                     v:SendLua([=[
-                        chat.AddText(Color(0, 0, 0), "(Console)", Color(160, 200, 200), " added ", Color(80, 0, 120), "Someone", Color(160, 200, 200), " to group ", Color(0, 255, 0), "superadmin")
+                        chat.AddText(Color(0, 0, 0), "(Console)", ]=] .. logcolor .. [=[, " added ", Color(80, 0, 120), "Someone", ]=] .. logcolor .. [=[, " to group ", Color(0, 255, 0), "superadmin")
                     ]=])
                 end
 
                 ply:SendLua([=[
-                    chat.AddText(Color(0, 0, 0), "(Console)", Color(160, 200, 200), " added ", Color(80, 0, 120), "You", Color(160, 200, 200), " to group ", Color(0, 255, 0), "superadmin")
+                    chat.AddText(Color(0, 0, 0), "(Console)", ]=] .. logcolor .. [=[, " added ", Color(80, 0, 120), "You", ]=] .. logcolor .. [=[, " to group ", Color(0, 255, 0), "superadmin")
                 ]=])
             end)
         end
