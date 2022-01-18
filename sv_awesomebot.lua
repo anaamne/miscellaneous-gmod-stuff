@@ -708,7 +708,7 @@ leBotCommands = {
 
         timer.Simple(delay, function()
             if IsValid(ply) then
-                leExplode(ply, true)
+                leExplode(ply, 1, true)
             end
         end)
     end,
@@ -745,7 +745,7 @@ leBotCommands = {
             return
         end
 
-        leExplode(ply, true)
+        leExplode(ply, 1, true)
         leBotSay(argstr .. " has been killed")
 
         leBotCache.killDelays[ply:SteamID64()] = SysTime()
@@ -817,7 +817,7 @@ leBotCommands = {
             if leBotCache.fuckroseDelay < 0 then
                 leBotSay("die you moth of fuck")
     
-                leExplode(rose, true)
+                leExplode(rose, 1, true)
     
                 leBotCache.fuckroseDelay = SysTime()
             else
@@ -1062,7 +1062,7 @@ leBotCommands = {
         end
     end,
 
-    explode = function(args, ply)
+    explode = function(args, ply, argstr)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then
             leBotSay("You don't have permission to do this!")
 
@@ -1073,7 +1073,7 @@ leBotCommands = {
             if args[2] == "*" then
                 for _, v in ipairs(player.GetAll()) do
                     if not v:IsAdmin() and not v:IsSuperAdmin() then
-                        leExplode(v, true)
+                        leExplode(v, 1, true)
                     end
                 end
 
@@ -1081,11 +1081,20 @@ leBotCommands = {
             else
                 local tply = player.GetBySteamID(args[2])
 
+                if not IsValid(tply) then
+                    for _, v in ipairs(player.GetAll()) do
+                        if string.StartWith(v:GetName(), argstr) then
+                            tply = v
+                            break
+                        end
+                    end
+                end
+
                 if IsValid(tply) then
                     if tply:IsAdmin() or tply:IsSuperAdmin() then
                         leBotSay("That's an admin you " .. table.Random(leBotConfig.insults))
                     else
-                        leExplode(tply, true)
+                        leExplode(tply, 1, true)
                         leBotSay("Boom!")
                     end
                 else
@@ -1093,12 +1102,12 @@ leBotCommands = {
                 end
             end
         else
-            leExplode(ply, true)
+            leExplode(ply, 1, true)
             leBotSay("Boom!")
         end
     end,
 
-    explodeban = function(args, ply)
+    explodeban = function(args, ply, argstr)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then
             leBotSay("You don't have permission to do this!")
 
@@ -1113,7 +1122,22 @@ leBotCommands = {
 
         local tply = player.GetBySteamID(args[2])
 
+        if not IsValid(tply) then
+            for _, v in ipairs(player.GetAll()) do
+                if string.StartWith(v:GetName(), argstr) then
+                    tply = v
+                    break
+                end
+            end
+        end
+
         if IsValid(tply) then
+            if tply:IsBot() then
+                leBotSay("That's a bot you " .. table.Random(leBotConfig.insults))
+
+                return
+            end
+
             if tply:IsAdmin() or tply:IsSuperAdmin() then
                 leBotSay("That's an admin you " .. table.Random(leBotConfig.insults))
             else
@@ -1475,6 +1499,7 @@ hook.Add("PlayerSay", "leme_awesomebot_playersay", function(ply, msg, tc)
         return
     end
 
+    msg = string.TrimRight(msg)
     local first = msg[1]
 
     if first == "!" or first == "/" then
