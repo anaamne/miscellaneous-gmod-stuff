@@ -1590,7 +1590,7 @@ hook.Add("SetupMove", "leme_awesomebot_setupmove", function(ply, mv, cmd)
 end)
 
 hook.Add("StartCommand", "leme_awesomebot_startcommand", function(ply, cmd)
-    if not IsValid(ply) or not cmd or ply ~= bot then
+    if not IsValid(ply) or not cmd or ply ~= leAwesomeBot then
         return
     end
 
