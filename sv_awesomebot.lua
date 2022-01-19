@@ -1661,12 +1661,11 @@ hook.Add("StartCommand", "leme_awesomebot_startcommand", function(ply, cmd)
                     wep:SetClip1(wep:GetMaxClip1())
                 end
 
-                if leBotCache.fired then
-                    leBotCache.fired = false
-                else
+                if not leBotCache.fired then
                     cmd:SetButtons(IN_ATTACK)
-                    leBotCache.fired = true
                 end
+
+                leBotCache.fired = not leBotCache.fired
             end
         else
             leBotCache.attatckTarg = GetClosest()
