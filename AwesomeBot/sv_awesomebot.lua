@@ -667,7 +667,7 @@ leBotCommands = {
         end
     end,
 
-    noaccess = function(args, ply)
+    noaccess = function(args, ply, argstr)
         if leBotConfig.allowNoAcess then
             if not ply:IsAdmin() or not ply:IsSuperAdmin() then
                 leAwesomeBot:Say("You're not allowed to do this!")
@@ -675,20 +675,25 @@ leBotCommands = {
                 return
             end
 
-            args[2] = args[2] or ""
+            if not args[2] then
+                leAwesomeBot:Say("Unable to noaccess this person")
 
-            local tply = player.GetBySteamID(args[2])
+                return
+            end
+
+            local tply = player.GetBySteamID(args[2]) or leFindByName(argstr)
 
             if IsValid(tply) then
                 if tply:IsAdmin() or tply:IsSuperAdmin() then
                     leAwesomeBot:Say(tply:GetName() .. " is an admin you " .. table.Random(leBotConfig.insults))
                 else
-                    RunConsoleCommand("ulx", "adduserid", args[2], "noaccess")
+                    RunConsoleCommand("ulx", "adduserid", tply:SteamID(), "noaccess")
+                    RunConsoleCommand("sam", "adduser", tply:SteamID(), "noaccess")
 
                     leAwesomeBot:Say("Fuck you " .. tply:GetName() .. "!!!!!!")
                 end
             else
-                leAwesomeBot:Say("I can't find this person")
+                leAwesomeBot:Say("Unable to noaccess this person")
             end
         else
             leAwesomeBot:Say("This command has been disabled")
