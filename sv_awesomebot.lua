@@ -1542,6 +1542,8 @@ hook.Add("PlayerSilentDeath", "leme_awesomebot_playersilentdeath", function(ply)
 end)
 
 hook.Add("PlayerSpawn", "leme_awesomebot_playerspawn", function(ply, trans)
+    ply:Extinguish()
+
     if ply == bot then
         if leBotCache.attacking then
             if leBotCache.activeweapon then
