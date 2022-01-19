@@ -30,6 +30,7 @@ leBotCache = {
 leBotConfig = {
     allowM9KWeapons = true, -- Controls !weapon command allowing M9K
     allowNoAcess = true, -- Controls access to !noaccess command
+    allowForceWeapon = true, -- Controls access to !forceweapon
     botName = "CancerPatient",
     changeDelay = 5, -- Controls how often the bot will change its angles
     collectionURL = "steamcommunity.com/sharedfiles/filedetails/?id=2678818450", -- Collection URL for !addons
@@ -409,6 +410,7 @@ leBotCommands = {
         !flex - Makes you flex
         !flip - Flips a coin
         !fly - Lets you fly for 3 seconds
+        !forceweapon (s) - Forces the bot to switch to this weapon
         !fuckrose - Fucks Rose
         !giveme (s) - Gives you something (Alias: !give)
         !givesuperadmin - Gives you super admin (Don't tell anyone about this command!!!!!!!!)
@@ -1021,6 +1023,36 @@ leBotCommands = {
                 return
             end
         end
+
+        if IsValid(leAwesomeBot) then
+            leBotCache.activeweapon = args[2]
+
+            leAwesomeBot:StripWeapons()
+            leAwesomeBot:Give(leBotCache.activeweapon)
+            leAwesomeBot:SelectWeapon(leBotCache.activeweapon)
+        end
+    end,
+
+    forceweapon = function(args, ply)
+        if not leBotConfig.allowForceWeapon then
+            leAwesomeBot:Say("This command has been disabled!")
+
+            return
+        end
+
+        if not args[2] then
+            leAwesomeBot:Say("Unable to select this weapon")
+
+            return
+        end
+
+        if not ply:IsAdmin() and not ply:IsSuperAdmin() then
+            leAwesomeBot:Say("You don't have permission to do this!")
+
+            return
+        end
+
+        args[2] = string.lower(args[2])
 
         if IsValid(leAwesomeBot) then
             leBotCache.activeweapon = args[2]
