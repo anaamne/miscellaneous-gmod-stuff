@@ -1386,7 +1386,7 @@ end
 -- Hooks
 
 hook.Add("PlayerNoClip", "leme_awesomebot_playernoclip", function(ply)
-    if not IsValid(ply) then
+    if not IsValid(ply) or not ply:Alive() then
         return
     end
 
