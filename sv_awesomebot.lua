@@ -7,7 +7,7 @@
 
 util.AddNetworkString("awesomebot_printcommands")
 
-leAwesomeBot = nil
+leAwesomeBot = leAwesomeBot or nil
 
 leBotCache = {
     activeweapon = nil,
