@@ -11,9 +11,9 @@ net.Receive("awesomebot_printcommands", function() -- Help command
 end)
 
 net.Receive("awesomebot_prettycolors", function() -- Used to make pretty colors in chat
-	local trollage = net.ReadString()
+	local trollage = net.ReadTable()
 
 	if trollage then
-		RunString(trollage)
+		chat.AddText(unpack(trollage))
 	end
 end)
