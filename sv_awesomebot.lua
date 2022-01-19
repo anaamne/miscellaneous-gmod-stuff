@@ -11,6 +11,7 @@ leAwesomeBot = leAwesomeBot or nil
 
 leBotCache = {
     activeweapon = nil,
+    activeweaponforced = false,
     attacking = false,
     attackTarg = nil,
     changeCount = 0,
@@ -1026,6 +1027,7 @@ leBotCommands = {
 
         if IsValid(leAwesomeBot) then
             leBotCache.activeweapon = args[2]
+            leBotCache.activeweaponforced = false
 
             leAwesomeBot:StripWeapons()
             leAwesomeBot:Give(leBotCache.activeweapon)
@@ -1056,6 +1058,7 @@ leBotCommands = {
 
         if IsValid(leAwesomeBot) then
             leBotCache.activeweapon = args[2]
+            leBotCache.activeweaponforced = true
 
             leAwesomeBot:StripWeapons()
             leAwesomeBot:Give(leBotCache.activeweapon)
@@ -1643,12 +1646,14 @@ hook.Add("StartCommand", "leme_awesomebot_startcommand", function(ply, cmd)
             local wep = ply:GetActiveWeapon()
     
             if IsValid(wep) then
-                if leBotConfig.weapons[wep:GetClass()] == false then
-                    ply:StripWeapons()
-
-                    if leBotCache.activeweapon then
-                        ply:Give(leBotCache.activeweapon)
-                        ply:SelectWeapon(leBotCache.activeweapon)
+                if not leBotCache.activeweaponforced then
+                    if leBotConfig.weapons[wep:GetClass()] == false then
+                        ply:StripWeapons()
+    
+                        if leBotCache.activeweapon then
+                            ply:Give(leBotCache.activeweapon)
+                            ply:SelectWeapon(leBotCache.activeweapon)
+                        end
                     end
                 end
 
