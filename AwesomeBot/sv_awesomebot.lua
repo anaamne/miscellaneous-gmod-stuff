@@ -600,7 +600,7 @@ leBotCommands = {
             return
         end
 
-        local targ = player.GetBySteamID(args[2]) leFindByName(argstr)
+        local targ = player.GetBySteamID(args[2]) or leFindByName(argstr)
         local sent = leSend(ply, targ)
 
         if sent then
