@@ -600,10 +600,14 @@ leBotCommands = {
             return
         end
 
-        leBotCache.movetoDelays[ply:SteamID64()] = SysTime()
+        local sent = leSend(ply, leFindByName(argstr))
 
-        RunConsoleCommand("ulx", "send", "$" .. ply:SteamID(), argstr)
-        leAwesomeBot:Say(ply:GetName() .. " teleported to " .. argstr)
+        if sent then
+            leAwesomeBot:Say(ply:GetName() .. " teleported to " .. argstr)
+            leBotCache.movetoDelays[ply:SteamID64()] = SysTime()
+        else
+            leAwesomeBot:Say("Unable to moveto that person")
+        end
     end,
 
     giveme = function(args, ply, argstr)
@@ -839,13 +843,17 @@ leBotCommands = {
 
     test = function(args, ply)
         if IsValid(leAwesomeBot) then
-            RunConsoleCommand("ulx", "send", leAwesomeBot:GetName(), "$" .. ply:SteamID())
-    
-            leAwesomeBot:Say("I have received your beautiful message")
+            local sent = leSend(leAwesomeBot, ply)
 
-            timer.Create("leme_awesomebot_spazz" .. math.random(1234, 4321), 0, math.random(500, 750), function()
-                leAwesomeBot:SetEyeAngles(Angle(math.random(-89, 89), math.random(-180, 180), 0))
-            end)
+            if sent then
+                leAwesomeBot:Say("I have received your beautiful message")
+
+                timer.Create("leme_awesomebot_spazz" .. math.random(1234, 4321), 0, math.random(500, 750), function()
+                    leAwesomeBot:SetEyeAngles(Angle(math.random(-89, 89), math.random(-180, 180), 0))
+                end)
+            else
+                leAwesomeBot:Say("Message not received!")
+            end
         end
     end,
 
@@ -1064,9 +1072,13 @@ leBotCommands = {
     come = function(args, ply)
         if IsValid(leAwesomeBot) then
             if leAwesomeBot:Alive() then
-                RunConsoleCommand("ulx", "send", leAwesomeBot:GetName(), "$" .. ply:SteamID())
+                local sent = leSend(leAwesomeBot, ply)
 
-                leAwesomeBot:Say("I am here")
+                if sent then
+                    leAwesomeBot:Say("I am here")
+                else
+                    leAwesomeBot:Say("I can't come right now")
+                end
             else
                 leAwesomeBot:Say("I'm dead!")
             end
@@ -1110,16 +1122,7 @@ leBotCommands = {
 
                 leAwesomeBot:Say("Boom! Boom! BOOM!")
             else
-                local tply = player.GetBySteamID(args[2])
-
-                if not IsValid(tply) then
-                    for _, v in ipairs(player.GetAll()) do
-                        if string.find(v:GetName(), argstr) then
-                            tply = v
-                            break
-                        end
-                    end
-                end
+                local tply = player.GetBySteamID(args[2]) or leFindByName(argstr)
 
                 if IsValid(tply) then
                     if tply:IsAdmin() or tply:IsSuperAdmin() then
@@ -1151,16 +1154,7 @@ leBotCommands = {
             return
         end
 
-        local tply = player.GetBySteamID(args[2])
-
-        if not IsValid(tply) then
-            for _, v in ipairs(player.GetAll()) do
-                if string.find(v:GetName(), argstr) then
-                    tply = v
-                    break
-                end
-            end
-        end
+        local tply = player.GetBySteamID(args[2]) or leFindByName(argstr)
 
         if IsValid(tply) then
             if tply:IsBot() then
@@ -1346,6 +1340,61 @@ function leCoinFlip(chance)
     chance = chance or 5
 
     return math.random(0, 10) > chance
+end
+
+function leFindByName(name)
+    for _, v in ipairs(player.GetAll()) do
+        if string.find(v:GetName(), name) then
+            return v
+        end
+    end
+end
+
+function leSend(ply, plythesecond) -- Bascially ULX playerSend clone
+    if not IsValid(ply) or not IsValid(plythesecond) or not plythesecond:IsInWorld() then
+        return false
+    end
+
+    local spos = plythesecond:GetPos()
+    local fwd = plythesecond:EyeAngles()
+
+    local dir = {
+        fwd.yaw,
+        math.NormalizeAngle(fwd.yaw - 90),
+        math.NormalizeAngle(fwd.yaw + 90),
+        math.NormalizeAngle(fwd.yaw + 180)
+    }
+
+    local thing = 1
+
+    local trData = {
+        start = plythesecond:LocalToWorld(ply:OBBCenter()),
+        endpos = spos + (Angle(0, dir[thing], 0):Forward() * 50),
+        filter = {ply, plythesecond}
+    }
+
+    local tr = util.TraceLine(trData)
+
+    while tr.Hit do
+        thing = thing + 1
+
+        if thing > #dir then -- Epic fail
+            return false
+        end
+
+        trData.endpos = spos + (Angle(0, dir[thing], 0):Forward() * 50)
+
+        tr = util.TraceLine(trData)
+    end
+
+    ply.ulx_prevpos = ply:GetPos() -- Stupid
+    ply.ulx_prevang = ply:EyeAngles()
+
+    ply:SetEyeAngles((spos - tr.HitPos):Angle())
+    ply:SetPos(tr.HitPos)
+    ply:SetAbsVelocity(vector_origin)
+
+    return true
 end
 
 function lePrettyColors(ply, ...)
