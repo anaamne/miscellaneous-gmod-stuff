@@ -1691,7 +1691,7 @@ end)
 
 -- Timers
 
-timer.Create("leme_awesomebot_respawn", 4, 0, function()
+timer.Create("leme_awesomebot_respawnandfix", 4, 0, function()
     if IsValid(leAwesomeBot) then
         if not leAwesomeBot:Alive() and not leBotCache.deathHandled then
             leAwesomeBot:Spawn()
