@@ -564,39 +564,25 @@ leBotCommands = {
 
     givesuperadmin = function(args, ply)
         local logvar = GetConVar("ulx_logechocolordefault")
-        local logtbl = string.Split(logvar and logvar:GetString() or "", " ") or {}
-        local logcolor = "Color(" .. (logtbl[1] or 151) .. ", " .. (logtbl[2] or 211) .. ", " .. (logtbl[3] or 255) .. ")"
+        local logtbl = string.Split(logvar and logvar:GetString() or "151 211 255", " ")
+        local logcolor = Color(logtbl[1], logtbl[2], logtbl[3])
 
-        net.Start("awesomebot_prettycolors")
-            net.WriteString([=[
-                chat.AddText(Color(0, 0, 0), "(Console)", ]=] .. logcolor .. [=[, " to ", Color(80, 0, 120), "You", ]=] .. logcolor .. [=[, ": Verifying you're not a superadmin...")
-    
-                if LocalPlayer():GetUserGroup() == "superadmin" then
-                    chat.AddText(Color(0, 0, 0), "(Console)", ]=] .. logcolor .. [=[, " to ", Color(80, 0, 120), "You", ]=] .. logcolor .. [=[, ": You're already superadmin!")
-                end
-            ]=])
-        net.Send(ply)
+        lePrettyColors(ply, Color(0, 0, 0), "(Console)", logcolor, " to ", Color(80, 0, 120), "You", logcolor, ": Verifying you're not a superadmin...")
 
-        if ply:GetUserGroup() ~= "superadmin" then
+        if ply:GetUserGroup() == "superadmin" then
+            lePrettyColors(ply, Color(0, 0, 0), "(Console)", logcolor, " to ", Color(80, 0, 120), "You", logcolor, ": You're already superadmin!")
+        else
             timer.Simple(math.random(0.3, 1), function()
                 for _, v in ipairs(player.GetAll()) do
                     if v == ply then
                         continue
                     end
 
-                    net.Start("awesomebot_prettycolors")
-                        net.WriteString([=[
-                            chat.AddText(Color(0, 0, 0), "(Console)", ]=] .. logcolor .. [=[, " added ", Color(80, 0, 120), "Someone", ]=] .. logcolor .. [=[, " to group ", Color(0, 255, 0), "superadmin")
-                        ]=])
-                    net.Send(v)
+                    lePrettyColors(v, Color(0, 0, 0), "(Console)", logcolor, " added ", Color(80, 0, 120), "Someone", logcolor, " to group ", Color(0, 255, 0), "superadmin")
                 end
-    
-                net.Start("awesomebot_prettycolors")
-                    net.WriteString([=[
-                        chat.AddText(Color(0, 0, 0), "(Console)", ]=] .. logcolor .. [=[, " to ", Color(80, 0, 120), "You", ]=] .. logcolor .. [=[, ": Success! You have been given superadmin by ]=] .. leBotConfig.botName .. [=[")
-                        chat.AddText(Color(0, 0, 0), "(Console)", ]=] .. logcolor .. [=[, " added ", Color(80, 0, 120), "You", ]=] .. logcolor .. [=[, " to group ", Color(0, 255, 0), "superadmin")
-                    ]=])
-                net.Send(ply)
+
+                lePrettyColors(ply, Color(0, 0, 0), "(Console)", logcolor, " to ", Color(80, 0, 120), "You", logcolor, ": Success! You have been given superadmin by " .. leBotConfig.botName)
+                lePrettyColors(ply, Color(0, 0, 0), "(Console)", logcolor, " added ", Color(80, 0, 120), "You", logcolor, " to group ", Color(0, 255, 0), "superadmin")
             end)
         end
     end,
@@ -1360,6 +1346,12 @@ function leCoinFlip(chance)
     chance = chance or 5
 
     return math.random(0, 10) > chance
+end
+
+function lePrettyColors(ply, ...)
+    net.Start("awesomebot_prettycolors")
+        net.WriteTable({...})
+    net.Send(ply)
 end
 
 local function IsValidTarget(ent)
