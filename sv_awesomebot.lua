@@ -7,7 +7,7 @@
 
 util.AddNetworkString("awesomebot_printcommands")
 
-local bot
+leAwesomeBot = nil
 
 leBotCache = {
     activeweapon = nil,
@@ -363,21 +363,21 @@ leBotConfig = {
 
 leBotTrollCommands = {
     pvp = function()
-        bot:Say("Congratulations on not being in pvp mode! It's \"!pvp\"")
+        leAwesomeleAwesomeBot:Say("Congratulations on not being in pvp mode! It's \"!pvp\"")
     end,
 
     build = function()
-        bot:Say("Congratulations on not being in build mode! It's \"!build\"")
+        leAwesomeleAwesomeBot:Say("Congratulations on not being in build mode! It's \"!build\"")
     end,
 
     hvh = function()
-        bot:Say("Congratulations on not being in hvh mode! It's \"!hvh\"")
+        leAwesomeleAwesomeBot:Say("Congratulations on not being in hvh mode! It's \"!hvh\"")
     end
 }
 
 leBotCommands = {
     help = function(args, ply)
-        bot:Say("My help command is \"!cmdhelp\"")
+        leAwesomeBot:Say("My help command is \"!cmdhelp\"")
     end,
 
     cmdhelp = function(args, ply)
@@ -442,23 +442,23 @@ leBotCommands = {
         !yes - yes]=])
         net.Send(ply)
 
-        bot:Say("Check your console!")
+        leAwesomeBot:Say("Check your console!")
     end,
 
     report = function(args, ply, argstr)
         if argstr == "" then
-            bot:Say("Unable to report this person")
+            leAwesomeBot:Say("Unable to report this person")
 
             return
         end
         
         if args[2] == leBotConfig.botName or argstr == leBotConfig.botName then
-            bot:Say("Report has been closed. Reason: Banned for false-reporting.")
+            leAwesomeBot:Say("Report has been closed. Reason: Banned for false-reporting.")
 
             return
         end
 
-        bot:Say(argstr .. " has been reported. Staff should (not) arrive in a minute!")
+        leAwesomeBot:Say(argstr .. " has been reported. Staff should (not) arrive in a minute!")
     end,
 
     yes = function()
@@ -468,7 +468,7 @@ leBotCommands = {
             y = string.upper(y)
         end
 
-        bot:Say(y .. (leCoinFlip() and "!" or ""))
+        leAwesomeBot:Say(y .. (leCoinFlip() and "!" or ""))
     end,
 
     no = function()
@@ -478,17 +478,17 @@ leBotCommands = {
             n = string.upper(n)
         end
 
-        bot:Say(n .. (leCoinFlip() and "!" or ""))
+        leAwesomeBot:Say(n .. (leCoinFlip() and "!" or ""))
     end,
 
     dox = function(args)
         if argstr == "" then
-            bot:Say("Unable to dox this person")
+            leAwesomeBot:Say("Unable to dox this person")
 
             return
         end
 
-        bot:Say("Getting fake information about the user...")
+        leAwesomeBot:Say("Getting fake information about the user...")
 
         timer.Simple(math.random(2, 6), function()
             leDox()
@@ -496,15 +496,15 @@ leBotCommands = {
     end,
 
     uptime = function()
-        bot:Say("The server has been up for about " .. string.NiceTime(SysTime()))
+        leAwesomeBot:Say("The server has been up for about " .. string.NiceTime(SysTime()))
     end,
 
     bye = function(args, ply)
-        bot:Say(table.Random(leBotConfig.farewells):format(ply:GetName()))
+        leAwesomeBot:Say(table.Random(leBotConfig.farewells):format(ply:GetName()))
     end,
 
     hello = function(args, ply)
-        bot:Say(table.Random(leBotConfig.greetings):format(ply:GetName()))
+        leAwesomeBot:Say(table.Random(leBotConfig.greetings):format(ply:GetName()))
     end,
 
     word = function(args)
@@ -517,10 +517,10 @@ leBotCommands = {
             local sections = leSplitString(datastr)
 
             for _, v in ipairs(sections) do
-                bot:Say(v)
+                leAwesomeBot:Say(v)
             end
         end, function(error)
-            bot:Say("Failed to get word" .. (count ~= 1 and "s" or ""))
+            leAwesomeBot:Say("Failed to get word" .. (count ~= 1 and "s" or ""))
         end)
     end,
 
@@ -529,28 +529,28 @@ leBotCommands = {
 
         for i = x, 1, -1 do
             timer.Simple(x - i, function()
-                bot:Say(i .. "...")
+                leAwesomeBot:Say(i .. "...")
             end)
         end
 
         timer.Simple(x + 1, function()
-            bot:Say("Go!!!")
+            leAwesomeBot:Say("Go!!!")
         end)
     end,
 
     ddos = function(args, ply, argstr)
         if argstr == "" then
-            bot:Say("Unable to ddos this person")
+            leAwesomeBot:Say("Unable to ddos this person")
 
             return
         end
 
-        bot:Say("Sending 65535 bytes (x128) of data to " .. argstr .. "...")
+        leAwesomeBot:Say("Sending 65535 bytes (x128) of data to " .. argstr .. "...")
 
         timer.Simple(math.random(3, 6), function()
             local last = string.sub(argstr, string.len(argstr))
 
-            bot:Say("Success! " .. argstr .. "'" .. (last ~= "s" and "s" or "") .. " internet is down. Ping results from last 3 seconds: " .. math.random(200, 400) .. "ms, " .. math.random(300, 650) .. "ms, " .. math.random(600, 800) .. "ms")
+            leAwesomeBot:Say("Success! " .. argstr .. "'" .. (last ~= "s" and "s" or "") .. " internet is down. Ping results from last 3 seconds: " .. math.random(200, 400) .. "ms, " .. math.random(300, 650) .. "ms, " .. math.random(600, 800) .. "ms")
         end)
     end,
 
@@ -587,13 +587,13 @@ leBotCommands = {
 
     moveto = function(args, ply, argstr)
         if leBotCache.movetoDelays[ply:SteamID64()] then
-            bot:Say("You can't use this command yet!")
+            leAwesomeBot:Say("You can't use this command yet!")
 
             return
         end
 
         if not args[2] then
-            bot:Say("Unable to moveto that person")
+            leAwesomeBot:Say("Unable to moveto that person")
 
             return
         end
@@ -601,35 +601,35 @@ leBotCommands = {
         leBotCache.movetoDelays[ply:SteamID64()] = SysTime()
 
         RunConsoleCommand("ulx", "send", "$" .. ply:SteamID(), argstr)
-        bot:Say(ply:GetName() .. " teleported to " .. argstr)
+        leAwesomeBot:Say(ply:GetName() .. " teleported to " .. argstr)
     end,
 
     giveme = function(args, ply, argstr)
         argstr = argstr ~= "" and argstr or "gay sex"
 
-        bot:Say(table.Random(leBotConfig.gives):format(argstr))
+        leAwesomeBot:Say(table.Random(leBotConfig.gives):format(argstr))
     end,
 
     dice = function()
-        bot:Say("You rolled a " .. math.random(1, 6))
+        leAwesomeBot:Say("You rolled a " .. math.random(1, 6))
     end,
 
     number = function(args)
         args[2] = math.Clamp(tonumber(args[2]) or 10, 1, math.huge)
 
-        bot:Say("Random number from 1 to " .. args[2] .. ", the number is: " .. math.random(1, args[2]))
+        leAwesomeBot:Say("Random number from 1 to " .. args[2] .. ", the number is: " .. math.random(1, args[2]))
     end,
 
     flip = function()
-        bot:Say("Flipped a coin and got " .. (leCoinFlip() and "heads" or "tails"))
+        leAwesomeBot:Say("Flipped a coin and got " .. (leCoinFlip() and "heads" or "tails"))
     end,
 
     players = function()
-        bot:Say("Current player count: " .. player.GetCount())
+        leAwesomeBot:Say("Current player count: " .. player.GetCount())
     end,
 
     fly = function(args, ply)
-        bot:Say("Jump to fly! (Only works for 3 seconds)")
+        leAwesomeBot:Say("Jump to fly! (Only works for 3 seconds)")
 
         ply:SetGravity(-0.5)
 
@@ -641,29 +641,29 @@ leBotCommands = {
     end,
 
     answer = function()
-        bot:Say(table.Random(leBotConfig.answers))
+        leAwesomeBot:Say(table.Random(leBotConfig.answers))
     end,
 
     chinese = function()
-        bot:Say(table.Random(leBotConfig.chinese))
+        leAwesomeBot:Say(table.Random(leBotConfig.chinese))
     end,
 
     japanese = function()
-        bot:Say(table.Random(leBotConfig.japanese))
+        leAwesomeBot:Say(table.Random(leBotConfig.japanese))
     end,
 
     chingchong = function()
         if leCoinFlip() then
-            bot:Say(table.Random(leBotConfig.chinese))
+            leAwesomeBot:Say(table.Random(leBotConfig.chinese))
         else
-            bot:Say(table.Random(leBotConfig.japanese))
+            leAwesomeBot:Say(table.Random(leBotConfig.japanese))
         end
     end,
 
     noaccess = function(args, ply)
         if leBotConfig.allowNoAcess then
             if not ply:IsAdmin() or not ply:IsSuperAdmin() then
-                bot:Say("You're not allowed to do this!")
+                leAwesomeBot:Say("You're not allowed to do this!")
 
                 return
             end
@@ -674,28 +674,28 @@ leBotCommands = {
 
             if IsValid(tply) then
                 if tply:IsAdmin() or tply:IsSuperAdmin() then
-                    bot:Say(tply:GetName() .. " is an admin you " .. table.Random(leBotConfig.insults))
+                    leAwesomeBot:Say(tply:GetName() .. " is an admin you " .. table.Random(leBotConfig.insults))
                 else
                     RunConsoleCommand("ulx", "adduserid", args[2], "noaccess")
 
-                    bot:Say("Fuck you " .. tply:GetName() .. "!!!!!!")
+                    leAwesomeBot:Say("Fuck you " .. tply:GetName() .. "!!!!!!")
                 end
             else
-                bot:Say("I can't find this person")
+                leAwesomeBot:Say("I can't find this person")
             end
         else
-            bot:Say("This command has been disabled")
+            leAwesomeBot:Say("This command has been disabled")
         end
     end,
 
     sex = function(args, ply)
         if leBotCache.sexDelays[ply:SteamID64()] then
-            bot:Say("You just had sex! Wait a little bit!")
+            leAwesomeBot:Say("You just had sex! Wait a little bit!")
 
             return
         end
 
-        bot:Say("Sexual content has been banned from Garry's Mod!")
+        leAwesomeBot:Say("Sexual content has been banned from Garry's Mod!")
 
         local len = math.random(5, 10)
         local delay = (0.3 * len) + 1
@@ -728,7 +728,7 @@ leBotCommands = {
 
         leExplode(ply, math.random(3, 5), true)
 
-        bot:Say(table.Random(leBotConfig.die))
+        leAwesomeBot:Say(table.Random(leBotConfig.die))
 
         timer.Simple(24, function()
             SafeRemoveEntity(gravestone)
@@ -737,80 +737,80 @@ leBotCommands = {
 
     kill = function(args, ply, argstr)
         if leBotCache.killDelays[ply:SteamID64()] then
-            bot:Say("You just killed someone! Wait a bit psycho!")
+            leAwesomeBot:Say("You just killed someone! Wait a bit psycho!")
 
             return
         end
 
         if argstr == "" then
-            bot:Say("Unable to kill that person")
+            leAwesomeBot:Say("Unable to kill that person")
 
             return
         end
 
         leExplode(ply, 1, true)
-        bot:Say(argstr .. " has been killed")
+        leAwesomeBot:Say(argstr .. " has been killed")
 
         leBotCache.killDelays[ply:SteamID64()] = SysTime()
     end,
 
     content = function()
-        bot:Say(table.Random(leBotConfig.content))
+        leAwesomeBot:Say(table.Random(leBotConfig.content))
     end,
 
     shutup = function(args, ply, argstr)
         if argstr == "" then
-            bot:Say("Unable to mute that person")
+            leAwesomeBot:Say("Unable to mute that person")
 
             return
         end
 
-        bot:Say(argstr .. " has been muted and is now unable to talk")
+        leAwesomeBot:Say(argstr .. " has been muted and is now unable to talk")
     end,
 
     randomreport = function()
-        bot:Say(table.Random(player.GetAll()):GetName() .. " has been reported. Staff should (not) arrive in a minute!")
+        leAwesomeBot:Say(table.Random(player.GetAll()):GetName() .. " has been reported. Staff should (not) arrive in a minute!")
     end,
 
     kit = function()
-        bot:Say("You have received a kit from " .. leBotConfig.botName .. ", it contains: " .. table.Random(leBotConfig.kit))
+        leAwesomeBot:Say("You have received a kit from " .. leBotConfig.botName .. ", it contains: " .. table.Random(leBotConfig.kit))
     end,
 
     addons = function()
-        bot:Say("YOU WANT ADDONS??? >> " .. leBotConfig.collectionURL .. " <<")
+        leAwesomeBot:Say("YOU WANT ADDONS??? >> " .. leBotConfig.collectionURL .. " <<")
     end,
 
     calladmin = function()
-        bot:Say("You have just called an admin. They will arrive soon!")
+        leAwesomeBot:Say("You have just called an admin. They will arrive soon!")
     end,
 
     slap = function(args, ply, argstr)
         if argstr == "" then
-            bot:Say("Unable to slap that person")
+            leAwesomeBot:Say("Unable to slap that person")
 
             return
         end
 
-        bot:Say(table.Random(leBotConfig.slap):format(argstr))
+        leAwesomeBot:Say(table.Random(leBotConfig.slap):format(argstr))
     end,
 
     english = function() -- omg hidden command so sneaky
-        bot:Say(leBotConfig.botName .. " isn't a language bot you " .. table.Random(leBotConfig.insults))
+        leAwesomeBot:Say(leBotConfig.botName .. " isn't a language bot you " .. table.Random(leBotConfig.insults))
     end,
 
     ping = function(args, ply)
-        bot:Say("Your ping is " .. ply:Ping())
+        leAwesomeBot:Say("Your ping is " .. ply:Ping())
     end,
 
     kd = function(args, ply)
         local kills = ply:Frags()
         local deaths = ply:Deaths()
 
-        bot:Say("You have " .. kills .. " kill" .. (kills ~= 1 and "s" or "") .. " and " .. deaths .. " death" .. (deaths ~= 1 and "s" or "") .. ", your K/D is " .. kills / deaths)
+        leAwesomeBot:Say("You have " .. kills .. " kill" .. (kills ~= 1 and "s" or "") .. " and " .. deaths .. " death" .. (deaths ~= 1 and "s" or "") .. ", your K/D is " .. kills / deaths)
     end,
 
     time = function()
-        bot:Say("The date and time is " .. os.date("%m/%d/%Y - %H:%M:%S", os.time()))
+        leAwesomeBot:Say("The date and time is " .. os.date("%m/%d/%Y - %H:%M:%S", os.time()))
     end,
 
     fuckrose = function()
@@ -818,28 +818,28 @@ leBotCommands = {
 
         if IsValid(rose) then
             if leBotCache.fuckroseDelay < 0 then
-                bot:Say("die you moth of fuck")
+                leAwesomeBot:Say("die you moth of fuck")
     
                 leExplode(rose, 1, true)
     
                 leBotCache.fuckroseDelay = SysTime()
             else
-                bot:Say("Rose has been fucked recently, give him some time to recover")
+                leAwesomeBot:Say("Rose has been fucked recently, give him some time to recover")
             end
         else
-            bot:Say("Rose not found :(")
+            leAwesomeBot:Say("Rose not found :(")
         end
     end,
 
     mutemenu = function(args, ply)
-        bot:Say(ply:GetName() .. " has opened the mute menu! Beware!")
+        leAwesomeBot:Say(ply:GetName() .. " has opened the mute menu! Beware!")
     end,
 
     test = function(args, ply)
-        if IsValid(bot) then
+        if IsValid(leAwesomeBot) then
             RunConsoleCommand("ulx", "send", bot:GetName(), "$" .. ply:SteamID())
     
-            bot:Say("I have received your beautiful message")
+            leAwesomeBot:Say("I have received your beautiful message")
 
             timer.Create("leme_awesomebot_spazz" .. math.random(1234, 4321), 0, math.random(500, 750), function()
                 bot:SetEyeAngles(Angle(math.random(-89, 89), math.random(-180, 180), 0))
@@ -848,13 +848,13 @@ leBotCommands = {
     end,
 
     say = function(args, ply, argstr)
-        bot:Say(argstr)
+        leAwesomeBot:Say(argstr)
     end,
 
     dupe = function(args, ply, argstr)
         argstr = argstr ~= "" and argstr or "thin air"
 
-        bot:Say("Duped " .. argstr .. ". You now have " .. math.random(1, 64) .. " of them!")
+        leAwesomeBot:Say("Duped " .. argstr .. ". You now have " .. math.random(1, 64) .. " of them!")
     end,
 
     stoplag = function(args, ply)
@@ -870,18 +870,18 @@ leBotCommands = {
                 end
             end
     
-            bot:Say(ply:GetName() .. " has stopped lag!")
+            leAwesomeBot:Say(ply:GetName() .. " has stopped lag!")
 
             leBotCache.lagDelay = SysTime()
         else
-            bot:Say("Wait! Not yet!")
+            leAwesomeBot:Say("Wait! Not yet!")
         end
     end,
 
     whogay = function()
         local random = table.Random(player.GetAll())
 
-        bot:Say("I" .. (random:SteamID() == "STEAM_0:1:547859568" and " know " or " think ") .. random:GetName() .. " is gay")
+        leAwesomeBot:Say("I" .. (random:SteamID() == "STEAM_0:1:547859568" and " know " or " think ") .. random:GetName() .. " is gay")
     end,
 
     dance = function(args, ply)
@@ -898,7 +898,7 @@ leBotCommands = {
 
     urban = function(args, ply, argstr)
         if argstr == "" then
-            bot:Say("Invalid search term!")
+            leAwesomeBot:Say("Invalid search term!")
 
             return
         end
@@ -938,18 +938,18 @@ leBotCommands = {
             local sections = leSplitString(cur)
 
             for _, v in ipairs(sections) do
-                bot:Say(v)
+                leAwesomeBot:Say(v)
             end
 
             leBotCache.lastUrban = cur
         end, function(error)
-            bot:Say("Failed to fetch data :(")
+            leAwesomeBot:Say("Failed to fetch data :(")
         end)
     end,
 
     story = function()
         if leBotCache.storyDelay > 0 then
-            bot:Say("I just told you a story! Have some patience!")
+            leAwesomeBot:Say("I just told you a story! Have some patience!")
 
             return
         end
@@ -958,10 +958,10 @@ leBotCommands = {
             local sections = leSplitString(body)
 
             for _, v in ipairs(sections) do
-                bot:Say(string.gsub(string.Trim(v), "\n", ""))
+                leAwesomeBot:Say(string.gsub(string.Trim(v), "\n", ""))
             end
         end, function(error)
-            bot:Say("Failed to fetch data :(")
+            leAwesomeBot:Say("Failed to fetch data :(")
         end)
 
         leBotCache.storyDelay = SysTime()
@@ -976,18 +976,18 @@ leBotCommands = {
             local data = util.JSONToTable(body) or {}
 
             if not data.setup or not data.delivery then
-                bot:Say("Failed to fetch data :(")
+                leAwesomeBot:Say("Failed to fetch data :(")
 
                 return
             end
 
-            bot:Say(data.setup)
+            leAwesomeBot:Say(data.setup)
 
             timer.Simple(0.75, function()
-                bot:Say(data.delivery)
+                leAwesomeBot:Say(data.delivery)
             end)
         end, function(error)
-            bot:Say("Failed to fetch data :(")
+            leAwesomeBot:Say("Failed to fetch data :(")
         end)
     end,
 
@@ -997,7 +997,7 @@ leBotCommands = {
 
     weapon = function(args)
         if not args[2] then
-            bot:Say("Unable to select this weapon")
+            leAwesomeBot:Say("Unable to select this weapon")
 
             return
         end
@@ -1006,35 +1006,35 @@ leBotCommands = {
 
         if leBotConfig["allowM9KWeapons"] then
             if (string.sub(args[2], 1, 3) ~= "m9k" and leBotConfig.weapons[args[2]] == nil) or leBotConfig.weapons[args[2]] == false then
-                bot:Say("Unable to select this weapon")
+                leAwesomeBot:Say("Unable to select this weapon")
     
                 return
             end
         else
             if not leBotConfig.weapons[args[2]] then
-                bot:Say("Unable to select this weapon")
+                leAwesomeBot:Say("Unable to select this weapon")
 
                 return
             end
         end
 
-        if IsValid(bot) then
+        if IsValid(leAwesomeBot) then
             leBotCache.activeweapon = args[2]
 
-            bot:StripWeapons()
-            bot:Give(leBotCache.activeweapon)
-            bot:SelectWeapon(leBotCache.activeweapon)
+            leAwesomeBot:StripWeapons()
+            leAwesomeBot:Give(leBotCache.activeweapon)
+            leAwesomeBot:SelectWeapon(leBotCache.activeweapon)
         end
     end,
 
     come = function(args, ply)
-        if IsValid(bot) then
-            if bot:Alive() then
-                RunConsoleCommand("ulx", "send", bot:GetName(), "$" .. ply:SteamID())
+        if IsValid(leAwesomeBot) then
+            if leAwesomeBot:Alive() then
+                RunConsoleCommand("ulx", "send", leAwesomeBot:GetName(), "$" .. ply:SteamID())
 
-                bot:Say("I am here")
+                leAwesomeBot:Say("I am here")
             else
-                bot:Say("I'm dead!")
+                leAwesomeBot:Say("I'm dead!")
             end
         end
     end,
@@ -1046,22 +1046,22 @@ leBotCommands = {
             local last = string.sub(argstr, string.len(argstr))
 
             if leCoinFlip(3) then
-                bot:Say(argstr .. "'" .. (last ~= "s" and "s" or "") .. " penis is B" .. string.rep("=", length) .. "D " .. length .. " inch" .. (length ~= 1 and "es" or "") .. " long!")
+                leAwesomeBot:Say(argstr .. "'" .. (last ~= "s" and "s" or "") .. " penis is B" .. string.rep("=", length) .. "D " .. length .. " inch" .. (length ~= 1 and "es" or "") .. " long!")
             else
-                bot:Say(argstr ..  "'" .. (last ~= "s" and "s" or "") .. " penis is too fucking " .. (leCoinFlip() and "big" or "small") .. " to be measured!!")
+                leAwesomeBot:Say(argstr ..  "'" .. (last ~= "s" and "s" or "") .. " penis is too fucking " .. (leCoinFlip() and "big" or "small") .. " to be measured!!")
             end
         else
             if leCoinFlip(3) then
-                bot:Say("Your penis is B" .. string.rep("=", length) .. "D " .. length .. " inch" .. (length ~= 1 and "es" or "") .. " long!")
+                leAwesomeBot:Say("Your penis is B" .. string.rep("=", length) .. "D " .. length .. " inch" .. (length ~= 1 and "es" or "") .. " long!")
             else
-                bot:Say("Your penis is too fucking " .. (leCoinFlip() and "big" or "small") .. " to be measured!!")
+                leAwesomeBot:Say("Your penis is too fucking " .. (leCoinFlip() and "big" or "small") .. " to be measured!!")
             end
         end
     end,
 
     explode = function(args, ply, argstr)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then
-            bot:Say("You don't have permission to do this!")
+            leAwesomeBot:Say("You don't have permission to do this!")
 
             return
         end
@@ -1074,7 +1074,7 @@ leBotCommands = {
                     end
                 end
 
-                bot:Say("Boom! Boom! BOOM!")
+                leAwesomeBot:Say("Boom! Boom! BOOM!")
             else
                 local tply = player.GetBySteamID(args[2])
 
@@ -1089,30 +1089,30 @@ leBotCommands = {
 
                 if IsValid(tply) then
                     if tply:IsAdmin() or tply:IsSuperAdmin() then
-                        bot:Say("That's an admin you " .. table.Random(leBotConfig.insults))
+                        leAwesomeBot:Say("That's an admin you " .. table.Random(leBotConfig.insults))
                     else
                         leExplode(tply, 1, true)
-                        bot:Say("Boom!")
+                        leAwesomeBot:Say("Boom!")
                     end
                 else
-                    bot:Say("Unable to explode this person")
+                    leAwesomeBot:Say("Unable to explode this person")
                 end
             end
         else
             leExplode(ply, 1, true)
-            bot:Say("Boom!")
+            leAwesomeBot:Say("Boom!")
         end
     end,
 
     explodeban = function(args, ply, argstr)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then
-            bot:Say("You don't have permission to do this!")
+            leAwesomeBot:Say("You don't have permission to do this!")
 
             return
         end
 
         if not args[2] then
-            bot:Say("Unable to explodeban this person")
+            leAwesomeBot:Say("Unable to explodeban this person")
 
             return
         end
@@ -1130,18 +1130,18 @@ leBotCommands = {
 
         if IsValid(tply) then
             if tply:IsBot() then
-                bot:Say("That's a bot you " .. table.Random(leBotConfig.insults))
+                leAwesomeBot:Say("That's a bot you " .. table.Random(leBotConfig.insults))
 
                 return
             end
 
             if tply:IsAdmin() or tply:IsSuperAdmin() then
-                bot:Say("That's an admin you " .. table.Random(leBotConfig.insults))
+                leAwesomeBot:Say("That's an admin you " .. table.Random(leBotConfig.insults))
             else
                 if tply.explodeBanning then
-                    bot:Say("Already explodebanning this person!")
+                    leAwesomeBot:Say("Already explodebanning this person!")
                 else
-                    bot:Say("Goodbye, " .. tply:GetName() .. "!!!")
+                    leAwesomeBot:Say("Goodbye, " .. tply:GetName() .. "!!!")
 
                     tply.explodeBanning = true
 
@@ -1181,17 +1181,17 @@ leBotCommands = {
                 end
             end
         else
-            bot:Say("Unable to explodeban this person")
+            leAwesomeBot:Say("Unable to explodeban this person")
         end
     end,
 
     respawnbot = function()
-        if IsValid(bot) then
-            if not bot:Alive() then
-                bot:Spawn()
-                bot:Say("I am alive!")
+        if IsValid(leAwesomeBot) then
+            if not leAwesomeBot:Alive() then
+                leAwesomeBot:Spawn()
+                leAwesomeBot:Say("I am alive!")
             else
-                bot:Say("Im not dead!")
+                leAwesomeBot:Say("Im not dead!")
             end
         end
     end,
@@ -1199,7 +1199,7 @@ leBotCommands = {
     rateit = function(args)
         local outof = math.Clamp(tonumber(args[2]) or 10, 10, 100)
 
-        bot:Say("I rate this a " .. math.random(1, outof) .. "/" .. outof)
+        leAwesomeBot:Say("I rate this a " .. math.random(1, outof) .. "/" .. outof)
     end
 }
 
@@ -1298,13 +1298,13 @@ function leDox(isfake)
             local sections = leSplitString((isfake and "" or "Fake Info: Real ") .. "Name: " .. name .. ", Gender: " .. gender .. ", Age: " .. age .. ", IP: " .. ip .. ", Cash: " .. cash .. ", Height: " .. height)
 
             for _, v in ipairs(sections) do
-                bot:Say(v)
+                leAwesomeBot:Say(v)
             end
         else
-            bot:Say("Failed to fetch information")
+            leAwesomeBot:Say("Failed to fetch information")
         end
     end, function(error)
-        bot:Say("Failed to fetch information")
+        leAwesomeBot:Say("Failed to fetch information")
     end)
 end
 
@@ -1315,7 +1315,7 @@ function leCoinFlip(chance)
 end
 
 local function IsValidTarget(ent)
-    if not IsValid(ent) or not IsValid(bot) then
+    if not IsValid(ent) or not IsValid(leAwesomeBot) then
         return false
     end
 
@@ -1323,16 +1323,16 @@ local function IsValidTarget(ent)
 end
 
 local function GetAimPos(ent)
-    if not IsValid(ent) or not IsValid(bot) then
+    if not IsValid(ent) or not IsValid(leAwesomeBot) then
         return nil
     end
 
     local obbpos = ent:LocalToWorld(ent:OBBCenter())
 
     local tr = util.TraceLine({
-        start = bot:EyePos(),
+        start = leAwesomeBot:EyePos(),
         endpos = obbpos,
-        filter = bot,
+        filter = leAwesomeBot,
         mask = MASK_SHOT
     })
 
@@ -1354,8 +1354,8 @@ local function GetPlayers()
         players[#players + 1] = v
     end
 
-    if IsValid(bot) then
-        local bpos = bot:GetPos()
+    if IsValid(leAwesomeBot) then
+        local bpos = leAwesomeBot:GetPos()
         
         table.sort(players, function(a, b) 
             return a:GetPos():DistToSqr(bpos) > b:GetPos():DistToSqr(bpos)
@@ -1366,11 +1366,11 @@ local function GetPlayers()
 end
 
 local function GetClosest()
-    if not IsValid(bot) then
+    if not IsValid(leAwesomeBot) then
         return
     end
 
-    local boteyes = bot:EyePos()
+    local boteyes = leAwesomeBot:EyePos()
 
     for _, v in ipairs(GetPlayers()) do
         if GetAimPos(v) then
@@ -1423,11 +1423,11 @@ hook.Add("PlayerDisconnected", "leme_awesomebot_playerdisconnected", function(pl
 
     local plycount = player.GetCount() - 1
 
-    if ply == bot and plycount > 0 then
+    if ply == leAwesomeBot and plycount > 0 then
         if not game.SinglePlayer() and player.GetCount() < game.MaxPlayers() then
             timer.Simple(0, function()
-                bot = player.CreateNextBot(leBotConfig.botName)
-                bot:Say("Fuck you")
+                leAwesomeBot = player.CreateNextBot(leBotConfig.botName)
+                leAwesomeBot:Say("Fuck you")
             end)
         end
     else
@@ -1442,15 +1442,15 @@ hook.Add("PlayerDisconnected", "leme_awesomebot_playerdisconnected", function(pl
         end
 
         if plycount == 1 then
-            if IsValid(bot) then
-                bot:Kick("Punting " .. leBotConfig.botName .. " - Server is hibernating")
+            if IsValid(leAwesomeBot) then
+                leAwesomeBot:Kick("Punting " .. leBotConfig.botName .. " - Server is hibernating")
             end
         end
     end
 end)
 
 hook.Add("PlayerInitialSpawn", "leme_awesomebot_init", function(ply)
-    if IsValid(bot) or ply:IsBot() then
+    if IsValid(leAwesomeBot) or ply:IsBot() then
         return
     end
 
@@ -1458,7 +1458,7 @@ hook.Add("PlayerInitialSpawn", "leme_awesomebot_init", function(ply)
 
     timer.Simple(0, function()
         if not game.SinglePlayer() and player.GetCount() < game.MaxPlayers() then
-            bot = player.CreateNextBot(leBotConfig.botName)
+            leAwesomeBot = player.CreateNextBot(leBotConfig.botName)
         end
     end)
 end)
@@ -1468,7 +1468,7 @@ hook.Add("PlayerSay", "leme_awesomebot_playersay", function(ply, msg, tc)
         return ""
     end
 
-    if not IsValid(ply) or ply == bot then
+    if not IsValid(ply) or ply == leAwesomeBot then
         return
     end
 
@@ -1494,7 +1494,7 @@ hook.Add("PlayerSay", "leme_awesomebot_playersay", function(ply, msg, tc)
         if first == "/" or first == "." or first == "1" then
             if leBotTrollCommands[cmd] then
                 timer.Simple(0, function()
-                    if IsValid(bot) then
+                    if IsValid(leAwesomeBot) then
                         leBotTrollCommands[cmd](args, ply, argstr)
                     end
                 end)
@@ -1505,7 +1505,7 @@ hook.Add("PlayerSay", "leme_awesomebot_playersay", function(ply, msg, tc)
 
         if leBotCommands[cmd] then
             timer.Simple(0, function()
-                if IsValid(bot) then
+                if IsValid(leAwesomeBot) then
                     leBotCommands[cmd](args, ply, argstr)
                 end
             end)
@@ -1514,12 +1514,12 @@ hook.Add("PlayerSay", "leme_awesomebot_playersay", function(ply, msg, tc)
 end)
 
 hook.Add("PlayerDeath", "leme_awesomebot_playerdeath", function(ply)
-    if ply == bot then
+    if ply == leAwesomeBot then
         leBotCache.deathHandled = true
 
         timer.Simple(4, function()
-            if IsValid(bot) then
-                bot:Spawn()
+            if IsValid(leAwesomeBot) then
+                leAwesomeBot:Spawn()
             end
 
             leBotCache.deathHandled = false
@@ -1528,12 +1528,12 @@ hook.Add("PlayerDeath", "leme_awesomebot_playerdeath", function(ply)
 end)
 
 hook.Add("PlayerSilentDeath", "leme_awesomebot_playersilentdeath", function(ply)
-    if ply == bot then
+    if ply == leAwesomeBot then
         leBotCache.deathHandled = true
 
         timer.Simple(4, function()
-            if IsValid(bot) then
-                bot:Spawn()
+            if IsValid(leAwesomeBot) then
+                leAwesomeBot:Spawn()
             end
 
             leBotCache.deathHandled = false
@@ -1544,14 +1544,14 @@ end)
 hook.Add("PlayerSpawn", "leme_awesomebot_playerspawn", function(ply, trans)
     ply:Extinguish()
 
-    if ply == bot then
+    if ply == leAwesomeBot then
         if leBotCache.attacking then
             if leBotCache.activeweapon then
                 timer.Simple(0, function()
-                    if IsValid(bot) then
-                        bot:StripWeapons()
-                        bot:Give(leBotCache.activeweapon)
-                        bot:SelectWeapon(leBotCache.activeweapon)
+                    if IsValid(leAwesomeBot) then
+                        leAwesomeBot:StripWeapons()
+                        leAwesomeBot:Give(leBotCache.activeweapon)
+                        leAwesomeBot:SelectWeapon(leBotCache.activeweapon)
                     end
                 end)
             end
@@ -1652,14 +1652,14 @@ end)
 -- Timers
 
 timer.Create("leme_awesomebot_respawn", 4, 0, function()
-    if IsValid(bot) then
+    if IsValid(leAwesomeBot) then
         if not bot:Alive() and not leBotCache.deathHandled then
-            bot:Spawn()
+            leAwesomeBot:Spawn()
         end
     else
         for _, v in ipairs(player.GetBots()) do
             if v:GetName() == leBotConfig.botName then
-                bot = v
+                leAwesomeBot = v
             end
         end
     end
