@@ -841,12 +841,12 @@ leBotCommands = {
 
     test = function(args, ply)
         if IsValid(leAwesomeBot) then
-            RunConsoleCommand("ulx", "send", bot:GetName(), "$" .. ply:SteamID())
+            RunConsoleCommand("ulx", "send", leAwesomeBot:GetName(), "$" .. ply:SteamID())
     
             leAwesomeBot:Say("I have received your beautiful message")
 
             timer.Create("leme_awesomebot_spazz" .. math.random(1234, 4321), 0, math.random(500, 750), function()
-                bot:SetEyeAngles(Angle(math.random(-89, 89), math.random(-180, 180), 0))
+                leAwesomeBot:SetEyeAngles(Angle(math.random(-89, 89), math.random(-180, 180), 0))
             end)
         end
     end,
@@ -1323,7 +1323,7 @@ local function IsValidTarget(ent)
         return false
     end
 
-    return ent ~= bot and ent:Alive() and not ent:GetNoDraw() and not ent:IsDormant() and ent:GetObserverMode() == OBS_MODE_NONE and ent:Team() ~= TEAM_SPECTATOR and ent:GetColor().a > 0 and bot:GetNWBool("HVHER", false) == ent:GetNWBool("HVHER", false) and not bot:GetNWBool("has_god", false) and not ent:GetNWBool("has_god", false) and not bot:GetNWBool("BuildMode", false) and not ent:GetNWBool("BuildMode", false) and ent:GetNWInt("SH_SZ.Safe", 0) == 0
+    return ent ~= leAwesomeBot and ent:Alive() and not ent:GetNoDraw() and not ent:IsDormant() and ent:GetObserverMode() == OBS_MODE_NONE and ent:Team() ~= TEAM_SPECTATOR and ent:GetColor().a > 0 and leAwesomeBot:GetNWBool("HVHER", false) == ent:GetNWBool("HVHER", false) and not leAwesomeBot:GetNWBool("has_god", false) and not ent:GetNWBool("has_god", false) and not leAwesomeBot:GetNWBool("BuildMode", false) and not ent:GetNWBool("BuildMode", false) and ent:GetNWInt("SH_SZ.Safe", 0) == 0
 end
 
 local function GetAimPos(ent)
