@@ -600,10 +600,11 @@ leBotCommands = {
             return
         end
 
-        local sent = leSend(ply, leFindByName(argstr))
+        local targ = player.GetBySteamID(args[2]) leFindByName(argstr)
+        local sent = leSend(ply, targ)
 
         if sent then
-            leAwesomeBot:Say(ply:GetName() .. " teleported to " .. argstr)
+            leAwesomeBot:Say(ply:GetName() .. " teleported to " .. targ:GetName())
             leBotCache.movetoDelays[ply:SteamID64()] = SysTime()
         else
             leAwesomeBot:Say("Unable to moveto that person")
