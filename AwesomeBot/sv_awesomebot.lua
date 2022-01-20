@@ -339,6 +339,7 @@ leBotConfig = {
         m9k_coolak47 = false,
         m9k_davy_crockett = false,
         m9k_dragunov = false,
+        m9k_harpoonkazoo = false,
         m9k_legendaryan94 = false,
         m9k_m202 = false,
         m9k_matador = false,
