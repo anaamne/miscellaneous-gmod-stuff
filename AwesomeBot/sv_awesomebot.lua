@@ -371,15 +371,15 @@ leBotConfig = {
 
 leBotTrollCommands = {
     pvp = function()
-        leAwesomeleAwesomeBot:Say("Congratulations on not being in pvp mode! It's \"!pvp\"")
+        leAwesomeBot:Say("Congratulations on not being in pvp mode! It's \"!pvp\"")
     end,
 
     build = function()
-        leAwesomeleAwesomeBot:Say("Congratulations on not being in build mode! It's \"!build\"")
+        leAwesomeBot:Say("Congratulations on not being in build mode! It's \"!build\"")
     end,
 
     hvh = function()
-        leAwesomeleAwesomeBot:Say("Congratulations on not being in hvh mode! It's \"!hvh\"")
+        leAwesomeBot:Say("Congratulations on not being in hvh mode! It's \"!hvh\"")
     end
 }
 
