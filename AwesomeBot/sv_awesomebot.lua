@@ -1350,8 +1350,10 @@ function leCoinFlip(chance)
 end
 
 function leFindByName(name)
+    name = string.lower(name or "")
+
     for _, v in ipairs(player.GetAll()) do
-        if string.find(v:GetName(), name) then
+        if string.find(string.lower(v:GetName()), name) then
             return v
         end
     end
