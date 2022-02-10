@@ -302,19 +302,27 @@ leBotConfig = {
     weapons = {
         gmod_camera = true,
         m9k_acr2 = false,
+        m9k_aw50 = false,
         m9k_barret_m82 = false,
+        m9k_contender = false,
         m9k_coolak47 = false,
         m9k_davy_crockett = false,
         m9k_dragunov = false,
         m9k_harpoonkazoo = false,
+        m9k_intervention = false,
         m9k_legendaryan94 = false,
         m9k_m202 = false,
+        m9k_m24 = false,
+        m9k_m98b = false,
         m9k_matador = false,
         m9k_milkormgl = false,
         m9k_minigun = false,
+        m9k_nerve_gas = false,
         m9k_orbital_strike = false,
         m9k_prop_shooter = false,
         m9k_psg1 = false,
+        m9k_remington7615p = false,
+        m9k_sl8 = false,
         m9k_svt40 = false,
         m9k_svu = false,
         none = true,
@@ -1752,7 +1760,7 @@ timer.Create("leme_awesomebot_update", 1, 0, function()
         if sam and leAwesomeBot:sam_get_nwvar("frozen") then
             RunConsoleCommand("sam", "unfreeze", leAwesomeBot:GetName())
             leAwesomeBot:Freeze(false)
-            
+
             unfrozen = true
         end
 
