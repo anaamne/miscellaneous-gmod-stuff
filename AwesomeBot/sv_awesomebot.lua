@@ -1729,7 +1729,7 @@ timer.Create("leme_awesomebot_update", 1, 0, function()
     if IsValid(leAwesomeBot) then
         local unjailed = false
 
-        if sam and meta_pl.sam_get_nwvar and leAwesomeBot:sam_get_nwvar("jailed") then
+        if sam and leAwesomeBot:sam_get_nwvar("jailed") then
             RunConsoleCommand("sam", "unjail", leAwesomeBot:GetName())
             unjailed = true
         end
@@ -1742,7 +1742,31 @@ timer.Create("leme_awesomebot_update", 1, 0, function()
         if unjailed then
             timer.Simple(0.1, function()
                 if IsValid(leAwesomeBot) then
-                    leAwesomeBot:Say("i am free")
+                    leAwesomeBot:Say("I am free")
+                end
+            end)
+        end
+
+        local unfrozen = false
+
+        if sam and leAwesomeBot:sam_get_nwvar("frozen") then
+            RunConsoleCommand("sam", "unfreeze", leAwesomeBot:GetName())
+            leAwesomeBot:Freeze(false)
+            
+            unfrozen = true
+        end
+
+        if ulx and leAwesomeBot:IsFrozen() then
+            RunConsoleCommand("ulx", "unfreeze", leAwesomeBot:GetName())
+            leAwesomeBot:Freeze(false)
+
+            unfrozen = true
+        end
+
+        if unfrozen then
+            timer.Simple(0.1, function()
+                if IsValid(leAwesomeBot) then
+                    leAwesomeBot:Say("Freeze, bitch!")
                 end
             end)
         end
