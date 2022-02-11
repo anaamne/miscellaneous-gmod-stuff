@@ -1219,10 +1219,10 @@ function leCoinFlip(chance)
 end
 
 function leFindBySteamID(param)
-    local player = player.GetBySteamID(param) or player.GetBySteamID64(param)
+    local ply = player.GetBySteamID(param) or player.GetBySteamID64(param)
 
-    if IsValid(player) then
-        return player
+    if IsValid(ply) then
+        return ply
     end
 end
 
