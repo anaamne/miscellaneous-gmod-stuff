@@ -510,7 +510,7 @@ leBotCommands = {
             return
         end
 
-        local targ = player.GetBySteamID(args[2]) or leFindByName(argstr)
+        local targ = leFindBySteamID(args[2]) or leFindByName(argstr)
         local sent = leSend(ply, targ)
 
         if sent then
@@ -590,7 +590,7 @@ leBotCommands = {
             return
         end
 
-        local tply = player.GetBySteamID(args[2]) or leFindByName(argstr)
+        local tply = leFindBySteamID(args[2]) or leFindByName(argstr)
 
         if IsValid(tply) then
             if tply:IsAdmin() or tply:IsSuperAdmin() then
@@ -725,7 +725,7 @@ leBotCommands = {
     end, {"date"}},
 
     fuckrose = {true, 180, "Fucks rose", function()
-        local rose = player.GetBySteamID("STEAM_0:1:82072473")
+        local rose = leFindBySteamID("STEAM_0:1:82072473")
 
         if IsValid(rose) then
             leAwesomeBot:Say("die you moth of fuck")
@@ -1007,7 +1007,7 @@ leBotCommands = {
 
                 leAwesomeBot:Say("Boom! Boom! BOOM!")
             else
-                local tply = player.GetBySteamID(args[2]) or leFindByName(argstr)
+                local tply = leFindBySteamID(args[2]) or leFindByName(argstr)
 
                 if IsValid(tply) then
                     if (tply:IsAdmin() or tply:IsSuperAdmin()) and not ply:IsSuperAdmin() then
@@ -1039,7 +1039,7 @@ leBotCommands = {
             return
         end
 
-        local tply = player.GetBySteamID(args[2]) or leFindByName(argstr)
+        local tply = leFindBySteamID(args[2]) or leFindByName(argstr)
 
         if IsValid(tply) then
             if tply:IsBot() then
@@ -1216,6 +1216,14 @@ function leCoinFlip(chance)
     chance = chance or 5
 
     return math.random(0, 10) > chance
+end
+
+function leFindBySteamID(param)
+    local player = player.GetBySteamID(param) or player.GetBySteamID64(param)
+
+    if IsValid(player) then
+        return player
+    end
 end
 
 function leFindByName(name)
