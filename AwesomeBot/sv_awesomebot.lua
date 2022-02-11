@@ -1520,9 +1520,10 @@ hook.Add("PlayerSay", "leme_awesomebot_playersay", function(ply, msg, tc)
 
         if not lcmd then
             for k, v in pairs(leBotCommands) do
-                if v[5] and v[5][cmd] then
+                if v[5] and table.HasValue(v[5], cmd) then
                     lcmd = leBotCommands[k]
                     cmd = k
+                    
                     break
                 end
             end
