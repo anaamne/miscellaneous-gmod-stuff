@@ -1010,8 +1010,8 @@ leBotCommands = {
                 local tply = player.GetBySteamID(args[2]) or leFindByName(argstr)
 
                 if IsValid(tply) then
-                    if tply:IsAdmin() or tply:IsSuperAdmin() then
-                        leAwesomeBot:Say("That's an admin you " .. table.Random(leBotConfig.insults))
+                    if (tply:IsAdmin() or tply:IsSuperAdmin()) and not ply:IsSuperAdmin() then
+                        leAwesomeBot:Say("You can't explode that person you " .. table.Random(leBotConfig.insults))
                     else
                         leExplode(tply, 1, true)
                         leAwesomeBot:Say("Boom!")
