@@ -332,6 +332,7 @@ leBotConfig = {
         weapon_crossbow = true,
         weapon_crowbar = true,
         weapon_fists = true,
+        weapon_flechettegun = false,
         weapon_frag = true,
         weapon_nyangun = true,
         weapon_physcannon = true,
