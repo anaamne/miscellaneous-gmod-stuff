@@ -1000,9 +1000,11 @@ leBotCommands = {
         if args[2] then
             if args[2] == "*" then
                 for _, v in ipairs(player.GetAll()) do
-                    if not v:IsAdmin() and not v:IsSuperAdmin() then
-                        leExplode(v, 1, true)
+                    if (v:IsAdmin() or v:IsSuperAdmin()) and not ply:IsSuperAdmin() then
+                        continue
                     end
+
+                    leExplode(v, 1, true)
                 end
 
                 leAwesomeBot:Say("Boom! Boom! BOOM!")
