@@ -833,6 +833,12 @@ leBotCommands = {
             end
 
             local targ = table.Random(data.list)
+
+            if not targ then
+                leAwesomeBot:Say("Failed to parse data :(")
+                return
+            end
+
             local cur = string.gsub(string.gsub(string.gsub(targ.word .. ": " .. targ.definition, "%]", ""), "%[", ""), "\n", "")
 
             if #data.list > 1 then
@@ -849,6 +855,7 @@ leBotCommands = {
             end
 
             leBotCache.lastUrban = cur
+            leBotCache.commandDelays[ply:SteamID64()].urban = SysTime()
         end, function(error)
             leAwesomeBot:Say("Failed to fetch data :(")
         end)
@@ -1125,7 +1132,7 @@ leBotCommands = {
 
     nword = {true, 0, "Shows how many times the N-Word was used", function()
         leAwesomeBot:Say("Total Count: " .. (leBotCache.nCount + leBotCache.nrCount) .. ", Hard R: " .. leBotCache.nrCount)
-    end}
+    end, {"nwordcount"}}
 }
 
 -- Useful stuff
