@@ -803,7 +803,7 @@ leBotCommands = {
         ply:SendLua([=[LocalPlayer():ConCommand("act muscle")]=])
     end},
 
-    urban = {true, 0, "Defines a word using Urban Dictionary", function(args, ply, argstr)
+    urban = {true, 10, "Defines a word using Urban Dictionary", function(args, ply, argstr)
         if argstr == "" then
             leAwesomeBot:Say("Invalid search term!")
 
