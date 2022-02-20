@@ -1406,11 +1406,11 @@ end
 -- Hooks
 
 hook.Add("PlayerNoClip", "leme_awesomebot_playernoclip", function(ply)
-    if not IsValid(ply) or not ply:Alive() then
+    if not IsValid(ply) then
         return
     end
 
-    if ply.explodeBanning then
+    if not ply:Alive() or ply.explodeBanning then
         return false
     end
 end)
