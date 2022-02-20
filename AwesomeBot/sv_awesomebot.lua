@@ -1001,18 +1001,15 @@ leBotCommands = {
     explode = {true, 0, "Explodes a player", function(args, ply, argstr)
         local tply = leFindBySteamID(args[2]) or leFindByName(argstr)
 
+        if IsValid(tply) and tply:GetUserGroup() == "noaccess" then
+            leExplode(tply, 1, true)
+            leAwesomeBot:Say("Boom!")
+        end
+
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then
-            if IsValid(tply) then
-                if tply:GetUserGroup() ~= "noaccess" then
-                    leAwesomeBot:Say("You don't have permission to do this!")
+            leAwesomeBot:Say("You don't have permission to do this!")
             
-                    return
-                end
-            else
-                leAwesomeBot:Say("You don't have permission to do this!")
-        
-                return
-            end
+            return
         end
 
         if args[2] then
