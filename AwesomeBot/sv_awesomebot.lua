@@ -1004,6 +1004,8 @@ leBotCommands = {
         if IsValid(tply) and tply:GetUserGroup() == "noaccess" then
             leExplode(tply, 1, true)
             leAwesomeBot:Say("Boom!")
+
+            return
         end
 
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then
