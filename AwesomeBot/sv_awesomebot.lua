@@ -999,10 +999,20 @@ leBotCommands = {
     end},
 
     explode = {true, 0, "Explodes a player", function(args, ply, argstr)
-        if not ply:IsAdmin() and not ply:IsSuperAdmin() then
-            leAwesomeBot:Say("You don't have permission to do this!")
+        local tply = leFindBySteamID(args[2]) or leFindByName(argstr)
 
-            return
+        if not ply:IsAdmin() and not ply:IsSuperAdmin() then
+            if IsValid(tply) then
+                if tply:GetUserGroup() ~= "noaccess" then
+                    leAwesomeBot:Say("You don't have permission to do this!")
+            
+                    return
+                end
+            else
+                leAwesomeBot:Say("You don't have permission to do this!")
+        
+                return
+            end
         end
 
         if args[2] then
@@ -1017,8 +1027,6 @@ leBotCommands = {
 
                 leAwesomeBot:Say("Boom! Boom! BOOM!")
             else
-                local tply = leFindBySteamID(args[2]) or leFindByName(argstr)
-
                 if IsValid(tply) then
                     if (tply:IsAdmin() or tply:IsSuperAdmin()) and not ply:IsSuperAdmin() then
                         leAwesomeBot:Say("You can't explode that person you " .. table.Random(leBotConfig.insults))
