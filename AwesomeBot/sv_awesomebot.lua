@@ -1142,7 +1142,7 @@ leBotCommands = {
         leAwesomeBot:Say("Total Count: " .. (leBotCache.nCount + leBotCache.nrCount) .. ", Hard R: " .. leBotCache.nrCount)
     end, {"nwordcount"}},
 
-    necromance = {true, 0, "Respawns dead player(s)", function(args, ply)
+    necromance = {true, 0, "Respawns dead player(s)", function(args, ply, argstr)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then
             leAwesomeBot:Say("You don't have permission to do this!")
 
@@ -1151,7 +1151,7 @@ leBotCommands = {
 
         if args[2] then
             local tply = leFindBySteamID(args[2]) or leFindByName(argstr)
-
+            
             if IsValid(tply) then
                 if not tply:Alive() then
                     tply:Spawn()
