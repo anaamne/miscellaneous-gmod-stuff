@@ -1153,6 +1153,7 @@ leBotCommands = {
             local tply = leFindBySteamID(args[2]) or leFindByName(argstr)
 
             if IsValid(tply) then
+                MsgAll(tply:Alive())
                 if not tply:Alive() then
                     tply:Spawn()
                     leAwesomeBot:Say("Rise my child!")
@@ -1160,7 +1161,7 @@ leBotCommands = {
                     leAwesomeBot:Say("That person isn't dead!")
                 end
             else
-                leAwesomeBot:Say("Unable to explodeban this person")
+                leAwesomeBot:Say("Unable to necromance this person")
             end
         else
             local res = 0
