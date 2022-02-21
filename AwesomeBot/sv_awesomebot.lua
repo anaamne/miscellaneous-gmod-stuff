@@ -1140,7 +1140,49 @@ leBotCommands = {
 
     nword = {true, 0, "Shows how many times the N-Word was used", function()
         leAwesomeBot:Say("Total Count: " .. (leBotCache.nCount + leBotCache.nrCount) .. ", Hard R: " .. leBotCache.nrCount)
-    end, {"nwordcount"}}
+    end, {"nwordcount"}},
+
+    necromance = {true, 0, "Respawns dead player(s)", function(args, ply)
+        if not ply:IsAdmin() and not ply:IsSuperAdmin() then
+            leAwesomeBot:Say("You don't have permission to do this!")
+
+            return
+        end
+
+        if args[2] then
+            local tply = leFindBySteamID(args[2]) or leFindByName(argstr)
+
+            if IsValid(tply) then
+                if not tply:Alive() then
+                    tply:Spawn()
+                    leAwesomeBot:Say("Rise my child!")
+                else
+                    leAwesomeBot:Say("That person isn't dead!")
+                end
+            else
+                leAwesomeBot:Say("Unable to explodeban this person")
+            end
+        else
+            local res = 0
+
+            for _, v in ipairs(player.GetAll()) do
+                if not v:Alive() then
+                    res = res + 1
+                    v:Spawn()
+                end
+            end
+
+            if res > 0 then
+                if res == 1 then
+                    leAwesomeBot:Say("Rise my child!")
+                else
+                    leAwesomeBot:Say("Rise my children!")
+                end
+            else
+                leAwesomeBot:Say("Nobody is dead!")
+            end
+        end
+    end}
 }
 
 -- Useful stuff
