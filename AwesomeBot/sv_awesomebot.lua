@@ -635,12 +635,12 @@ leBotCommands = {
     end, {"cum", "furryporn"}},
 
     die = {true, 0, "Rest in peace", function(args, ply)
-        local deathpos = ply:GetPos()
         local gravestone = ents.Create("prop_physics")
 
         if IsValid(gravestone) then
+            gravestone:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
             gravestone:SetModel("models/props_c17/gravestone_cross001a.mdl")
-            gravestone:SetPos(deathpos)
+            gravestone:SetPos(ply:GetPos())
             gravestone:Spawn()
         end
 
