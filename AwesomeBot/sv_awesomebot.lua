@@ -1153,7 +1153,6 @@ leBotCommands = {
             local tply = leFindBySteamID(args[2]) or leFindByName(argstr)
 
             if IsValid(tply) then
-                MsgAll(tply:Alive())
                 if not tply:Alive() then
                     tply:Spawn()
                     leAwesomeBot:Say("Rise my child!")
