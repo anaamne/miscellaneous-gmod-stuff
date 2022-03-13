@@ -19,21 +19,21 @@ local stuff = {
 player.GetByAnyID = function(param)
 	param = param or ""
 
-    local ply = player.GetBySteamID(param) or player.GetBySteamID64(param)
+	local ply = player.GetBySteamID(param) or player.GetBySteamID64(param)
 
-    return IsValid(ply) and ply or nil
+	return IsValid(ply) and ply or nil
 end
 
 player.GetByName = function(param)
 	param = string.lower(param or "")
 
-    for _, v in ipairs(player.GetAll()) do
-        if string.find(string.lower(v:GetName()), param) then
-            return v
-        end
-    end
+	for _, v in ipairs(player.GetAll()) do
+		if string.find(string.lower(v:GetName()), param) then
+			return v
+		end
+	end
 
-    return nil
+	return nil
 end
 
 local function updateSpectate(ply, target)
@@ -112,16 +112,16 @@ hook.Add("PlayerSay", "lespec_PlayerSay", function(ply, msg)
 		local argstr = ""
 
 		if #args > 1 then
-            local argn = {}
-    
-            for i = 2, #args do
-                argn[#argn + 1] = args[i]
-            end
+			local argn = {}
+			
+			for i = 2, #args do
+			    argn[#argn + 1] = args[i]
+			end
 
-            argstr = table.concat(argn, " ")
-        end
+			argstr = table.concat(argn, " ")
+		 end
 
-        if not args[2] or argstr == "" then
+		if not args[2] or argstr == "" then
 			return ""
 		end
 
@@ -153,7 +153,7 @@ hook.Add("SetupMove", "lespec_SetupMove", function(ply, mv, cmd)
 
 		if ply.lespec.Weapons then
 			ply:StripWeapons()
-	
+			
 			for _, v in ipairs(ply.lespec.Weapons) do
 				ply:Give(v)
 			end
@@ -194,7 +194,7 @@ hook.Add("SetupMove", "lespec_SetupMove", function(ply, mv, cmd)
 
 		ply:SelectWeapon(class)
 	end
-end)
+end)	
 
 hook.Add("Tick", "lespec_Tick", function()
 	if CurTime() - stuff.lastUpdate <= stuff.tickInterval then
@@ -212,9 +212,9 @@ hook.Add("Tick", "lespec_Tick", function()
 			pos = target:EyePos(),
 			ang = target:EyeAngles()
 		}
-	
+		
 		data = util.Compress(util.TableToJSON(data))
-	
+		
 		net.Start("lespec_UpdatePosition")
 			net.WriteUInt(#data, 16)
 			net.WriteData(data, #data)
