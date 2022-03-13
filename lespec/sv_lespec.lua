@@ -8,10 +8,6 @@ if CLIENT then return end
 
 util.AddNetworkString("lespec_UpdateSpectator")
 
-lespec = lespec or {}
-
-lespec.spectators = lespec.spectators or {}
-
 player.GetByAnyID = function(param)
     local ply = player.GetBySteamID(param) or player.GetBySteamID64(param)
 
