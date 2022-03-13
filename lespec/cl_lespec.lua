@@ -84,6 +84,8 @@ hook.Add("RenderScreenspaceEffects", "lespec_RenderScreenspaceEffects", function
 		return
 	end
 
+	-- Fix viewmodel rendering when spectating
+
 	local target = specData.target
 
 	if not IsValid(target:GetActiveWeapon()) then
@@ -109,6 +111,8 @@ hook.Add("CalcViewModelView", "lespec_CalcViewModelView", function(wep, vm, opos
 	if not specData.status or not IsValid(specData.target) then
 		return
 	end
+
+	-- Fix viewmodel positioning when spectating
 
 	local target = specData.target
 
