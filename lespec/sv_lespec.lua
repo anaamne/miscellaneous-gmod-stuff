@@ -155,6 +155,5 @@ hook.Add("SetupMove", "lespec_SetupMove", function(ply, mv, cmd)
 		end
 
 		ply:SelectWeapon(class)
-		ply:SetActiveWeapon(class)
 	end
 end)
