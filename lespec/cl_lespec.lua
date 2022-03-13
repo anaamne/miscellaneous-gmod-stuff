@@ -62,7 +62,7 @@ hook.Add("CalcView", "lespec_CalcView", function(ply, pos, ang, fov, zn, zf)
 		local wCalcView = w.CalcView
 
 		if wCalcView then
-			view.origin, view.angles, view.fov = wCalcView(w, target, pos * 1, ang * 1, fov)
+			_, _, view.fov = wCalcView(w, target, pos * 1, ang * 1, fov)
 		end
 	end
 
