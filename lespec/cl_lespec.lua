@@ -21,28 +21,28 @@ local specData = {
 
 net.Receive("lespec_UpdateSpectator", function()
 	local len = net.ReadUInt(16)
-    local data = net.ReadData(len)
+	local data = net.ReadData(len)
 
-    if data then
-    	data = util.JSONToTable(util.Decompress(data))
+	if data then
+		data = util.JSONToTable(util.Decompress(data))
 
-    	specData.status = data.status
-    	specData.fov = data.fov
-    end
+		specData.status = data.status
+		specData.fov = data.fov
+	end
 
-    specData.target = net.ReadEntity()
+	specData.target = net.ReadEntity()
 end)
 
 net.Receive("lespec_UpdatePosition", function()
 	local len = net.ReadUInt(16)
-    local data = net.ReadData(len)
+	local data = net.ReadData(len)
 
-    if data then
-    	data = util.JSONToTable(util.Decompress(data))
+	if data then
+		data = util.JSONToTable(util.Decompress(data))
 
-    	specData.pos = data.pos
-    	specData.ang = data.ang
-    end
+		specData.pos = data.pos
+		specData.ang = data.ang
+	end
 end)
 
 hook.Add("CalcView", "lespec_CalcView", function(ply, pos, ang, fov, zn, zf)
