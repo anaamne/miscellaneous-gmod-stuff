@@ -72,7 +72,7 @@ hook.Add("PlayerSay", "lespec_PlayerSay", function(ply, msg)
 
 		if ply.lespec.Spectating then
 			ply.lespec.Spectating = false
-			return
+			return ""
 		end
 
 		local argstr = ""
@@ -90,10 +90,12 @@ hook.Add("PlayerSay", "lespec_PlayerSay", function(ply, msg)
 		local target = player.GetByAnyID(args[2]) or player.GetByName(argstr)
 
 		if not IsValid(target) then
-			return
+			return ""
 		end
 
 		updateSpectate(ply, target)
+
+		return ""
 	end
 end)
 
