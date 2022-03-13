@@ -6,7 +6,11 @@
 
 if SERVER then return end
 
-local eyepos = EyePos()
+local stuff = {
+	eyepos = EyePos(),
+	weaponcolor = nil
+}
+
 local specData = {
 	status = false,
 	target = nil,
@@ -52,7 +56,8 @@ hook.Add("CalcView", "lespec_CalcView", function(ply, pos, ang, fov, zn, zf)
 	local v = target:GetVehicle()
 
 	if IsValid(v) then
-		eyepos = view.origin
+		stuff.eyepos = view.origin
+
 		return hook.Run("CalcVehicleView", v, target, view)
 	end
 
@@ -66,7 +71,7 @@ hook.Add("CalcView", "lespec_CalcView", function(ply, pos, ang, fov, zn, zf)
 		end
 	end
 
-	eyepos = view.origin
+	stuff.eyepos = view.origin
 
 	return view
 end)
@@ -80,13 +85,23 @@ hook.Add("CreateMove", "lespec_CreateMove", function(cmd)
 end)
 
 hook.Add("RenderScreenspaceEffects", "lespec_RenderScreenspaceEffects", function()
-	if not specData.status or not IsValid(specData.target) then
+	if not specData.status or not IsValid(specData.target) or IsValid(specData.target:GetVehicle()) then
+		if stuff.weaponcolor then
+			LocalPlayer():SetWeaponColor(stuff.weaponcolor)
+
+			stuff.weaponcolor = nil
+		end
+
 		return
 	end
 
 	-- Fix viewmodel rendering when spectating
 
 	local target = specData.target
+
+	stuff.weaponcolor = stuff.weaponcolor or LocalPlayer():GetWeaponColor()
+
+	LocalPlayer():SetWeaponColor(target:GetWeaponColor())
 
 	if not IsValid(target:GetActiveWeapon()) then
 		return
@@ -98,7 +113,7 @@ hook.Add("RenderScreenspaceEffects", "lespec_RenderScreenspaceEffects", function
 		return
 	end
 
-	cam.Start3D(eyepos, EyeAngles())
+	cam.Start3D(stuff.eyepos, EyeAngles())
 		cam.IgnoreZ(true)
 
 		vm:DrawModel()
@@ -107,20 +122,18 @@ hook.Add("RenderScreenspaceEffects", "lespec_RenderScreenspaceEffects", function
 	cam.End3D()
 end)
 
-hook.Add("CalcViewModelView", "lespec_CalcViewModelView", function(wep, vm, opos, oang, pos, ang)
-	if not specData.status or not IsValid(specData.target) then
+hook.Add("CalcViewModelView", "lespec_CalcViewModelView", function()
+	if not specData.status or not IsValid(specData.target) or IsValid(specData.target:GetVehicle()) then
 		return
 	end
 
 	-- Fix viewmodel positioning when spectating
 
-	local target = specData.target
-
-	if not IsValid(target:GetActiveWeapon()) then
+	if not IsValid(specData.target:GetActiveWeapon()) then
 		return
 	end
 
-	return eyepos, EyeAngles()
+	return stuff.eyepos, EyeAngles()
 end)
 
 hook.Add("PrePlayerDraw", "lespec_PrePlayerDraw", function(ply)
