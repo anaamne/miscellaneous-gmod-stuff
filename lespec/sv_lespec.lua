@@ -36,6 +36,22 @@ player.GetByName = function(param)
 	return nil
 end
 
+debug.getregistry().Player.IsAdminRank = function(ply)
+	if not IsValid(ply) then
+		return false
+	end
+
+	local usergroup = ply:GetUserGroup()
+
+	local rank = sam and sam.ranks.get_rank(usergroup) or nil
+
+	if rank and (rank.data.permissions.admin_mode or rank.inherit:lower():find("admin") or rank.name:lower():find("admin")) then
+		return true
+	end
+
+	return ply:IsAdmin() or ply:IsSuperAdmin()
+end
+
 local function updateSpectate(ply, target)
 	if not IsValid(ply) then
 		return
@@ -46,7 +62,7 @@ local function updateSpectate(ply, target)
 	local new = IsValid(target)
 
 	if new then
-		local found = false
+		local found = false -- Prevent jank
 
 		for _, v in ipairs(stuff.spectators) do
 			if v == ply then
@@ -56,12 +72,43 @@ local function updateSpectate(ply, target)
 		end
 
 		if not found then
+			-- Register spectator
+
 			stuff.spectators[#stuff.spectators + 1] = ply
+
+			-- Backup weapons
+
+			if not ply.lespec.Weapons then
+				local weps = {}
+		
+				for _, v in ipairs(ply:GetWeapons()) do
+					weps[#weps + 1] = v:GetClass()
+				end
+		
+				ply.lespec.Weapons = weps
+			end
 		end
 	else
 		for k, v in ipairs(stuff.spectators) do
 			if v == ply then
+				-- Unregister spectator
+
 				table.remove(stuff.spectators, k)
+
+				-- Restore weapons
+
+				if ply.lespec.Weapons then
+					ply:StripWeapons()
+					
+					for _, v in ipairs(ply.lespec.Weapons) do
+						ply:Give(v)
+					end
+		
+					ply:SwitchToDefaultWeapon()
+
+					ply.lespec.Weapons = nil
+				end
+
 				break
 			end
 		end
@@ -93,15 +140,14 @@ hook.Add("PlayerSay", "lespec_PlayerSay", function(ply, msg)
 		return
 	end
 
-	if not ply:GetUserGroup():lower():find("admin") then
-		if not ply:IsAdmin() or not ply:IsSuperAdmin() then
-			return
-		end
-	end
-
 	local args = msg:Split(" ")
 
 	if args[1]:lower() == "!spectate" then
+		if not ply:IsAdminRank() then
+			ply:ChatPrint("You can't spectate")
+			return ""
+		end
+
 		ply.lespec = ply.lespec or {}
 
 		if ply.lespec.Spectating then
@@ -146,39 +192,10 @@ hook.Add("SetupMove", "lespec_SetupMove", function(ply, mv, cmd)
 
 	local target = ply.lespec.Target
 
-	if not IsValid(target) or mv:GetVelocity() ~= vector_origin then
+	if not IsValid(target) or cmd:GetButtons() ~= 0 then
 		updateSpectate(ply, nil)
 
-		-- Restore weapons
-
-		if ply.lespec.Weapons then
-			ply:StripWeapons()
-			
-			for _, v in ipairs(ply.lespec.Weapons) do
-				ply:Give(v)
-			end
-
-			ply:SwitchToDefaultWeapon()
-		end
-
 		return
-	end
-
-	-- Fuck movement somewhat
-
-	mv:SetVelocity(vector_origin)
-
-	-- Weapon stuff
-	-- Backup
-
-	if not ply.lespec.Weapons then
-		local weps = {}
-
-		for _, v in ipairs(ply:GetWeapons()) do
-			weps[#weps + 1] = v:GetClass()
-		end
-
-		ply.lespec.Weapons = weps
 	end
 
 	-- Spectated player's weapon
@@ -202,11 +219,15 @@ hook.Add("Tick", "lespec_Tick", function()
 	end
 
 	for _, v in ipairs(stuff.spectators) do
+		v.lespec = v.lespec or {}
+
 		local target = v.lespec.Target
 
 		if not IsValid(target) then
 			continue
 		end
+
+		-- Set positions up properly clientside
 
 		local data = {
 			pos = target:EyePos(),
