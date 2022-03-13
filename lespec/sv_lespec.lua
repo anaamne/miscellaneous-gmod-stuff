@@ -7,6 +7,9 @@
 if CLIENT then return end
 
 util.AddNetworkString("lespec_UpdateSpectator")
+util.AddNetworkString("lespec_UpdatePosition")
+
+local lastUpdate = 0
 
 player.GetByAnyID = function(param)
 	param = param or ""
@@ -114,9 +117,9 @@ hook.Add("SetupMove", "lespec_SetupMove", function(ply, mv, cmd)
 		return
 	end
 
-	local targ = ply.lespec.Target
+	local target = ply.lespec.Target
 
-	if not IsValid(targ) or mv:GetVelocity() ~= vector_origin then
+	if not IsValid(target) or mv:GetVelocity() ~= vector_origin then
 		updateSpectate(ply, nil)
 
 		-- Restore weapons
@@ -153,10 +156,10 @@ hook.Add("SetupMove", "lespec_SetupMove", function(ply, mv, cmd)
 
 	-- Spectated player's weapon
 
-	local targwep = targ:GetActiveWeapon()
+	local targetwep = target:GetActiveWeapon()
 
-	if IsValid(targwep) then
-		local class = targwep:GetClass()
+	if IsValid(targetwep) then
+		local class = targetwep:GetClass()
 
 		if not ply:HasWeapon(class) then
 			ply:Give(class)
@@ -164,4 +167,36 @@ hook.Add("SetupMove", "lespec_SetupMove", function(ply, mv, cmd)
 
 		ply:SelectWeapon(class)
 	end
+end)
+
+hook.Add("FinishMove", "lespec_FinishMove", function(ply)
+	if not ply.lespec.Spectating then
+		return
+	end
+
+	if CurTime() - lastUpdate <= engine.TickInterval() then
+		return
+	end
+
+	ply.lespec = ply.lespec or {}
+
+	local target = ply.lespec.Target
+
+	if not IsValid(target) then
+		return
+	end
+
+	local data = {
+		pos = target:EyePos(),
+		ang = target:EyeAngles()
+	}
+
+	data = util.Compress(util.TableToJSON(data))
+
+	net.Start("lespec_UpdatePosition")
+		net.WriteUInt(#data, 16)
+		net.WriteData(data, #data)
+	net.Send(ply)
+
+	lastUpdate = CurTime()
 end)
