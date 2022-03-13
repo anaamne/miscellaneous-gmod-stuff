@@ -59,8 +59,14 @@ hook.Add("PlayerInitialSpawn", "lespec_PlayerInitialSpawn", function(ply)
 end)
 
 hook.Add("PlayerSay", "lespec_PlayerSay", function(ply, msg)
-	if msg[1] ~= "!" or not ply:IsAdmin() or not ply:IsSuperAdmin() or ply.lespec.Spectating then
+	if msg[1] ~= "!"then
 		return
+	end
+
+	if not ply:GetUserGroup():lower():find("admin") then
+		if not ply:IsAdmin() or not ply:IsSuperAdmin() then
+			return
+		end
 	end
 
 	local args = msg:Split(" ")
