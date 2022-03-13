@@ -71,6 +71,14 @@ hook.Add("CalcView", "lespec_CalcView", function(ply, pos, ang, fov, zn, zf)
 	return view
 end)
 
+hook.Add("CreateMove", "lespec_CreateMove", function(cmd)
+	if not specData.status or not IsValid(specData.target) then
+		return
+	end
+
+	cmd:ClearButtons()
+end)
+
 hook.Add("RenderScreenspaceEffects", "lespec_RenderScreenspaceEffects", function()
 	if not specData.status or not IsValid(specData.target) then
 		return
