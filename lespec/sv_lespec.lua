@@ -72,6 +72,10 @@ hook.Add("PlayerSay", "lespec_PlayerSay", function(ply, msg)
 	local args = msg:Split(" ")
 
 	if args[1]:lower() == "!spectate" then
+		if not args[2] then
+			return ""
+		end
+
 		ply.lespec = ply.lespec or {}
 
 		if ply.lespec.Spectating then
