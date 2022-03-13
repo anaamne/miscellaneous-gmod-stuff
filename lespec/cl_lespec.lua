@@ -8,7 +8,23 @@ if SERVER then return end
 
 local stuff = {
 	eyepos = EyePos(),
-	weaponcolor = nil
+	weaponcolor = nil,
+
+	badkeys = {
+		IN_ALT1,
+		IN_ALT2,
+		IN_ATTACK,
+		IN_ATTACK2,
+		IN_BULLRUSH,
+		IN_CANCEL,
+		IN_GRENADE1,
+		IN_GRENADE2,
+		IN_RELOAD,
+		IN_SPEED,
+		IN_USE,
+		IN_WALK,
+		IN_ZOOM
+	}
 }
 
 local specData = {
@@ -95,7 +111,11 @@ hook.Add("CreateMove", "lespec_CreateMove", function(cmd)
 		return
 	end
 
-	cmd:ClearButtons()
+	for _, v in ipairs(stuff.badkeys) do
+		if cmd:KeyDown(v) then
+			cmd:RemoveKey(v)
+		end
+	end
 end)
 
 hook.Add("RenderScreenspaceEffects", "lespec_RenderScreenspaceEffects", function()
