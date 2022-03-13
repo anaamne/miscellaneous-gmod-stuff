@@ -14,7 +14,9 @@ local stuff = {
 local specData = {
 	status = false,
 	target = nil,
-	fov = 100
+	fov = 100,
+	pos = vector_origin,
+	ang = angle_zero
 }
 
 net.Receive("lespec_UpdateSpectator", function()
@@ -31,6 +33,18 @@ net.Receive("lespec_UpdateSpectator", function()
     specData.target = net.ReadEntity()
 end)
 
+net.Receive("lespec_UpdatePosition", function()
+	local len = net.ReadUInt(16)
+    local data = net.ReadData(len)
+
+    if data then
+    	data = util.JSONToTable(util.Decompress(data))
+
+    	specData.pos = data.pos
+    	specData.ang = data.ang
+    end
+end)
+
 hook.Add("CalcView", "lespec_CalcView", function(ply, pos, ang, fov, zn, zf)
 	if not specData.status or not IsValid(specData.target) then
 		return
@@ -40,8 +54,8 @@ hook.Add("CalcView", "lespec_CalcView", function(ply, pos, ang, fov, zn, zf)
 
 	local target = specData.target
 
-	pos = target:EyePos()
-	ang = target:EyeAngles()
+	pos = specData.pos
+	ang = specData.ang
 	fov = specData.fov
 
 	local view = {
