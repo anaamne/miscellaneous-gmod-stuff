@@ -9,6 +9,8 @@ if CLIENT then return end
 util.AddNetworkString("lespec_UpdateSpectator")
 
 player.GetByAnyID = function(param)
+	param = param or ""
+
     local ply = player.GetBySteamID(param) or player.GetBySteamID64(param)
 
     return IsValid(ply) and ply or nil
