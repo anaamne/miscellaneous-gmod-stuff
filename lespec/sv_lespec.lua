@@ -9,7 +9,12 @@ if CLIENT then return end
 util.AddNetworkString("lespec_UpdateSpectator")
 util.AddNetworkString("lespec_UpdatePosition")
 
-local lastUpdate = 0
+local stuff = {
+	lastUpdate = 0,
+	tickInterval = engine.TickInterval(),
+
+	spectators = {}
+}
 
 player.GetByAnyID = function(param)
 	param = param or ""
@@ -39,6 +44,28 @@ local function updateSpectate(ply, target)
 	ply.lespec = ply.lespec or {}
 
 	local new = IsValid(target)
+
+	if new then
+		local found = false
+
+		for _, v in ipairs(stuff.spectators) do
+			if v == ply then
+				found = true
+				break
+			end
+		end
+
+		if not found then
+			stuff.spectators[#stuff.spectators + 1] = ply
+		end
+	else
+		for k, v in ipairs(stuff.spectators) do
+			if v == ply then
+				table.remove(stuff.spectators, k)
+				break
+			end
+		end
+	end
 
 	ply.lespec.Spectating = new
 	ply.lespec.Target = target
@@ -169,34 +196,30 @@ hook.Add("SetupMove", "lespec_SetupMove", function(ply, mv, cmd)
 	end
 end)
 
-hook.Add("FinishMove", "lespec_FinishMove", function(ply)
-	if not ply.lespec.Spectating then
+hook.Add("Tick", "lespec_Tick", function()
+	if CurTime() - stuff.lastUpdate <= stuff.tickInterval then
 		return
 	end
 
-	if CurTime() - lastUpdate <= engine.TickInterval() then
-		return
+	for _, v in ipairs(stuff.spectators) do
+		local target = v.lespec.Target
+
+		if not IsValid(target) then
+			continue
+		end
+
+		local data = {
+			pos = target:EyePos(),
+			ang = target:EyeAngles()
+		}
+	
+		data = util.Compress(util.TableToJSON(data))
+	
+		net.Start("lespec_UpdatePosition")
+			net.WriteUInt(#data, 16)
+			net.WriteData(data, #data)
+		net.Send(v)
 	end
 
-	ply.lespec = ply.lespec or {}
-
-	local target = ply.lespec.Target
-
-	if not IsValid(target) then
-		return
-	end
-
-	local data = {
-		pos = target:EyePos(),
-		ang = target:EyeAngles()
-	}
-
-	data = util.Compress(util.TableToJSON(data))
-
-	net.Start("lespec_UpdatePosition")
-		net.WriteUInt(#data, 16)
-		net.WriteData(data, #data)
-	net.Send(ply)
-
-	lastUpdate = CurTime()
+	stuff.lastUpdate = CurTime()
 end)
