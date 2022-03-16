@@ -84,7 +84,7 @@ fgui.colors = {
 fgui.colors.grey = fgui.colors.gray -- We are anonymous
 
 fgui.functions = {
-	GetFurthestParent = function(base) -- Used to get FHFrame's accent color
+	GetFurthestParent = function(base) -- Used to get FHFrame's accent color from any child object
 		if not base then
 			return error("Invalid Panel Provided")
 		end
@@ -98,7 +98,7 @@ fgui.functions = {
 		return fgui.functions.GetFurthestParent(cparent)
 	end,
 
-	CopyColor = function(color)
+	CopyColor = function(color) -- Used for modification of the accent's alpha without affecting the original
 		if not color then
 			return error("No Color Provided")
 		end
@@ -174,8 +174,8 @@ fgui.objects = {
 		},
 
 		Init = function(self)
-			self:SetTitle("")
-			self:GetChildren()[4]:SetVisible(false) -- Hide default window title
+			self:SetTitle("") -- Hide default window title
+			self:GetChildren()[4]:SetVisible(false)
 		end,
 
 		Paint = function(self, w, h)
@@ -877,6 +877,10 @@ fgui.objects = {
 			end,
 
 			SetupContentFrame = function(self)
+				-- This creates a content frame at the exact same position and with the same size as the text box
+				-- This is needed because overriding Paint on a DTextEntry causes the text to disappear as well
+				-- and to avoid rendering the text manually, this workaround will suffice
+
 				local ContentFrame = fgui.Create("FHContentFrame", self:GetParent())
 				ContentFrame:Dock(NODOCK)
 				ContentFrame:SetSize(self:GetSize())
