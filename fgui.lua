@@ -23,7 +23,7 @@
 			Functions:
 				- SetTitle(newTitle)				=>			Sets the title of the section
 				- GetTitle()						=>			Returns the title of the section
-				- GetContentFame()					=>			Return's the section's content frame
+				- GetContentFrame()					=>			Return's the section's content frame
 
 		FHCheckBox (DCheckBoxLabel; DO *NOT* OVERRIDE OnChange FOR THIS OBJECT! USE FHOnChange INSTEAD!)
 			Functions:
@@ -48,6 +48,7 @@
 				- AddTab(newTabName)				=>			Creates a tab and returns the content frame of the tab (Works like DPropertySheet:AddSheet)
 				- SetTabBackground(newState)		=>			Sets rendering of the background behind tabs
 				- GetTabBackground()				=>			Returns current rendering state of the background behind tabs
+				- SetValue(value)					=>			Used internally to update the tabbed menu to the specified tab
 
 		FHList (DListView; DO *NOT* OVERRIDE OnRowSelected FOR THIS OBJECT! USE FHOnRowSelected INSTEAD!)
 			Functions:
@@ -55,8 +56,11 @@
 				- GetVarTable()						=>			Returns the list's VarTable and key name
 				- AddColumn(newColumn, position)	=>			Modified version of DListView:AddColumn (Works the exact same)
 				- AddLine(...)						=>			Modified version of DListView:AddLine (Works the exact same)
+				- SetValue(value)					=>			Used internally to update the list to the specified line (Works the same as DListView:SelectItem)
 
 		FHButton (DButton)
+			Functions:
+				- SetCallback(function)				=>			Sets the callback function for the button (Same as overriding DoClick, you can do either to accomplish the same task)
 
 		FHTextBox (DTextEntry; DO *NOT* OVERRIDE OnValueChanged FOR THIS OBJECT! USE FHOnValueChanged INSTEAD!)
 			Functions:
@@ -66,6 +70,9 @@
 ]]
 
 fgui = fgui or {}
+
+fgui.timer = "fgui_SlowTick"
+fgui.vth = {} -- VarTable holders
 
 fgui.colors = {
 	black = Color(0, 0, 0, 255),
@@ -115,6 +122,7 @@ fgui.objects = {
 
 		customParams = {
 			AccentColor = fgui.colors.accent,
+			Title = "Frame " .. math.random(0, 12345),
 			TitleColor = fgui.colors.white,
 			Font = "BudgetLabel"
 		},
@@ -313,6 +321,8 @@ fgui.objects = {
 
 				self.FH.VarTable = varloc
 				self.FH.Var = var
+
+				fgui.vth[#fgui.vth + 1] = self
 			end,
 
 			GetVarTable = function(self)
@@ -370,6 +380,8 @@ fgui.objects = {
 
 				self.FH.VarTable = varloc
 				self.FH.Var = var
+
+				fgui.vth[#fgui.vth + 1] = self
 			end,
 
 			GetVarTable = function(self)
@@ -397,7 +409,7 @@ fgui.objects = {
 				surface.SetDrawColor(fgui.colors.back_obj)
 				surface.DrawRect(0, y, w, h)
 
-				surface.SetFont(MP.FH.Font)
+				surface.SetFont(MP:GetFont())
 				surface.SetTextColor(fgui.colors.white)
 
 				local val = self:GetValue()
@@ -461,6 +473,8 @@ fgui.objects = {
 
 				self.FH.VarTable = varloc
 				self.FH.Var = var
+
+				fgui.vth[#fgui.vth + 1] = self
 			end,
 
 			GetVarTable = function(self)
@@ -595,6 +609,8 @@ fgui.objects = {
 
 				self.FH.VarTable = varloc
 				self.FH.Var = var
+
+				fgui.vth[#fgui.vth + 1] = self
 			end,
 
 			GetVarTable = function(self)
@@ -656,6 +672,24 @@ fgui.objects = {
 
 			GetTabBackground = function(self)
 				return self.FH.TabBackground
+			end,
+
+			SetValue = function(self, value)
+				if value == nil then
+					return error("No Value Provided")
+				end
+
+				for _, v in ipairs(self:GetItems()) do
+					if v.Name == value then
+						v:SetActiveTab(v.Tab)
+
+						if self.FH.VarTable then
+							self.FH.VarTable[self.FH.Var] = v.Name
+						end
+
+						break
+					end
+				end
 			end
 		},
 
@@ -709,6 +743,8 @@ fgui.objects = {
 
 				self.FH.VarTable = varloc
 				self.FH.Var = var
+
+				fgui.vth[#fgui.vth + 1] = self
 			end,
 
 			GetVarTable = function(self)
@@ -777,6 +813,14 @@ fgui.objects = {
 				end
 
 				return Line
+			end,
+
+			SetValue = function(self, value)
+				self:SelectItem(value)
+
+				if self.FH.VarTable then
+					self.FH.VarTable[self.FH.Var] = value
+				end
 			end
 		},
 
@@ -826,6 +870,22 @@ fgui.objects = {
 	FHButton = {
 		base = "DButton",
 
+		customFunctions = {
+			SetCallback = function(self, callback)
+				if not callback then
+					return error("No Callback Provided")
+				end
+
+				if not type(callback) == "function" then
+					return error("Invalid Callback Provided")
+				end
+
+				self.DoClick = function(self)
+					callback(self)
+				end
+			end
+		},
+
 		Init = function(self)
 			self:SetTextColor(fgui.colors.white)
 			self:SetFont(fgui.functions.GetFurthestParent(self):GetFont())
@@ -870,6 +930,8 @@ fgui.objects = {
 
 				self.FH.VarTable = varloc
 				self.FH.Var = var
+
+				fgui.vth[#fgui.vth + 1] = self
 			end,
 
 			GetVarTable = function(self)
@@ -945,6 +1007,7 @@ fgui.Create = function(type, parent, name)
 	local FHObject = vgui.Create(current.base, parent, name)
 
 	FHObject.FH = {}
+	FHObject.FH.Type = type
 
 	if current.contentFrame then
 		local frame = fgui.Create("FHContentFrame", FHObject)
@@ -975,6 +1038,20 @@ fgui.Create = function(type, parent, name)
 
 	return FHObject
 end
+
+timer.Create("fgui_SlowTick", 0.2, 0, function()
+	for _, v in ipairs(fgui.vth) do
+		if not IsValid(v) or not v:IsVisible() or not v.FH or not v.FH.VarTable or not v.FH.Var then -- Just in case something goes wrong
+			continue
+		end
+
+		if v.FH.Type == "FHCheckBox" then -- Funny SetValue calls OnChange and I'm not gonna override SetValue
+			v:SetChecked(v.FH.VarTable[v.FH.Var])
+		else
+			v:SetValue(v.FH.VarTable[v.FH.Var])
+		end
+	end
+end)
 
 -- Shitty quick test menu
 
@@ -1038,6 +1115,9 @@ end
 local testbutton = fgui.Create("FHButton", tab2)
 testbutton:SetPos(25, 25)
 testbutton:SetSize(100, 24)
+testbutton:SetCallback(function(self) -- self gets passed through the click function
+	print("hii " .. self:GetName())
+end)
 
 local testtextbox = fgui.Create("FHTextBox", hi)
 testtextbox:SetSize(150, 24)
@@ -1045,3 +1125,7 @@ testtextbox:SetPos(25, 25)
 testtextbox:SetupContentFrame()
 
 test:MakePopup()
+
+concommand.Add("testInvertOption", function()
+	vars.testoption = not vars.testoption
+end)
