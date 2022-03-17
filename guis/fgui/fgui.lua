@@ -13,6 +13,7 @@
 				- SetFont(newFont)					=>			Set the frame's font to be used for all added fgui elements
 				- GetFont()							=>			Modified version of Panel:GetFont - Returns the frame's fgui child font
 				- GetContentFrame()					=>			Returns the frame's DPanel content frame (Gray box in the middle)
+				- ShowCloseButton(newState)			=>			Modified version of DFrame:ShowCloseButton (Works the exact same)
 
 		FHContentFrame (DPanel)
 			Functions:
@@ -216,15 +217,53 @@ fgui.objects = {
 
 			GetContentFrame = function(self)
 				return self.FH.ContentFrame
+			end,
+
+			ShowCloseButton = function(self, active)
+				if active == nil then
+					return error("No Boolean Provided")
+				end
+
+				self.FH.CloseButton:SetVisible(active)
+				self.FH.CloseButton:SetEnabled(active)
 			end
 		},
 
 		Init = function(self)
 			self:SetTitle("") -- Hide default window title
 			self:GetChildren()[4]:SetVisible(false)
+
+			local closeButton = vgui.Create("DButton", self) -- Custom close button
+			closeButton:SetSize(24, 24)	
+			closeButton:SetFont(self.FH.Font)
+			closeButton:SetTextColor(fgui.colors.white)
+			closeButton:SetText("X")
+
+			closeButton.DoClick = function()
+				self:Close()
+			end
+
+			closeButton.Paint = function(self, w, h)
+				surface.SetDrawColor(fgui.colors.back_obj)
+				surface.DrawRect(0, 0, w, h)
+
+				surface.SetDrawColor(fgui.colors.outline)
+				surface.DrawOutlinedRect(0, 0, w, h)
+			end
+				
+			self.FH.CloseButton = closeButton
+
+			local children = self:GetChildren() -- Hide default close button
+	
+			for i = 1, 3 do
+				children[i]:SetVisible(false)
+				children[i]:SetEnabled(false)
+			end
 		end,
 
 		Paint = function(self, w, h)
+			self.FH.CloseButton:SetPos(w - self.FH.CloseButton:GetWide(), 0)
+
 			surface.SetDrawColor(fgui.colors.black)
 			surface.DrawRect(0, 0, w, h)
 
@@ -315,6 +354,7 @@ fgui.objects = {
 
 		Init = function(self)
 			self.FH.ContentFrame:DockMargin(5, 10, 5, 5)
+			self.FH.ContentFrame:SetDrawOutline(false)
 		end,
 
 		Paint = function(self, w, h)
@@ -1494,6 +1534,7 @@ fgui.Create = function(type, parent, name)
 	if current.contentFrame then
 		local frame = fgui.Create("FHContentFrame", FHObject)
 		frame:Dock(FILL)
+		frame:SetDrawOutline(true)
 
 		FHObject.FH.ContentFrame = frame
 	end
