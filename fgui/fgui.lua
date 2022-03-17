@@ -1123,7 +1123,7 @@ fgui.objects = {
 			local ty = ((h / 2) - (th / 2)) + th
 
 			surface.SetDrawColor(self.FH.Color)
-			surface.DrawRect(5, ty - 2, w - 10, 3)
+			surface.DrawRect(5, ty - 1, w - 10, 3)
 		end
 	},
 
@@ -1318,7 +1318,7 @@ fgui.objects = {
 				Label:SetTextColor(fgui.colors.white)
 				Label:SetFont(font)
 				Label:SetText(self.FH.LabelText)
-				Label:SetPos(self:GetX() + ((self:GetWide() / 2) - (tw / 2)), self:GetY() - th)
+				Label:SetPos(self:GetX() + ((self:GetWide() / 2) - (tw / 2)), self:GetY() - th - 3)
 	
 				self.FH.Label = Label
 			end)
