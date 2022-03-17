@@ -87,6 +87,17 @@
 				- GetVarTable()						=>			Returns the binder's VarTable and key name
 				- SetLabel(newLabel)				=>			Sets the binder's overhead label
 				- GetLabel()						=>			Returns the binder's overhead label
+
+		FHMiniMenu (DFrame) (Not parented to anything)
+			Functions:
+				- SetFont(newFont)					=>			Set the mini menu's font to be used
+				- GetFont()							=>			Modified version of Panel:GetFont - Returns the mini menu's fgui font
+				- SetTextColor(newColor)			=>			Sets the mini menu's text color
+				- GetTextColor()					=>			Returns the mini menu's text color
+				- AddColumn(columnName, index)		=>			Creates a column at optional index (Places at end if no index is given)
+				- AddRow(...)						=>			Creates a row with given data (Format as a table with 1 key for each column, ex: {"Column 1", "Column 2", "Column 3"})
+				- SetBackgroundAlpha(newAlpha)		=>			Sets backround alpha for the rows in the mini menu
+
 ]]
 
 fgui = fgui or {}
@@ -141,9 +152,9 @@ fgui.objects = {
 		contentFrame = true,
 
 		customParams = {
-			AccentColor = fgui.colors.accent,
+			AccentColor = fgui.functions.CopyColor(fgui.colors.accent),
 			Title = "Frame " .. math.random(0, 12345),
-			TitleColor = fgui.colors.white,
+			TitleColor = fgui.functions.CopyColor(fgui.colors.white),
 			Font = "BudgetLabel"
 		},
 
@@ -1326,6 +1337,126 @@ fgui.objects = {
 			surface.SetDrawColor(fgui.colors.outline)
 			surface.DrawOutlinedRect(0, 0, w, h)
 		end
+	},
+
+	FHMiniMenu = {
+		base = "DFrame",
+		noParent = true,
+
+		customParams = {
+			Columns = {},
+			Rows = {},
+			BackgroundAlpha = 255,
+			Font = "BudgetLabel",
+			TextColor = fgui.functions.CopyColor(fgui.colors.white)
+		},
+
+		customFunctions = {
+			SetFont = function(self, font)
+				if not font then
+					return error("No Font Provided")
+				end
+
+				self.FH.Font = font
+			end,
+
+			GetFont = function(self)
+				return self.FH.Font
+			end,
+
+			SetTextColor = function(self, color)
+				if not color then
+					return error("No Color Provided")
+				end
+
+				self.FH.TextColor = color
+			end,
+
+			GetTextColor = function(self)
+				return self.FH.TextColor
+			end,
+
+			AddColumn = function(self, name, index)
+				if not name then
+					return error("No Column Name Provided")
+				end
+
+				index = index or (#self.FH.Columns + 1)
+
+				for _, v in ipairs(self.FH.Rows) do
+					table.insert(v, index, "")
+				end
+
+				table.insert(self.FH.Columns, index, name)
+			end,
+
+			AddRow = function(self, ...)
+				self.FH.Rows[#self.FH.Rows + 1] = ...
+
+				self:SetTall(20 + (20 * #self.FH.Rows))
+			end,
+
+			SetBackgroundAlpha = function(self, alpha)
+				if not alpha then
+					return error("No Alpha Provided")
+				end
+
+				self.FH.BackgroundAlpha = alpha
+			end
+		},
+
+		Init = function(self)
+			self:SetTitle("")
+			self:GetChildren()[4]:SetVisible(false)
+
+			self:ShowCloseButton(false)
+
+			self:SetVisible(true)
+		end,
+
+		Paint = function(self, w, h)
+			surface.SetDrawColor(fgui.colors.back_min)
+			surface.DrawRect(0, 0, w, 20)
+
+			local bgcol = fgui.functions.CopyColor(fgui.colors.back_obj)
+			bgcol.a = self.FH.BackgroundAlpha
+
+			local rows = #self.FH.Rows
+			local cols = #self.FH.Columns
+
+			surface.SetDrawColor(bgcol)
+			surface.DrawRect(0, 20, w, 20 * rows)
+
+			surface.SetDrawColor(fgui.colors.outline)
+			surface.DrawOutlinedRect(0, 0, w, h)
+
+			surface.SetFont(self.FH.Font)
+			surface.SetTextColor(self.FH.TextColor)
+
+			local step = w / cols
+
+			for i = 1, cols do
+				surface.DrawLine((i - 1) * step, 0, (i - 1) * step, h)
+
+				local cur = self.FH.Columns[i]
+
+				local tw, th = surface.GetTextSize(cur)
+
+				surface.SetTextPos(((step / 2) - (tw / 2)) + ((i - 1) * step), 10 - (th / 2))
+				surface.DrawText(cur)
+			end
+
+			for i = 1, rows do
+				surface.DrawLine(0, i * 20, w, i * 20)
+
+				for k, v in ipairs(self.FH.Rows[i]) do
+					local tw, th = surface.GetTextSize(v)
+		
+					surface.SetTextPos(((step / 2) - (tw / 2)) + ((k - 1) * step), (10 - (th / 2)) + 20)
+					surface.DrawText(v)
+				end
+			end
+		end
 	}
 }
 
@@ -1405,7 +1536,7 @@ end)
 
 local vars = {
 	testoption = false,
-	testcolor= Color(255, 255, 100, 255)
+	testcolor = Color(255, 255, 100, 255)
 }
 
 local test = fgui.Create("FHFrame")
@@ -1482,6 +1613,13 @@ local testbind = fgui.Create("FHBinder", test)
 testbind:SetSize(100, 24)
 testbind:SetPos(25, 550)
 testbind:SetLabel("Test Bind")
+
+local testmini = fgui.Create("FHMiniMenu")
+testmini:SetSize(300, 300)
+testmini:SetBackgroundAlpha(100)
+testmini:AddColumn("hi")
+testmini:AddColumn("hey")
+testmini:AddRow({"wow", 327})
 
 test:MakePopup()
 
