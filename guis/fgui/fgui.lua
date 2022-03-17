@@ -234,7 +234,7 @@ fgui.objects = {
 			self:GetChildren()[4]:SetVisible(false)
 
 			local closeButton = vgui.Create("DButton", self) -- Custom close button
-			closeButton:SetSize(24, 24)	
+			closeButton:SetSize(24, 24)
 			closeButton:SetFont(self.FH.Font)
 			closeButton:SetTextColor(fgui.colors.white)
 			closeButton:SetText("X")
@@ -664,6 +664,7 @@ fgui.objects = {
 
 			if self.DMenu then
 				self.DMenuOpen = self.DMenu:IsVisible()
+				self.DMenu:SetMinimumWidth(self:GetWide())
 			end
 		end
 	},
