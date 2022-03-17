@@ -2,7 +2,7 @@
 	leme's FlowHooks vgui base
 
 	Valid Objects (These support the functions of their default Derma counterparts as well. If no functions are listed under it then it simply doesn't have any custom FlowHooks ablities)
-		FHFrame (DFrame that comes with a content frame)
+		FHFrame (DFrame that comes with a content frame) (Not parented to anything)
 			Functions:
 				- SetAccentColor(newColor)			=>			Sets the frame's accent color (Added fgui elements will use the same color)
 				- GetAccentColor()					=>			Returns the frame's accent color
@@ -58,15 +58,35 @@
 				- AddLine(...)						=>			Modified version of DListView:AddLine (Works the exact same)
 				- SetValue(value)					=>			Used internally to update the list to the specified line (Works the same as DListView:SelectItem)
 
+		FHTextBox (DTextEntry; DO *NOT* OVERRIDE OnValueChanged FOR THIS OBJECT! USE FHOnValueChanged INSTEAD!)
+			Functions:
+				- SetVarTable(table, key)			=>			Sets the text box's table key to update on value change (Returns the text inside the text box)
+				- GetVarTable()						=>			Returns the text box's VarTable and key name
+
 		FHButton (DButton)
 			Functions:
 				- SetCallback(function)				=>			Sets the callback function for the button (Same as overriding DoClick, you can do either to accomplish the same task)
 
-		FHTextBox (DTextEntry; DO *NOT* OVERRIDE OnValueChanged FOR THIS OBJECT! USE FHOnValueChanged INSTEAD!)
+		FHColorButton (DButton; DO *NOT* OVERRIDE DoClick FOR THIS OBJECT!)
 			Functions:
-				- SetupContentFrame()				=>			You MUST call this function AFTER setting position and size parameters for the text box in order for it to display properly
-				- SetVarTable(table, key)			=>			Sets the text box's table key to update on value change (Returns the text inside the text box)
-				- GetVarTable()						=>			Returns the text box's VarTable and key name
+				- SetVarTable(table, key)			=>			Sets the color button's table key to update on value change (Returns the color)
+				- GetVarTable()						=>			Returns the color button's VarTable and key name
+				- SetColor(newColor)				=>			Sets the color button's color (Also updates the VarTable if provided)
+				- GetColor()						=>			Returns the color button's color
+				- SetValue(value)					=>			Used internally to update the button's color to the specified color (Works the same as FHColorButton:SetColor)
+
+		FHColorPicker (DFrame; Used internally for FHFrames and FHColorButtons, may cause jank if used manually) (Not parented to anything)
+			Functions:
+				- Invoke(table, key)				=>			Used internally to show the color picker and sets its VarTable and key to update when OK is clicked
+				- GetFont()							=>			Used internally to get the color picker's parent frame's font
+				- GetContentFrame()					=>			Used internally to parent the color picker's components
+
+		FHBinder (DBinder; DO *NOT* OVERRIDE OnChange FOR THIS OBJECT! USE FhOnChange INSTEAD!)
+			Functions:
+				- SetVarTable(table, key)			=>			Sets the binder's table key to update on value change (Returns the key code instead of key name)
+				- GetVarTable()						=>			Returns the binder's VarTable and key name
+				- SetLabel(newLabel)				=>			Sets the binder's overhead label
+				- GetLabel()						=>			Returns the binder's overhead label
 ]]
 
 fgui = fgui or {}
@@ -632,7 +652,7 @@ fgui.objects = {
 
 				local ogclick = data.Tab.DoClick
 
-				data.Tab.DoClick = function(selfP)
+				data.Tab.DoClick = function(selfP) -- selfP because I'm lazy
 					if self.FH.VarTable then
 						self.FH.VarTable[self.FH.Var] = self:GetText()
 					end
@@ -653,6 +673,7 @@ fgui.objects = {
 
 						surface.SetDrawColor(fgui.functions.GetFurthestParent(self):GetAccentColor())
 						surface.DrawLine(0, 0, w, 0)
+						surface.DrawLine(0, 1, w, 1)
 					else
 						surface.SetDrawColor(fgui.colors.back_obj)
 						surface.DrawRect(0, 0, w, h)
@@ -867,6 +888,77 @@ fgui.objects = {
 		end
 	},
 
+	FHTextBox = {
+		base = "DTextEntry",
+
+		customFunctions = {
+			SetVarTable = function(self, varloc, var)
+				if not varloc then
+					return error("Invalid Variable Table Provided")
+				end
+
+				if not var then
+					return error("No Variable Provided")
+				end
+
+				self.FH.VarTable = varloc
+				self.FH.Var = var
+
+				fgui.vth[#fgui.vth + 1] = self
+			end,
+
+			GetVarTable = function(self)
+				return self.FH.VarTable, self.FH.Var
+			end
+		},
+
+		Init = function(self)
+			local MP = fgui.functions.GetFurthestParent(self)
+
+			self:SetTextColor(fgui.colors.white)
+			self:SetFont(MP:GetFont())
+
+			self:SetPaintBackground(false)
+
+			self.OnValueChanged = function(self, new)
+				if self.FH.VarTable then
+					self.FH.VarTable[self.FH.Var] = new
+				end
+
+				if self.FHOnValueChanged then
+					self.FHOnValueChanged(self, new)
+				end
+			end
+
+			-- Setup highlight colors
+
+			self.m_colHighlight = MP:GetAccentColor()
+			self.colTextEntryTextHighlight = MP:GetAccentColor()
+
+			-- Setup content frame
+
+			-- This creates a content frame at the exact same position and with the same size as the text box
+			-- This is needed because overriding Paint on a DTextEntry causes the text to disappear as well
+			-- and to avoid rendering the text manually, this workaround will suffice
+
+			timer.Simple(0, function()
+				local ContentFrame = fgui.Create("FHContentFrame", self:GetParent())
+				ContentFrame:Dock(NODOCK)
+				ContentFrame:SetSize(self:GetSize())
+				ContentFrame:SetPos(self:GetPos())
+	
+				ContentFrame.Paint = function(self, w, h)
+					surface.SetDrawColor(fgui.colors.gray)
+					surface.DrawRect(0, 0, w, h)
+				end
+	
+				self:SetParent(ContentFrame)
+				self:DockMargin(0, 0, 0, 0)
+				self:Dock(FILL)
+			end)
+		end
+	},
+
 	FHButton = {
 		base = "DButton",
 
@@ -915,8 +1007,234 @@ fgui.objects = {
 		end
 	},
 
-	FHTextBox = {
-		base = "DTextEntry",
+	FHColorButton = {
+		base = "DButton",
+
+		customParams = {
+			Color = fgui.functions.CopyColor(fgui.colors.white)
+		},
+
+		customFunctions = {
+			SetVarTable = function(self, varloc, var)
+				if not varloc then
+					return error("Invalid Variable Table Provided")
+				end
+
+				if not var then
+					return error("No Variable Provided")
+				end
+
+				self.FH.VarTable = varloc
+				self.FH.Var = var
+
+				self.FH.Color = varloc[var]
+
+				fgui.vth[#fgui.vth + 1] = self
+			end,
+
+			GetVarTable = function(self)
+				return self.FH.VarTable, self.FH.Var
+			end,
+
+			SetColor = function(self, color)
+				if not color then
+					return error("No Color Provided")
+				end
+
+				self.FH.VarTable[self.FH.Var] = color
+
+				self.FH.Color = color
+			end,
+
+			GetColor = function(self)
+				return self.FH.Color
+			end,
+
+			SetValue = function(self, color)
+				if not color then
+					return error("No Color Provided")
+				end
+
+				self.FH.VarTable[self.FH.Var] = color
+
+				self.FH.Color = color
+			end
+		},
+
+		Init = function(self)
+			local MP = fgui.functions.GetFurthestParent(self)
+
+			self:SetTextColor(fgui.colors.white)
+			self:SetFont(MP:GetFont())
+
+			self:SetCursor("arrow")
+
+			self.DoClick = function(self)
+				local MPPicker = MP.FH.ColorPicker
+
+				if IsValid(MPPicker) then
+					local varloc = self.FH.VarTable and self.FH.VarTable or self.FH
+					local var = self.FH.Var and self.FH.Var or "Color"
+
+					MPPicker:Invoke(varloc, var)
+				end
+			end
+		end,
+
+		Paint = function(self, w, h)
+			surface.SetDrawColor(fgui.colors.back_obj)
+			surface.DrawRect(0, 0, w, h)
+
+			local grad = 55
+			local step = 55 / h
+			grad = math.floor(grad / step) - 1
+
+			local c = 55
+
+			for i = 1, grad do
+				c = c - step
+
+				surface.SetDrawColor(c, c, c, 255)
+				surface.DrawLine(0, i, w, i)
+			end
+
+			surface.SetDrawColor(fgui.colors.outline)
+			surface.DrawOutlinedRect(0, 0, w, h)
+
+			local _, th = surface.GetTextSize(self:GetText())
+			local ty = ((h / 2) - (th / 2)) + th
+
+			surface.SetDrawColor(self.FH.Color)
+			surface.DrawRect(5, ty - 2, w - 10, 3)
+		end
+	},
+
+	FHColorPicker = {
+		base = "DFrame",
+		noParent = true,
+		contentFrame = true,
+
+		customParams = {
+			Title = "Color Picker"
+		},
+
+		customFunctions = {
+			Invoke = function(self, varloc, var)
+				if not varloc then
+					return error("Invalid Variable Table Provided")
+				end
+
+				if not var then
+					return error("No Variable Provided")
+				end
+
+				self.FH.VarTable = varloc
+				self.FH.Var = var
+
+				self:SetVisible(true)
+				self:Center()
+
+				self:MakePopup()
+
+				self.FH.ColorMixer:SetColor(varloc[var])
+			end,
+
+			GetFont = function(self)
+				return self.FH.MP:GetFont()
+			end,
+
+			GetContentFrame = function(self)
+				return self.FH.ContentFrame
+			end
+		},
+
+		Init = function(self, oparent)
+			self:SetTitle("") -- Hide default window title
+			self:GetChildren()[4]:SetVisible(false)
+
+			self:SetSize(210, 186)
+			self:ShowCloseButton(false)
+			self:SetDeleteOnClose(false)
+
+			self:SetVisible(false)
+			self:Close()
+
+			timer.Simple(0, function() -- Do setup on next tick to avoid fucky business
+				local ContentFrame = self:GetContentFrame()
+				local cfw, cfh = self:GetWide() - 20, self:GetTall() - 10 -- Uses self instead of content frame because jank
+	
+				local OK = fgui.Create("FHButton", ContentFrame)
+				OK:SetSize(100, 22)
+				OK:SetPos((cfw / 2) - 50, cfh - 50)
+				OK:SetText("OK")
+		
+				OK.DoClick = function()
+					self.FH.VarTable[self.FH.Var] = self.FH.ColorMixer:GetColor()
+
+					self:Close()
+				end
+
+				local ColorMixer = vgui.Create("DColorMixer", ContentFrame)
+				ColorMixer:SetPalette(false)
+				ColorMixer:SetWangs(false)
+				ColorMixer:SetSize(180, 116)
+				ColorMixer:SetPos((cfw / 2) - 90, 6)
+
+				self.FH.ColorMixer = ColorMixer
+
+				local ColorMixerChildren = ColorMixer:GetChildren()
+
+				local ColorMixerHandle = ColorMixerChildren[4]:GetChildren()[1]
+				ColorMixerHandle:SetSize(15, 15)
+				ColorMixerHandle:SetCursor("arrow")
+
+				ColorMixerHandle.Paint = function(self, w, h)
+					surface.DrawCircle((w / 2), (h / 2), 5, fgui.colors.white)
+					surface.DrawCircle((w / 2), (h / 2), 4, fgui.colors.black)
+					surface.DrawCircle((w / 2), (h / 2), 6, fgui.colors.black)
+				end
+			end)
+		end,
+
+		Paint = function(self, w, h) -- Same(ish) as FHFrame
+			local MP = self.FH.MP
+
+			if not IsValid(MP) then
+				self:Remove()
+				return
+			end
+
+			surface.SetDrawColor(fgui.colors.black)
+			surface.DrawRect(0, 0, w, h)
+
+			local grad = 55
+
+			for i = 1, grad do
+				local c = grad - i
+
+				surface.SetDrawColor(c, c, c, 255)
+				surface.DrawLine(0, i, w, i)
+			end
+
+			surface.SetDrawColor(fgui.colors.outline)
+			surface.DrawOutlinedRect(0, 0, w, h)
+
+			surface.SetFont(MP:GetFont())
+			surface.SetTextColor(MP:GetTitleColor())
+
+			local tw, th = surface.GetTextSize(self.FH.Title)
+
+			surface.SetTextPos((w / 2) - (tw / 2), 13 - (th / 2))
+			surface.DrawText(self.FH.Title)
+		end
+	},
+
+	FHBinder = {
+		base = "DBinder",
+
+		customParams = {
+			LabelText = ""
+		},
 
 		customFunctions = {
 			SetVarTable = function(self, varloc, var)
@@ -938,49 +1256,75 @@ fgui.objects = {
 				return self.FH.VarTable, self.FH.Var
 			end,
 
-			SetupContentFrame = function(self)
-				-- This creates a content frame at the exact same position and with the same size as the text box
-				-- This is needed because overriding Paint on a DTextEntry causes the text to disappear as well
-				-- and to avoid rendering the text manually, this workaround will suffice
-
-				local ContentFrame = fgui.Create("FHContentFrame", self:GetParent())
-				ContentFrame:Dock(NODOCK)
-				ContentFrame:SetSize(self:GetSize())
-				ContentFrame:SetPos(self:GetPos())
-	
-				ContentFrame.Paint = function(self, w, h)
-					surface.SetDrawColor(fgui.colors.gray)
-					surface.DrawRect(0, 0, w, h)
+			SetLabel = function(self, label)
+				if not label then
+					return error("No Label Provided")
 				end
-	
-				self:SetParent(ContentFrame)
-				self:DockMargin(0, 0, 0, 0)
-				self:Dock(FILL)
+
+				self.FH.LabelText = label
+
+				if self.FH.Label then
+					self.FH.Label:SetText(label)
+				end
+			end,
+
+			GetLabel = function(self)
+				return self.FH.LabelText
 			end
 		},
 
 		Init = function(self)
-			local MP = fgui.functions.GetFurthestParent(self)
+			local font = fgui.functions.GetFurthestParent(self):GetFont()
 
 			self:SetTextColor(fgui.colors.white)
-			self:SetFont(MP:GetFont())
+			self:SetFont(font)
 
-			self:SetPaintBackground(false)
+			self:SetCursor("arrow")
 
-			self.OnValueChanged = function(self, new)
+			self.OnChange = function(self, new)
 				if self.FH.VarTable then
 					self.FH.VarTable[self.FH.Var] = new
 				end
 
-				if self.FHOnValueChanged then
-					self.FHOnValueChanged(self, new)
+				if self.FHOnChange then
+					self.FHOnChange(self, new)
 				end
 			end
 
-			-- Setup highlight colors
+			timer.Simple(0, function()
+				surface.SetFont(font)
 
-			self.m_colHighlight = MP:GetAccentColor()
-			self.colTextEntryTextHighlight = MP:GetAccentColor()
+				local tw, th = surface.GetTextSize(self.FH.LabelText)
+
+				local Label = vgui.Create("DLabel", self:GetParent())
+				Label:SetTextColor(fgui.colors.white)
+				Label:SetFont(font)
+				Label:SetText(self.FH.LabelText)
+				Label:SetPos(self:GetX() + ((self:GetWide() / 2) - (tw / 2)), self:GetY() - th)
+	
+				self.FH.Label = Label
+			end)
+		end,
+
+		Paint = function(self, w, h)
+			surface.SetDrawColor(fgui.colors.back_obj)
+			surface.DrawRect(0, 0, w, h)
+
+			local grad = 55
+			local step = 55 / h
+			grad = math.floor(grad / step) - 1
+
+			local c = 55
+
+			for i = 1, grad do
+				c = c - step
+
+				surface.SetDrawColor(c, c, c, 255)
+				surface.DrawLine(0, i, w, i)
+			end
+
+			surface.SetDrawColor(fgui.colors.outline)
+			surface.DrawOutlinedRect(0, 0, w, h)
 		end
 	}
 }
@@ -1016,6 +1360,12 @@ fgui.Create = function(type, parent, name)
 		FHObject.FH.ContentFrame = frame
 	end
 
+	if current.customParams then -- Create custom parameters
+		for k, v in pairs(current.customParams) do
+			FHObject.FH[k] = v
+		end
+	end
+
 	if current.Paint then -- Give the object the FlowHooks look
 		FHObject.Paint = current.Paint
 	end
@@ -1023,17 +1373,15 @@ fgui.Create = function(type, parent, name)
 	if current.Init then -- Change some default Derma settings for quick setup
 		current.Init(FHObject)
 	end
-
-	if current.customParams then -- Create custom parameters
-		for k, v in pairs(current.customParams) do
-			FHObject.FH[k] = v
-		end
-	end
-
 	if current.customFunctions then -- Register custom functions
 		for k, v in pairs(current.customFunctions) do
 			FHObject[k] = v
 		end
+	end
+
+	if type == "FHFrame" then
+		FHObject.FH.ColorPicker = fgui.Create("FHColorPicker")
+		FHObject.FH.ColorPicker.FH.MP = FHObject
 	end
 
 	return FHObject
@@ -1057,6 +1405,7 @@ end)
 
 local vars = {
 	testoption = false,
+	testcolor= Color(255, 255, 100, 255)
 }
 
 local test = fgui.Create("FHFrame")
@@ -1089,7 +1438,7 @@ testsection:SetSize(300, 100)
 testsection:SetPos(250, 300)
 testsection:SetTabBackground(true)
 local hi = testsection:AddTab("hi")
-testsection:AddTab("hello")
+local hello = testsection:AddTab("hello")
 
 local testsection2 = fgui.Create("FHTabbedMenu", test)
 testsection2:SetSize(300, 100)
@@ -1108,7 +1457,7 @@ testlist:SetPos(25, 300)
 testlist:AddColumn("hello")
 testlist:AddColumn("hey")
 testlist:AddColumn("hi")
-for i = 0, 100 do
+for i = 0, 20 do
 	testlist:AddLine("your", "mom", "gay")
 end
 
@@ -1122,7 +1471,17 @@ end)
 local testtextbox = fgui.Create("FHTextBox", hi)
 testtextbox:SetSize(150, 24)
 testtextbox:SetPos(25, 25)
-testtextbox:SetupContentFrame()
+
+local testcolor = fgui.Create("FHColorButton", hello)
+testcolor:SetPos(25, 25)
+testcolor:SetSize(100, 25)
+testcolor:SetText("hiyUWP(WHI")
+testcolor:SetVarTable(vars, "testcolor")
+
+local testbind = fgui.Create("FHBinder", test)
+testbind:SetSize(100, 24)
+testbind:SetPos(25, 550)
+testbind:SetLabel("Test Bind")
 
 test:MakePopup()
 
