@@ -102,6 +102,13 @@
 
 fgui = fgui or {}
 
+surface.CreateFont("FlowHooks", {
+	font = "Verdana",
+	size = 12,
+	antialias = false,
+	outline = true
+})
+
 fgui.timer = "fgui_SlowTick"
 fgui.vth = {} -- VarTable holders
 
@@ -155,7 +162,7 @@ fgui.objects = {
 			AccentColor = fgui.functions.CopyColor(fgui.colors.accent),
 			Title = "Frame " .. math.random(0, 12345),
 			TitleColor = fgui.functions.CopyColor(fgui.colors.white),
-			Font = "BudgetLabel"
+			Font = "FlowHooks"
 		},
 
 		customFunctions = {
@@ -1347,7 +1354,7 @@ fgui.objects = {
 			Columns = {},
 			Rows = {},
 			BackgroundAlpha = 255,
-			Font = "BudgetLabel",
+			Font = "FlowHooks",
 			TextColor = fgui.functions.CopyColor(fgui.colors.white)
 		},
 
