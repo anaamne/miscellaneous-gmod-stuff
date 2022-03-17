@@ -322,7 +322,7 @@ fgui.objects = {
 			surface.SetTextColor(fgui.colors.white)
 
 			local tw, th = surface.GetTextSize(self.FH.Title)
-			local tx, ty = (w / 2) - (tw / 2), 5 - (th / 2)
+			local tx, ty = 8, 5 - (th / 2)
 
 			surface.SetTextPos(tx, ty)
 			surface.DrawText(self.FH.Title)
