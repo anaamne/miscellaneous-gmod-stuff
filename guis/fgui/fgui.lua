@@ -238,6 +238,7 @@ fgui.objects = {
 			closeButton:SetFont(self.FH.Font)
 			closeButton:SetTextColor(fgui.colors.white)
 			closeButton:SetText("X")
+			closeButton:SetCursor("arrow")
 
 			closeButton.DoClick = function()
 				self:Close()
