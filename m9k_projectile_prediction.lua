@@ -81,9 +81,11 @@ hook.Add("Move", "", function()
 end)
 
 hook.Add("CreateMove", "", function(cmd)
+	lp = IsValid(lp) and lp or LocalPlayer()
+
 	lines = {}
 
-	local wep = LocalPlayer():GetActiveWeapon()
+	local wep = lp:GetActiveWeapon()
 
 	if not IsValid(wep) then
 		hitpos = nil
@@ -146,9 +148,9 @@ hook.Add("CreateMove", "", function(cmd)
 	hitpos = curpos
 	hitcol = color_white
 
-	local tr = util.TraceLine({
+	local tr = util.TraceLine({ -- Test for entity and sky hit
 		start = hitpos,
-		endpos = hitpos + (startfwd * 15),
+		endpos = hitpos + startfwd,
 		filter = lp
 	})
 
@@ -163,10 +165,10 @@ hook.Add("CreateMove", "", function(cmd)
 	lines[#lines + 1] = curpos
 end)
 
-hook.Add("PostDrawTranslucentRenderables", "", function(depth, skybox)
+hook.Add("PostDrawTranslucentRenderables", "", function(depth, skybox) -- Data said to use this so I'm using this
 	if depth or skybox or not hitpos then return end
 
-	local wep = LocalPlayer():GetActiveWeapon()
+	local wep = lp:GetActiveWeapon()
 
 	if not IsValid(wep) then
 		return
@@ -184,7 +186,7 @@ hook.Add("PostDrawTranslucentRenderables", "", function(depth, skybox)
 		render.DrawLine(lines[i], lines[i + 1], hitcol, true)
 	end
 
-	if hitposhit then
-		render.DrawWireframeSphere(hitpos, pred.data[class].rad, 15, 15, color_orange, true) -- Explosion kill radius
+	if hitposhit then -- Explosion kill radius
+		render.DrawWireframeSphere(hitpos, pred.data[class].rad, 15, 15, color_orange, true)
 	end
 end)
