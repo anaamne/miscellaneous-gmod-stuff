@@ -50,7 +50,6 @@ local pred = {
 	}
 }
 
-local dfvm = pred.data.m9k_rpg7.fvm -- Fallback
 local sub = Vector(0, 0, 0.111) -- Falls by this much extra every tick
 local gravity = Vector(0, 0, 6)
 
