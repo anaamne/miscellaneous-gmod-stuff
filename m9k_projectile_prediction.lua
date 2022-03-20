@@ -1,7 +1,7 @@
 --[[
 	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
 
-	Projectile prediction for m9k rpg7, m202, m79gl, ex41 and matador
+	Projectile prediction for m9k rpg7, m202, m79gl, ex41, matador, milkormgl, nitro glycerine, nerve gas, sticky grenades, frag grenades, ieds, harpoons and machetes
 ]]
 
 local lp = LocalPlayer()
@@ -13,7 +13,8 @@ local pred = {
 			fvm = (115 * 52.5) / 66, -- How the velocity works
 			dvm = (147 * 39.37) / 66, -- How much to remove from velocity each tick
 			rad = 180, -- Explosion radius to show,
-			startm = 2 -- What to multiply startfwd by
+			startm = 2, -- What to multiply startfwd by
+			sub = Vector(0, 0, 0.111) -- Falls by this much extra every tick
 		},
 
 		m9k_m202 = {
@@ -21,7 +22,8 @@ local pred = {
 			fvm = (115 * 52.5) / 66,
 			dvm = 500,
 			rad = 180,
-			startm = 2
+			startm = 2,
+			sub = Vector(0, 0, 0.111)
 		},
 
 		m9k_m79gl = {
@@ -29,7 +31,8 @@ local pred = {
 			fvm = (75 * 52.5) / 66,
 			dvm = 350,
 			rad = 105,
-			startm = 1
+			startm = 1,
+			sub = Vector(0, 0, 0.111)
 		},
 
 		m9k_ex41 = {
@@ -37,7 +40,8 @@ local pred = {
 			fvm = (80 * 52.5) / 66,
 			dvm = 350,
 			rad = 105,
-			startm = 1
+			startm = 1,
+			sub = Vector(0, 0, 0.111)
 		},
 
 		m9k_matador = {
@@ -45,14 +49,69 @@ local pred = {
 			fvm = (250 * 52.5) / 66,
 			dvm = 200,
 			rad = 135,
-			startm = 1.5
+			startm = 1.5,
+			sub = Vector(0, 0, 0.111)
+		},
+
+		m9k_milkormgl = {
+			starts = {4.5, -6},
+			fvm = (75 * 52.5) / 66,
+			dvm = 350,
+			rad = 52.5,
+			startm = 3,
+			sub = Vector(0, 0, 0.035)
+		},
+
+		-- The numbers below are mostly made up things because these weapons work weird and idk how to predict these properly
+
+		m9k_nitro = {
+			starts = {35, 0},
+			fvm = 100,
+			dvm = 550,
+			rad = 60,
+			startm = 0,
+			sub = Vector(0, 0, 0.111)
+		},
+
+		m9k_nerve_gas = {
+			starts = {0, 0},
+			fvm = 125,
+			dvm = 350,
+			rad = 0,
+			startm = 0,
+			sub = Vector(0, 0, 0.111)
+		},
+
+		m9k_ied_detonator = { -- These are fucky because bounces and bounding boxes and other shit I'm not gonna bother to predict
+			starts = {0, 0},
+			fvm = 25,
+			dvm = 350,
+			rad = 150,
+			startm = 0,
+			sub = Vector(0, 0, 0.111)
 		}
 	}
 }
 
-local sub = Vector(0, 0, 0.111) -- Falls by this much extra every tick
+-- These numbers are close enough that they can just be copied with minimal changes
+
+pred.data.m9k_sticky_grenade = table.Copy(pred.data.m9k_nerve_gas)
+pred.data.m9k_sticky_grenade.rad = 66
+
+pred.data.m9k_m61_frag = table.Copy(pred.data.m9k_nerve_gas)
+pred.data.m9k_m61_frag.rad = 105
+
+pred.data.m9k_harpoon = table.Copy(pred.data.m9k_nerve_gas)
+pred.data.m9k_harpoon.fvm = 190
+
+pred.data.m9k_machete = table.Copy(pred.data.m9k_nitro)
+pred.data.m9k_machete.starts = {0, 0}
+pred.data.m9k_machete.rad = 0
+pred.data.m9k_machete.fvm = 130
+
 local gravity = Vector(0, 0, 6)
 
+local color_red = Color(255, 0, 0, 255)
 local color_orange = Color(255, 150, 0, 255)
 
 local hitpos = nil
@@ -118,11 +177,12 @@ hook.Add("CreateMove", "", function(cmd)
 	local curfvm = fvm
 	local curpos = startpos
 
+	local sm = wepdata.startm
+	local sub = wepdata.sub
+
 	lines[1] = startpos
 
 	hitposhit = false
-
-	local sm = wepdata.startm
 
 	while not isInWorld(curpos) do
 		local tr = util.TraceLine({
