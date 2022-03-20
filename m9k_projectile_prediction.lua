@@ -74,16 +74,6 @@ local function isInWorld(pos) -- util.IsInWorld but clientside
 	return tr.HitWorld
 end
 
-local function getWepData()
-	local wep = LocalPlayer():GetActiveWeapon()
-
-	if not IsValid(wep) then
-		return nil
-	end
-
-
-end
-
 hook.Add("Move", "", function()
 	if not IsFirstTimePredicted() then return end
 
@@ -109,14 +99,16 @@ hook.Add("CreateMove", "", function(cmd)
 		return
 	end
 
-	local fvm = pred.data[class].fvm
-	local dvm = pred.data[class].dvm
+	local wepdata = pred.data[class]
+
+	local fvm = wepdata.fvm
+	local dvm = wepdata.dvm
 
 	local aimvector = lp:GetAimVector()
 	local side = aimvector:Cross(vector_up)
 	local up = side:Cross(aimvector)
 
-	local starts = pred.data[class].starts
+	local starts = wepdata.starts
 
 	local startpos = lp:GetShootPos() + (side * starts[1]) + (up * starts[2]) -- The weapon spawns the rocket here
 	local startfwd = lp:EyeAngles():Forward() * fvm
@@ -129,7 +121,7 @@ hook.Add("CreateMove", "", function(cmd)
 
 	hitposhit = false
 
-	local sm = pred.data[class].startm
+	local sm = wepdata.startm
 
 	while not isInWorld(curpos) do
 		local tr = util.TraceLine({
