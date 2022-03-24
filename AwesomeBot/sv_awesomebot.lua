@@ -35,7 +35,7 @@ leBotConfig = {
     allowM9KWeapons = true, -- Controls !weapon command allowing M9K
     botName = "CancerPatient",
     changeDelay = 5, -- Controls how often the bot will change its angles
-    collectionURL = "steamcommunity.com/sharedfiles/filedetails/?id=2678818450", -- Collection URL for !addons
+    collectionURL = "steamcommunity.com/sharedfiles/filedetails/?id=2783660625", -- Collection URL for !addons
     explodebanAmount = 50, -- How many times to explode before banning
 
     farewells = {
