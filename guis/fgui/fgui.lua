@@ -2,7 +2,7 @@
 	leme's FlowHooks vgui base
 
 	Valid Objects (These support the functions of their default Derma counterparts as well. If no functions are listed under it then it simply doesn't have any custom FlowHooks ablities)
-		FHFrame (DFrame that comes with a content frame) (Not parented to anything)
+		FHFrame (DFrame that comes with a content frame)
 			Functions:
 				- SetAccentColor(newColor)			=>			Sets the frame's accent color (Added fgui elements will use the same color)
 				- GetAccentColor()					=>			Returns the frame's accent color
@@ -68,7 +68,7 @@
 			Functions:
 				- SetCallback(function)				=>			Sets the callback function for the button (Same as overriding DoClick, you can do either to accomplish the same task)
 
-		FHColorButton (DButton; DO *NOT* OVERRIDE DoClick FOR THIS OBJECT!)
+		FHColorButton (DButton; DO *NOT* OVERRIDE DoClick FOR THIS OBJECT! Use FHDoClick INSTEAD!)
 			Functions:
 				- SetVarTable(table, key)			=>			Sets the color button's table key to update on value change (Returns the color)
 				- GetVarTable()						=>			Returns the color button's VarTable and key name
@@ -98,7 +98,6 @@
 				- AddColumn(columnName, index)		=>			Creates a column at optional index (Places at end if no index is given)
 				- AddRow(...)						=>			Creates a row with given data (Format as a table with 1 key for each column, ex: {"Column 1", "Column 2", "Column 3"})
 				- SetBackgroundAlpha(newAlpha)		=>			Sets backround alpha for the rows in the mini menu
-
 ]]
 
 fgui = fgui or {}
@@ -150,23 +149,36 @@ fgui.functions = {
 		end
 
 		return Color(color.r, color.g, color.b, color.a)
+	end,
+
+	RegisterVarTable = function(obj, varloc, var) -- Used to attach a variable in a table to an object
+		if not obj then
+			return
+		end
+
+		if not varloc then
+			return error("Invalid Variable Table Provided")
+		end
+
+		if not var then
+			return error("No Variable Provided")
+		end
+
+		obj.FH.VarTable = varloc
+		obj.FH.Var = var
+
+		fgui.vth[#fgui.vth + 1] = obj
 	end
 }
 
 fgui.objects = {
 	FHFrame = {
-		base = "DFrame",
-		noParent = true,
-		contentFrame = true,
+		Base = "DFrame",
 
-		customParams = {
-			AccentColor = fgui.functions.CopyColor(fgui.colors.accent),
-			Title = "Frame " .. math.random(0, 12345),
-			TitleColor = fgui.functions.CopyColor(fgui.colors.white),
-			Font = "FlowHooks"
-		},
+		NotParented = true,
+		HasContentFrame = true,
 
-		customFunctions = {
+		Registry = {
 			SetAccentColor = function(self, color)
 				if not color then
 					return error("No Color Provided")
@@ -226,78 +238,83 @@ fgui.objects = {
 
 				self.FH.CloseButton:SetVisible(active)
 				self.FH.CloseButton:SetEnabled(active)
-			end
-		},
+			end,
 
-		Init = function(self)
-			self:SetTitle("") -- Hide default window title
-			self:GetChildren()[4]:SetVisible(false)
+			Init = function(self)
+				self.FH = {
+					AccentColor = fgui.functions.CopyColor(fgui.colors.accent),
+					Title = "Frame " .. math.random(0, 12345),
+					TitleColor = fgui.functions.CopyColor(fgui.colors.white),
+					Font = "FlowHooks"
+				}
 
-			local closeButton = vgui.Create("DButton", self) -- Custom close button
-			closeButton:SetSize(24, 24)
-			closeButton:SetFont(self.FH.Font)
-			closeButton:SetTextColor(fgui.colors.white)
-			closeButton:SetText("X")
-			closeButton:SetCursor("arrow")
+				self:SetTitle("") -- Hide default window title
+				self:GetChildren()[4]:SetVisible(false)
 
-			closeButton.DoClick = function()
-				self:Close()
-			end
+				local closeButton = vgui.Create("DButton", self) -- Custom close button
+				closeButton:SetSize(24, 24)
+				closeButton:SetFont(self.FH.Font)
+				closeButton:SetTextColor(fgui.colors.white)
+				closeButton:SetText("X")
+				closeButton:SetCursor("arrow")
+	
+				closeButton.DoClick = function()
+					self:Close()
+				end
+	
+				closeButton.Paint = function(self, w, h)
+					surface.SetDrawColor(fgui.colors.back_obj)
+					surface.DrawRect(0, 0, w, h)
+	
+					surface.SetDrawColor(fgui.colors.outline)
+					surface.DrawOutlinedRect(0, 0, w, h)
+				end
+					
+				self.FH.CloseButton = closeButton
+	
+				local children = self:GetChildren() -- Hide default close button
+		
+				for i = 1, 3 do
+					children[i]:SetVisible(false)
+					children[i]:SetEnabled(false)
+				end
+			end,
 
-			closeButton.Paint = function(self, w, h)
-				surface.SetDrawColor(fgui.colors.back_obj)
+			Paint = function(self, w, h)
+				self.FH.CloseButton:SetPos(w - self.FH.CloseButton:GetWide(), 0)
+	
+				surface.SetDrawColor(fgui.colors.black)
 				surface.DrawRect(0, 0, w, h)
-
+	
+				local grad = 55
+	
+				for i = 1, grad do
+					local c = grad - i
+	
+					surface.SetDrawColor(c, c, c, 255)
+					surface.DrawLine(0, i, w, i)
+				end
+	
 				surface.SetDrawColor(fgui.colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
-			end
-				
-			self.FH.CloseButton = closeButton
-
-			local children = self:GetChildren() -- Hide default close button
 	
-			for i = 1, 3 do
-				children[i]:SetVisible(false)
-				children[i]:SetEnabled(false)
+				surface.SetFont(self:GetFont())
+				surface.SetTextColor(self:GetTitleColor())
+
+				local title = self:GetTitle()
+	
+				local tw, th = surface.GetTextSize(title)
+	
+				surface.SetTextPos((w / 2) - (tw / 2), 13 - (th / 2)) -- Not perfectly proportional to the real FlowHook's menu because of the Close Button
+				surface.DrawText(title)
 			end
-		end,
-
-		Paint = function(self, w, h)
-			self.FH.CloseButton:SetPos(w - self.FH.CloseButton:GetWide(), 0)
-
-			surface.SetDrawColor(fgui.colors.black)
-			surface.DrawRect(0, 0, w, h)
-
-			local grad = 55
-
-			for i = 1, grad do
-				local c = grad - i
-
-				surface.SetDrawColor(c, c, c, 255)
-				surface.DrawLine(0, i, w, i)
-			end
-
-			surface.SetDrawColor(fgui.colors.outline)
-			surface.DrawOutlinedRect(0, 0, w, h)
-
-			surface.SetFont(self.FH.Font)
-			surface.SetTextColor(self.FH.TitleColor)
-
-			local tw, th = surface.GetTextSize(self.FH.Title)
-
-			surface.SetTextPos((w / 2) - (tw / 2), 13 - (th / 2)) -- Not perfectly proportional to the real FlowHook's menu because of the Close Button
-			surface.DrawText(self.FH.Title)
-		end
+		}
 	},
 
 	FHContentFrame = {
-		base = "DPanel",
+		Base = "DPanel",
 
-		customParams = {
-			DrawOutlined = true
-		},
-
-		customFunctions = {
+		Registry = {
 			SetDrawOutline = function(self, active)
 				if active == nil then
 					return error("No Boolean Provided")
@@ -308,34 +325,35 @@ fgui.objects = {
 
 			GetDrawOutline = function(self)
 				return self.FH.DrawOutline
+			end,
+
+			Init = function(self)
+				self.FH = {
+					DrawOutlined = true
+				}
+
+				self:DockMargin(5, -5, 5, 5)
+				self:Dock(FILL)
+			end,
+
+			Paint = function(self, w, h)
+				surface.SetDrawColor(fgui.colors.back)
+				surface.DrawRect(0, 0, w, h)
+	
+				if self:GetDrawOutline() then
+					surface.SetDrawColor(fgui.colors.outline)
+					surface.DrawOutlinedRect(0, 0, w, h)
+				end
 			end
-		},
-
-		Init = function(self)
-			self:DockMargin(5, -5, 5, 5)
-			self:Dock(FILL)
-		end,
-
-		Paint = function(self, w, h)
-			surface.SetDrawColor(fgui.colors.back)
-			surface.DrawRect(0, 0, w, h)
-
-			if self.FH.DrawOutline then
-				surface.SetDrawColor(fgui.colors.outline)
-				surface.DrawOutlinedRect(0, 0, w, h)
-			end
-		end
+		}
 	},
 
 	FHSection = {
-		base = "DPanel",
-		contentFrame = true,
+		Base = "DPanel",
 
-		customParams = {
-			Title = "Section " .. math.random(0, 12345)
-		},
+		HasContentFrame = true,
 
-		customFunctions = {
+		Registry = {
 			SetTitle = function(self, title)
 				if not title then
 					return error("No Text Provided")
@@ -350,347 +368,310 @@ fgui.objects = {
 
 			GetContentFrame = function(self)
 				return self.FH.ContentFrame
+			end,
+
+			Init = function(self)
+				self.FH = {
+					Title = "Section " .. math.random(0, 12345)
+				}
+
+				timer.Simple(0, function()
+					local ContentFrame = self:GetContentFrame()
+	
+					if IsValid(ContentFrame) then
+						ContentFrame:DockMargin(5, 10, 5, 5)
+						ContentFrame:SetDrawOutline(false)
+					end
+				end)
+			end,
+
+			Paint = function(self, w, h)
+				surface.SetFont(fgui.functions.GetFurthestParent(self):GetFont())
+				surface.SetTextColor(fgui.colors.white)
+
+				local title = self:GetTitle()
+	
+				local tw, th = surface.GetTextSize(title)
+				local tx, ty = 8, 5 - (th / 2)
+	
+				surface.SetTextPos(tx, ty)
+				surface.DrawText(title)
+	
+				w = w - 1
+				h = h - 1
+				ty = ty + (th / 2)
+	
+				surface.SetDrawColor(fgui.colors.outline)
+				surface.DrawLine(0, ty, tx - 3, ty)
+				surface.DrawLine(tx + tw + 3, ty, w, ty)
+				surface.DrawLine(w, ty, w, h)
+				surface.DrawLine(w, h, 0, h)
+				surface.DrawLine(0, h, 0, ty)
 			end
-		},
-
-		Init = function(self)
-			self.FH.ContentFrame:DockMargin(5, 10, 5, 5)
-			self.FH.ContentFrame:SetDrawOutline(false)
-		end,
-
-		Paint = function(self, w, h)
-			surface.SetFont(fgui.functions.GetFurthestParent(self):GetFont())
-			surface.SetTextColor(fgui.colors.white)
-
-			local tw, th = surface.GetTextSize(self.FH.Title)
-			local tx, ty = 8, 5 - (th / 2)
-
-			surface.SetTextPos(tx, ty)
-			surface.DrawText(self.FH.Title)
-
-			w = w - 1
-			h = h - 1
-			ty = ty + (th / 2)
-
-			surface.SetDrawColor(fgui.colors.outline)
-			surface.DrawLine(0, ty, tx - 3, ty)
-			surface.DrawLine(tx + tw + 3, ty, w, ty)
-			surface.DrawLine(w, ty, w, h)
-			surface.DrawLine(w, h, 0, h)
-			surface.DrawLine(0, h, 0, ty)
-		end
+		}
 	},
 
 	FHCheckBox = {
-		base = "DCheckBoxLabel",
+		Base = "DCheckBoxLabel",
 
-		customParams = {
-			AccentColor = fgui.colors.accent
-		},
-
-		customFunctions = {
+		Registry = {
 			SetVarTable = function(self, varloc, var)
-				if not varloc then
-					return error("Invalid Variable Table Provided")
-				end
-
-				if not var then
-					return error("No Variable Provided")
-				end
-
-				self.FH.VarTable = varloc
-				self.FH.Var = var
-
-				fgui.vth[#fgui.vth + 1] = self
+				fgui.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
 				return self.FH.VarTable, self.FH.Var
-			end
-		},
+			end,
 
-		Init = function(self)
-			local MP = fgui.functions.GetFurthestParent(self)
+			Init = function(self)
+				local MP = fgui.functions.GetFurthestParent(self)
+	
+				local checkbox = self:GetChildren()[1]
+	
+				checkbox:SetCursor("arrow")
+	
+				checkbox.Paint = function(self, w, h)
+					surface.SetDrawColor(fgui.colors.back_obj)
+					surface.DrawRect(0, 0, w, h)
+		
+					if self:GetChecked() then
+						surface.SetDrawColor(MP:GetAccentColor())
+						surface.DrawRect(2, 2, w - 4, h - 4)
+					end
+		
+					surface.SetDrawColor(fgui.colors.outline)
+					surface.DrawOutlinedRect(0, 0, w, h)
+				end
+	
+				self:SetTextColor(fgui.colors.white)
+				self:SetFont(MP:GetFont())
+			end,
 
-			self.OnChange = function(self, new)
+			OnChange = function(self, new)
 				if self.FH.VarTable then
 					self.FH.VarTable[self.FH.Var] = new
 				end
-
+	
 				if self.FHOnChange then
 					self.FHOnChange(self, new)
 				end
 			end
-
-			local Checkbox = self:GetChildren()[1]
-
-			Checkbox:SetCursor("arrow")
-
-			Checkbox.Paint = function(self, w, h)
-				surface.SetDrawColor(fgui.colors.back_obj)
-				surface.DrawRect(0, 0, w, h)
-	
-				if self:GetChecked() then
-					surface.SetDrawColor(MP:GetAccentColor())
-					surface.DrawRect(2, 2, w - 4, h - 4)
-				end
-	
-				surface.SetDrawColor(fgui.colors.outline)
-				surface.DrawOutlinedRect(0, 0, w, h)
-			end
-
-			self:SetTextColor(fgui.colors.white)
-			self:SetFont(MP:GetFont())
-		end,
+		}
 	},
 
 	FHSlider = {
-		base = "DNumSlider",
+		Base = "DNumSlider",
 
-		customFunctions = {
+		Registry = {
 			SetVarTable = function(self, varloc, var)
-				if not varloc then
-					return error("Invalid Variable Table Provided")
-				end
-
-				if not var then
-					return error("No Variable Provided")
-				end
-
-				self.FH.VarTable = varloc
-				self.FH.Var = var
-
-				fgui.vth[#fgui.vth + 1] = self
+				fgui.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
 				return self.FH.VarTable, self.FH.Var
-			end
-		},
+			end,
 
-		Init = function(self)
-			local MP = fgui.functions.GetFurthestParent(self)
+			Init = function(self)
+				local MP = fgui.functions.GetFurthestParent(self)
 
-			self.OnValueChanged = function(self, new)
+				self:GetTextArea().Paint = function(self, w, h) -- Paint number area
+					local y = (h / 2) - 7.5
+					h = 15
+	
+					surface.SetDrawColor(fgui.colors.back_obj)
+					surface.DrawRect(0, y, w, h)
+	
+					surface.SetFont(MP:GetFont())
+					surface.SetTextColor(fgui.colors.white)
+	
+					local val = self:GetValue()
+					local tw, th = surface.GetTextSize(val)
+	
+					surface.SetTextPos((w / 2) - (tw / 2), y + (h / 2) - (th / 2))
+					surface.DrawText(val)
+	
+					surface.SetDrawColor(fgui.colors.outline)
+					surface.DrawOutlinedRect(0, y, w, h)
+				end
+	
+				local children = self:GetChildren()
+	
+				local label = children[3]
+	
+				label:GetChildren()[1]:SetEnabled(false) -- Disable that stupid popup panel
+				label:SetTextColor(fgui.colors.white) -- Setup label
+				label:SetFont(MP:GetFont())
+	
+				local bar = children[2]
+	
+				bar:SetCursor("arrow")
+	
+				bar.Paint = function(self, w, h) -- Paint custom horizontal bar
+					local y = h / 2
+	
+					surface.SetDrawColor(fgui.colors.outline)
+					surface.DrawLine(5, y, w - 5, y)
+				end
+	
+				local handle = bar:GetChildren()[1]
+	
+				handle:SetCursor("arrow")
+	
+				handle.Paint = function(self, w, h) -- Paint bar handle
+					local x = (w / 2) - 5
+					w = 10
+	
+					surface.SetDrawColor(fgui.colors.back)
+					surface.DrawRect(x, 0, w, h)
+	
+					surface.SetDrawColor(fgui.colors.outline)
+					surface.DrawOutlinedRect(x, 0, w, h)
+				end
+			end,
+
+			OnValueChanged = function(self, new)
 				if self.FH.VarTable then
 					self.FH.VarTable[self.FH.Var] = new
 				end
-
+	
 				if self.FHOnValueChanged then
 					self.FHOnValueChanged(self, new)
 				end
 			end
-
-			self:GetTextArea().Paint = function(self, w, h) -- Paint number area
-				local y = (h / 2) - 7.5
-				h = 15
-
-				surface.SetDrawColor(fgui.colors.back_obj)
-				surface.DrawRect(0, y, w, h)
-
-				surface.SetFont(MP:GetFont())
-				surface.SetTextColor(fgui.colors.white)
-
-				local val = self:GetValue()
-				local tw, th = surface.GetTextSize(val)
-
-				surface.SetTextPos((w / 2) - (tw / 2), y + (h / 2) - (th / 2))
-				surface.DrawText(val)
-
-				surface.SetDrawColor(fgui.colors.outline)
-				surface.DrawOutlinedRect(0, y, w, h)
-			end
-
-			local children = self:GetChildren()
-
-			local label = children[3]
-
-			label:GetChildren()[1]:SetEnabled(false) -- Disable that stupid popup panel
-			label:SetTextColor(fgui.colors.white) -- Setup label
-			label:SetFont(MP:GetFont())
-
-			local bar = children[2]
-
-			bar:SetCursor("arrow")
-
-			bar.Paint = function(self, w, h) -- Paint custom horizontal bar
-				local y = h / 2
-
-				surface.SetDrawColor(fgui.colors.outline)
-				surface.DrawLine(5, y, w - 5, y)
-			end
-
-			local handle = bar:GetChildren()[1]
-
-			handle:SetCursor("arrow")
-
-			handle.Paint = function(self, w, h) -- Paint bar handle
-				local x = (w / 2) - 5
-				w = 10
-
-				surface.SetDrawColor(fgui.colors.back)
-				surface.DrawRect(x, 0, w, h)
-
-				surface.SetDrawColor(fgui.colors.outline)
-				surface.DrawOutlinedRect(x, 0, w, h)
-			end
-		end
+		}
 	},
 
 	FHDropDown = {
-		base = "DComboBox",
+		Base = "DComboBox",
 
-		customFunctions = {
+		Registry = {
 			SetVarTable = function(self, varloc, var)
-				if not varloc then
-					return error("Invalid Variable Table Provided")
-				end
-
-				if not var then
-					return error("No Variable Provided")
-				end
-
-				self.FH.VarTable = varloc
-				self.FH.Var = var
-
-				fgui.vth[#fgui.vth + 1] = self
+				fgui.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
 				return self.FH.VarTable, self.FH.Var
 			end,
 
-			AddChoice = function(self, value, data, select, icon)
-				if not value then
-					return error("Invalid Value Provided")
+			Init = function(self)
+				self.FH = {
+					AddChoice = self.AddChoice
+				}
+
+				self.AddChoice = function(self, value, data, select, icon) -- Override default AddChoice
+					if not value then
+						return error("Invalid Value Provided")
+					end
+	
+					local MP = self.FH.MP or fgui.functions.GetFurthestParent(self)
+					self.FH.MP = self.FH.MP or MP
+	
+					local i = self.FH.AddChoice(self, value, data, select, icon)
+	
+					local newChild = self.DMenu:AddOption(value, function()
+						self:ChooseOptionID(i)
+					end)
+	
+					newChild:SetCursor("arrow")
+	
+					newChild:SetTextColor(fgui.colors.white)
+					newChild:SetFont(MP:GetFont())
+	
+					newChild.Paint = function(self, w, h)
+						surface.SetDrawColor(fgui.colors.back_obj)
+						surface.DrawRect(0, 0, w, h)
+	
+						if self:IsHovered() then
+							local accent = fgui.functions.CopyColor(MP:GetAccentColor())
+							accent.a = accent.a / 4
+	
+							surface.SetDrawColor(accent)
+							surface.DrawRect(0, 0, w, h)
+						end
+		
+						surface.SetDrawColor(fgui.colors.outline)
+						surface.DrawOutlinedRect(0, 0, w, h)
+					end
 				end
 
 				local MP = fgui.functions.GetFurthestParent(self)
-
-				local i = self.FH.AddChoice(self, value, data, select, icon)
-
-				local newChild = self.DMenu:AddOption(value, function()
-					self:ChooseOptionID(i)
-				end)
-
-				newChild:SetCursor("arrow")
-
-				newChild:SetTextColor(fgui.colors.white)
-				newChild:SetFont(MP:GetFont())
-
-				newChild.Paint = function(self, w, h)
-					surface.SetDrawColor(fgui.colors.back_obj)
-					surface.DrawRect(0, 0, w, h)
-
-					if self:IsHovered() then
-						local accent = fgui.functions.CopyColor(MP:GetAccentColor())
-						accent.a = accent.a / 4
-
-						surface.SetDrawColor(accent)
-						surface.DrawRect(0, 0, w, h)
-					end
 	
-					surface.SetDrawColor(fgui.colors.outline)
-					surface.DrawOutlinedRect(0, 0, w, h)
+				self:SetCursor("arrow")
+	
+				self:SetTextColor(fgui.colors.white)
+				self:SetFont(MP:GetFont())
+	
+				self:GetChildren()[1].Paint = function() end -- Hide the dropdown's arrow
+	
+				-- Custom DMenu Handling
+	
+				self.DMenuOpen = false
+				self.DMenu = vgui.Create("DMenu", MP)
+	
+				self.DMenu:SetDeleteSelf(false)
+				self.DMenu:Hide()
+	
+				self.IsMenuOpen = function(self)
+					return self.DMenuOpen
 				end
-			end
-		},
+			
+				self.OpenMenu = function(self)
+					self.DMenu:Open(MP:GetX() + self:GetX() + self:GetParent():GetX(), MP:GetY() + self:GetY() + self:GetParent():GetY() + self:GetTall())
+					self.DMenu:SetVisible(true)
+				end
+			
+				self.CloseMenu = function(self)
+					self.DMenu:Hide()
+					self.DMenu:SetVisible(false)
+				end
+			end,
 
-		Init = function(self)
-			local MP = fgui.functions.GetFurthestParent(self)
+			Paint = function(self, w, h)
+				surface.SetDrawColor(fgui.colors.back_obj)
+				surface.DrawRect(0, 0, w, h)
+	
+				surface.SetDrawColor(fgui.colors.back)
+				surface.DrawRect(w - h, 0, w - h, h)
+	
+				surface.SetDrawColor(fgui.colors.outline)
+				surface.DrawOutlinedRect(0, 0, w, h)
+				surface.DrawLine(w - h, 0, w - h, h)
+	
+				if self:IsMenuOpen() then
+					surface.DrawLine((w - h) + 3, h / 2, w - 3, h / 2)
+				else
+					surface.DrawLine(w - (h / 2), 3, w - (h / 2), h - 3)
+					surface.DrawLine((w - h) + 3, h / 2, w - 3, h / 2)
+				end
+	
+				if self.DMenu then
+					self.DMenuOpen = self.DMenu:IsVisible()
+					self.DMenu:SetMinimumWidth(self:GetWide())
+				end
+			end,
 
-			self.OnSelect = function(self, index, value, data)
+			OnSelect = function(self, index, value, data)
 				if index == nil then -- Prevent fucky business
 					return
 				end
-
+	
 				if self.FH.VarTable then
 					self.FH.VarTable[self.FH.Var] = value
 				end
-
+	
 				if self.FHOnSelect then
 					self.FHOnValueChanged(self, index, value, data)
 				end
 			end
-
-			self:SetCursor("arrow")
-
-			self:SetTextColor(fgui.colors.white)
-			self:SetFont(MP:GetFont())
-
-			self:GetChildren()[1].Paint = function() end -- Hide the dropdown's arrow
-
-			-- Custom DMenu Handling
-
-			self.DMenuOpen = false
-			self.DMenu = vgui.Create("DMenu", MP)
-
-			self.DMenu:SetDeleteSelf(false)
-			self.DMenu:Hide()
-
-			self.IsMenuOpen = function(self)
-				return self.DMenuOpen
-			end
-		
-			self.OpenMenu = function(self)
-				self.DMenu:Open(MP:GetX() + self:GetX() + self:GetParent():GetX(), MP:GetY() + self:GetY() + self:GetParent():GetY() + self:GetTall())
-				self.DMenu:SetVisible(true)
-			end
-		
-			self.CloseMenu = function(self)
-				self.DMenu:Hide()
-				self.DMenu:SetVisible(false)
-			end
-
-			self.FH.AddChoice = self.AddChoice
-		end,
-
-		Paint = function(self, w, h)
-			surface.SetDrawColor(fgui.colors.back_obj)
-			surface.DrawRect(0, 0, w, h)
-
-			surface.SetDrawColor(fgui.colors.back)
-			surface.DrawRect(w - h, 0, w - h, h)
-
-			surface.SetDrawColor(fgui.colors.outline)
-			surface.DrawOutlinedRect(0, 0, w, h)
-			surface.DrawLine(w - h, 0, w - h, h)
-
-			if self:IsMenuOpen() then
-				surface.DrawLine((w - h) + 3, h / 2, w - 3, h / 2)
-			else
-				surface.DrawLine(w - (h / 2), 3, w - (h / 2), h - 3)
-				surface.DrawLine((w - h) + 3, h / 2, w - 3, h / 2)
-			end
-
-			if self.DMenu then
-				self.DMenuOpen = self.DMenu:IsVisible()
-				self.DMenu:SetMinimumWidth(self:GetWide())
-			end
-		end
+		}
 	},
 
 	FHTabbedMenu = {
-		base = "DPropertySheet",
+		Base = "DPropertySheet",
 
-		customParams = {
-			TabBackground = false
-		},
-
-		customFunctions = {
+		Registry = {
 			SetVarTable = function(self, varloc, var)
-				if not varloc then
-					return error("Invalid Variable Table Provided")
-				end
-
-				if not var then
-					return error("No Variable Provided")
-				end
-
-				self.FH.VarTable = varloc
-				self.FH.Var = var
-
-				fgui.vth[#fgui.vth + 1] = self
+				fgui.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -703,7 +684,8 @@ fgui.objects = {
 
 				local data = self:AddSheet(name, ContentFrame, icon, noStretchX, noStretchY, tooltip)
 
-				local MP = fgui.functions.GetFurthestParent(self)
+				local MP = self.FH.MP or fgui.functions.GetFurthestParent(self)
+				self.FH.MP = self.FH.MP or MP
 
 				data.Tab:SetCursor("arrow")
 
@@ -771,129 +753,58 @@ fgui.objects = {
 						break
 					end
 				end
-			end
-		},
+			end,
 
-		Init = function(self)
-			self:SetFadeTime(0)
+			Init = function(self)
+				self.FH = {
+					TabBackground = false
+				}
 
-			if self.tabScroller then
-				self.tabScroller:DockMargin(0, 0, 0, 0)
-				self.tabScroller:SetOverlap(0)
-			end
-
-			self.tabScroller.Paint = function(self, w, h)
-				if not self:GetParent().FH.TabBackground then
-					return
+				self:SetFadeTime(0)
+	
+				if self.tabScroller then
+					self.tabScroller:DockMargin(0, 0, 0, 0)
+					self.tabScroller:SetOverlap(0)
 				end
-
-				h = 20
-
-				surface.SetDrawColor(fgui.colors.back_min)
+	
+				self.tabScroller.Paint = function(self, w, h)
+					if not self:GetParent():GetTabBackground() then
+						return
+					end
+	
+					h = 20
+	
+					surface.SetDrawColor(fgui.colors.back_min)
+					surface.DrawRect(0, 0, w, h)
+	
+					surface.SetDrawColor(fgui.colors.outline)
+					surface.DrawLine(0, 0, w, 0)
+					surface.DrawLine(0, 0, 0, h)
+					surface.DrawLine(w - 1, 0, w - 1, h)
+				end
+			end,
+	
+			Paint = function(self, w, h)
+				surface.SetDrawColor(fgui.colors.back)
 				surface.DrawRect(0, 0, w, h)
-
+	
 				surface.SetDrawColor(fgui.colors.outline)
-				surface.DrawLine(0, 0, w, 0)
-				surface.DrawLine(0, 0, 0, h)
-				surface.DrawLine(w - 1, 0, w - 1, h)
+				surface.DrawOutlinedRect(0, 20, w, h - 20)
+				surface.DrawLine(0, 20, w, 20)
 			end
-		end,
-
-		Paint = function(self, w, h)
-			surface.SetDrawColor(fgui.colors.back)
-			surface.DrawRect(0, 0, w, h)
-
-			surface.SetDrawColor(fgui.colors.outline)
-			surface.DrawOutlinedRect(0, 20, w, h - 20)
-			surface.DrawLine(0, 20, w, 20)
-		end
+		}
 	},
 
 	FHList = {
-		base = "DListView",
+		Base = "DListView",
 
-		customFunctions = {
+		Registry = {
 			SetVarTable = function(self, varloc, var)
-				if not varloc then
-					return error("Invalid Variable Table Provided")
-				end
-
-				if not var then
-					return error("No Variable Provided")
-				end
-
-				self.FH.VarTable = varloc
-				self.FH.Var = var
-
-				fgui.vth[#fgui.vth + 1] = self
+				fgui.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
 				return self.FH.VarTable, self.FH.Var
-			end,
-
-			AddColumn = function(self, name, pos)
-				if not name then
-					return error("No Column Name Provided")
-				end
-
-				if pos and (pos <= 0 or self.Columns[pos]) then
-					return error("Tried to Override Existing Column")
-				end
-
-				local MP = fgui.functions.GetFurthestParent(self)
-
-				local Column = self.FH.AddColumn(self, name, pos)
-
-				local ColumnButton = Column:GetChildren()[1]
-
-				ColumnButton:SetCursor("arrow")
-				ColumnButton:SetTextColor(fgui.colors.white)
-				ColumnButton:SetFont(MP:GetFont())
-
-				ColumnButton.Paint = function(self, w, h)
-					surface.SetDrawColor(fgui.colors.back_min)
-					surface.DrawRect(0, 0, w, h)
-
-					surface.SetDrawColor(fgui.colors.outline)
-					surface.DrawOutlinedRect(0, 0, w, h)
-				end
-
-				return Column
-			end,
-
-			AddLine = function(self, ...)
-				local vararg = {...}
-
-				if #vararg < 1 then
-					return error ("No Content Provided")
-				end
-
-				local MP = fgui.functions.GetFurthestParent(self)
-
-				local Line = self.FH.AddLine(self, ...)
-
-				for _, v in ipairs(Line:GetChildren()) do
-					v:SetTextColor(fgui.colors.white)
-					v:SetFont(MP:GetFont())
-				end
-
-				Line.Paint = function(self, w, h)
-					if not self:IsLineSelected() and not self:IsHovered() then
-						return 
-					end
-
-					local accent = fgui.functions.CopyColor(MP:GetAccentColor())
-
-					if self:IsHovered() and not self:IsLineSelected() then
-						accent.a = accent.a / 4
-					end
-
-					surface.SetDrawColor(accent)
-					surface.DrawRect(0, 0, w, h)
-				end
-
-				return Line
 			end,
 
 			SetValue = function(self, value)
@@ -902,127 +813,184 @@ fgui.objects = {
 				if self.FH.VarTable then
 					self.FH.VarTable[self.FH.Var] = value
 				end
-			end
-		},
+			end,
 
-		Init = function(self)
-			self.FH.AddColumn = self.AddColumn
-			self.FH.AddLine = self.AddLine
+			Init = function(self)
+				self.FH = {
+					AddColumn = self.AddColumn,
+					AddLine = self.AddLine
+				}
 
-			local scrollbar = self:GetChildren()[2]
-
-			scrollbar.Paint = function(self, w, h)
-				surface.SetDrawColor(fgui.colors.outline_b)
-				surface.DrawRect(0, 0, w, h)
-			end
-
-			for _, v in ipairs(scrollbar:GetChildren()) do
-				v:SetCursor("arrow")
-
-				v.Paint = function(self, w, h)
-					surface.SetDrawColor(fgui.colors.back)
-					surface.DrawRect(0, 0, w, h)
+				self.AddColumn = function(self, name, pos) -- Override default AddColumn
+					if not name then
+						return error("No Column Name Provided")
+					end
 	
-					surface.SetDrawColor(fgui.colors.outline)
-					surface.DrawOutlinedRect(0, 0, w, h)
+					if pos and (pos <= 0 or self.Columns[pos]) then
+						return error("Tried to Override Existing Column")
+					end
+	
+					local MP = self.FH.MP or fgui.functions.GetFurthestParent(self)
+					self.FH.MP = self.FH.MP or MP
+	
+					local Column = self.FH.AddColumn(self, name, pos)
+	
+					local ColumnButton = Column:GetChildren()[1]
+	
+					ColumnButton:SetCursor("arrow")
+					ColumnButton:SetTextColor(fgui.colors.white)
+					ColumnButton:SetFont(MP:GetFont())
+	
+					ColumnButton.Paint = function(self, w, h)
+						surface.SetDrawColor(fgui.colors.back_min)
+						surface.DrawRect(0, 0, w, h)
+	
+						surface.SetDrawColor(fgui.colors.outline)
+						surface.DrawOutlinedRect(0, 0, w, h)
+					end
+	
+					return Column
 				end
-			end
 
-			self.OnRowSelected = function(self, index, panel)
+				self.AddLine = function(self, ...) -- Override default AddLine
+					local vararg = {...}
+	
+					if #vararg < 1 then
+						return error ("No Content Provided")
+					end
+	
+					local MP = self.FH.MP or fgui.functions.GetFurthestParent(self)
+					self.FH.MP = self.FH.MP or MP
+	
+					local Line = self.FH.AddLine(self, ...)
+	
+					for _, v in ipairs(Line:GetChildren()) do
+						v:SetTextColor(fgui.colors.white)
+						v:SetFont(MP:GetFont())
+					end
+	
+					Line.Paint = function(self, w, h)
+						if not self:IsLineSelected() and not self:IsHovered() then
+							return 
+						end
+	
+						local accent = fgui.functions.CopyColor(MP:GetAccentColor())
+	
+						if self:IsHovered() and not self:IsLineSelected() then
+							accent.a = accent.a / 4
+						end
+	
+						surface.SetDrawColor(accent)
+						surface.DrawRect(0, 0, w, h)
+					end
+	
+					return Line
+				end
+
+				local scrollbar = self:GetChildren()[2]
+	
+				scrollbar.Paint = function(self, w, h)
+					surface.SetDrawColor(fgui.colors.outline_b)
+					surface.DrawRect(0, 0, w, h)
+				end
+	
+				for _, v in ipairs(scrollbar:GetChildren()) do
+					v:SetCursor("arrow")
+	
+					v.Paint = function(self, w, h)
+						surface.SetDrawColor(fgui.colors.back)
+						surface.DrawRect(0, 0, w, h)
+		
+						surface.SetDrawColor(fgui.colors.outline)
+						surface.DrawOutlinedRect(0, 0, w, h)
+					end
+				end
+			end,		
+	
+			Paint = function(self, w, h)
+				surface.SetDrawColor(fgui.colors.back_obj)
+				surface.DrawRect(0, 0, w, h)
+	
+				surface.SetDrawColor(fgui.colors.outline)
+				surface.DrawOutlinedRect(0, 0, w, h)
+			end,
+
+			OnRowSelected = function(self, index, panel)
 				if self.FH.VarTable then
 					self.FH.VarTable[self.FH.Var] = panel
 				end
-
+	
 				if self.FHRowSelected then
 					self.FHRowSelected(self, index, panel)
 				end
 			end
-		end,		
-
-		Paint = function(self, w, h)
-			surface.SetDrawColor(fgui.colors.back_obj)
-			surface.DrawRect(0, 0, w, h)
-
-			surface.SetDrawColor(fgui.colors.outline)
-			surface.DrawOutlinedRect(0, 0, w, h)
-		end
+		}
 	},
 
 	FHTextBox = {
-		base = "DTextEntry",
+		Base = "DTextEntry",
 
-		customFunctions = {
+		Registry = {
 			SetVarTable = function(self, varloc, var)
-				if not varloc then
-					return error("Invalid Variable Table Provided")
-				end
-
-				if not var then
-					return error("No Variable Provided")
-				end
-
-				self.FH.VarTable = varloc
-				self.FH.Var = var
-
-				fgui.vth[#fgui.vth + 1] = self
+				fgui.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
 				return self.FH.VarTable, self.FH.Var
-			end
-		},
+			end,
 
-		Init = function(self)
-			local MP = fgui.functions.GetFurthestParent(self)
+			Init = function(self)
+				local MP = fgui.functions.GetFurthestParent(self)
+	
+				self:SetTextColor(fgui.colors.white)
+				self:SetFont(MP:GetFont())
+	
+				self:SetPaintBackground(false)
+	
+				-- Setup highlight colors
+	
+				self.m_colHighlight = MP:GetAccentColor()
+				self.colTextEntryTextHighlight = MP:GetAccentColor()
+	
+				-- Setup content frame
+	
+				-- This creates a content frame at the exact same position and with the same size as the text box
+				-- This is needed because overriding Paint on a DTextEntry causes the text to disappear as well
+				-- and to avoid rendering the text manually, this workaround will suffice
+	
+				timer.Simple(0, function()
+					local ContentFrame = fgui.Create("FHContentFrame", self:GetParent())
+					ContentFrame:Dock(NODOCK)
+					ContentFrame:SetSize(self:GetSize())
+					ContentFrame:SetPos(self:GetPos())
+		
+					ContentFrame.Paint = function(self, w, h)
+						surface.SetDrawColor(fgui.colors.gray)
+						surface.DrawRect(0, 0, w, h)
+					end
+		
+					self:SetParent(ContentFrame)
+					self:DockMargin(0, 0, 0, 0)
+					self:Dock(FILL)
+				end)
+			end,
 
-			self:SetTextColor(fgui.colors.white)
-			self:SetFont(MP:GetFont())
-
-			self:SetPaintBackground(false)
-
-			self.OnValueChanged = function(self, new)
+			OnValueChanged = function(self, new)
 				if self.FH.VarTable then
 					self.FH.VarTable[self.FH.Var] = new
 				end
-
+	
 				if self.FHOnValueChanged then
 					self.FHOnValueChanged(self, new)
 				end
 			end
-
-			-- Setup highlight colors
-
-			self.m_colHighlight = MP:GetAccentColor()
-			self.colTextEntryTextHighlight = MP:GetAccentColor()
-
-			-- Setup content frame
-
-			-- This creates a content frame at the exact same position and with the same size as the text box
-			-- This is needed because overriding Paint on a DTextEntry causes the text to disappear as well
-			-- and to avoid rendering the text manually, this workaround will suffice
-
-			timer.Simple(0, function()
-				local ContentFrame = fgui.Create("FHContentFrame", self:GetParent())
-				ContentFrame:Dock(NODOCK)
-				ContentFrame:SetSize(self:GetSize())
-				ContentFrame:SetPos(self:GetPos())
-	
-				ContentFrame.Paint = function(self, w, h)
-					surface.SetDrawColor(fgui.colors.gray)
-					surface.DrawRect(0, 0, w, h)
-				end
-	
-				self:SetParent(ContentFrame)
-				self:DockMargin(0, 0, 0, 0)
-				self:Dock(FILL)
-			end)
-		end
+		}
 	},
 
 	FHButton = {
-		base = "DButton",
+		Base = "DButton",
 
-		customFunctions = {
+		Registry = {
 			SetCallback = function(self, callback)
 				if not callback then
 					return error("No Callback Provided")
@@ -1035,61 +1003,46 @@ fgui.objects = {
 				self.DoClick = function(self)
 					callback(self)
 				end
+			end,
+
+			Init = function(self)
+				self:SetTextColor(fgui.colors.white)
+				self:SetFont(fgui.functions.GetFurthestParent(self):GetFont())
+	
+				self:SetCursor("arrow")
+			end,
+
+			Paint = function(self, w, h)
+				surface.SetDrawColor(fgui.colors.back_obj)
+				surface.DrawRect(0, 0, w, h)
+	
+				local grad = 55
+				local step = 55 / h
+				grad = math.floor(grad / step) - 1
+	
+				local c = 55
+	
+				for i = 1, grad do
+					c = c - step
+	
+					surface.SetDrawColor(c, c, c, 255)
+					surface.DrawLine(0, i, w, i)
+				end
+	
+				surface.SetDrawColor(fgui.colors.outline)
+				surface.DrawOutlinedRect(0, 0, w, h)
 			end
-		},
-
-		Init = function(self)
-			self:SetTextColor(fgui.colors.white)
-			self:SetFont(fgui.functions.GetFurthestParent(self):GetFont())
-
-			self:SetCursor("arrow")
-		end,
-
-		Paint = function(self, w, h)
-			surface.SetDrawColor(fgui.colors.back_obj)
-			surface.DrawRect(0, 0, w, h)
-
-			local grad = 55
-			local step = 55 / h
-			grad = math.floor(grad / step) - 1
-
-			local c = 55
-
-			for i = 1, grad do
-				c = c - step
-
-				surface.SetDrawColor(c, c, c, 255)
-				surface.DrawLine(0, i, w, i)
-			end
-
-			surface.SetDrawColor(fgui.colors.outline)
-			surface.DrawOutlinedRect(0, 0, w, h)
-		end
+		}
 	},
 
 	FHColorButton = {
-		base = "DButton",
+		Base = "DButton",
 
-		customParams = {
-			Color = fgui.functions.CopyColor(fgui.colors.white)
-		},
-
-		customFunctions = {
+		Registry = {
 			SetVarTable = function(self, varloc, var)
-				if not varloc then
-					return error("Invalid Variable Table Provided")
-				end
-
-				if not var then
-					return error("No Variable Provided")
-				end
-
-				self.FH.VarTable = varloc
-				self.FH.Var = var
-
 				self.FH.Color = varloc[var]
 
-				fgui.vth[#fgui.vth + 1] = self
+				fgui.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -1110,75 +1063,72 @@ fgui.objects = {
 				return self.FH.Color
 			end,
 
-			SetValue = function(self, color)
-				if not color then
-					return error("No Color Provided")
+			Init = function(self)
+				self.FH = {
+					Color = fgui.functions.CopyColor(fgui.colors.white)
+				}
+
+				self.SetValue = self.SetColor
+
+				self:SetTextColor(fgui.colors.white)
+				self:SetFont(fgui.functions.GetFurthestParent(self):GetFont())
+	
+				self:SetCursor("arrow")
+			end,
+
+			Paint = function(self, w, h)
+				surface.SetDrawColor(fgui.colors.back_obj)
+				surface.DrawRect(0, 0, w, h)
+	
+				local grad = 55
+				local step = 55 / h
+				grad = math.floor(grad / step) - 1
+	
+				local c = 55
+	
+				for i = 1, grad do
+					c = c - step
+	
+					surface.SetDrawColor(c, c, c, 255)
+					surface.DrawLine(0, i, w, i)
 				end
+	
+				surface.SetDrawColor(fgui.colors.outline)
+				surface.DrawOutlinedRect(0, 0, w, h)
+	
+				local _, th = surface.GetTextSize(self:GetText())
+				local ty = ((h / 2) - (th / 2)) + th
+	
+				surface.SetDrawColor(self:GetColor())
+				surface.DrawRect(5, ty - 1, w - 10, 3)
+			end,
 
-				self.FH.VarTable[self.FH.Var] = color
+			DoClick = function(self)
+				local MP = self.FH.MP or fgui.functions.GetFurthestParent(self)
+				self.FH.MP = self.FH.MP or MP
 
-				self.FH.Color = color
-			end
-		},
-
-		Init = function(self)
-			local MP = fgui.functions.GetFurthestParent(self)
-
-			self:SetTextColor(fgui.colors.white)
-			self:SetFont(MP:GetFont())
-
-			self:SetCursor("arrow")
-
-			self.DoClick = function(self)
-				local MPPicker = MP.FH.ColorPicker
-
+				local MPPicker = self.FH.MP.FH.ColorPicker
+	
 				if IsValid(MPPicker) then
 					local varloc = self.FH.VarTable and self.FH.VarTable or self.FH
 					local var = self.FH.Var and self.FH.Var or "Color"
-
+	
 					MPPicker:Invoke(varloc, var)
 				end
+
+				if self.FHDoClick then
+					self.FHDoClick(self)
+				end
 			end
-		end,
-
-		Paint = function(self, w, h)
-			surface.SetDrawColor(fgui.colors.back_obj)
-			surface.DrawRect(0, 0, w, h)
-
-			local grad = 55
-			local step = 55 / h
-			grad = math.floor(grad / step) - 1
-
-			local c = 55
-
-			for i = 1, grad do
-				c = c - step
-
-				surface.SetDrawColor(c, c, c, 255)
-				surface.DrawLine(0, i, w, i)
-			end
-
-			surface.SetDrawColor(fgui.colors.outline)
-			surface.DrawOutlinedRect(0, 0, w, h)
-
-			local _, th = surface.GetTextSize(self:GetText())
-			local ty = ((h / 2) - (th / 2)) + th
-
-			surface.SetDrawColor(self.FH.Color)
-			surface.DrawRect(5, ty - 1, w - 10, 3)
-		end
+		}
 	},
 
 	FHColorPicker = {
-		base = "DFrame",
-		noParent = true,
-		contentFrame = true,
+		Base = "DFrame",
+		NotParented = true,
+		HasContentFrame = true,
 
-		customParams = {
-			Title = "Color Picker"
-		},
-
-		customFunctions = {
+		Registry = {
 			Invoke = function(self, varloc, var)
 				if not varloc then
 					return error("Invalid Variable Table Provided")
@@ -1205,111 +1155,100 @@ fgui.objects = {
 
 			GetContentFrame = function(self)
 				return self.FH.ContentFrame
-			end
-		},
+			end,
 
-		Init = function(self, oparent)
-			self:SetTitle("") -- Hide default window title
-			self:GetChildren()[4]:SetVisible(false)
+			Init = function(self, oparent)
+				self.FH = {
+					Title = "Color Picker"
+				}
 
-			self:SetSize(210, 186)
-			self:ShowCloseButton(false)
-			self:SetDeleteOnClose(false)
-
-			self:SetVisible(false)
-			self:Close()
-
-			timer.Simple(0, function() -- Do setup on next tick to avoid fucky business
-				local ContentFrame = self:GetContentFrame()
-				local cfw, cfh = self:GetWide() - 20, self:GetTall() - 10 -- Uses self instead of content frame because jank
+				self:SetTitle("")
+				self:GetChildren()[4]:SetVisible(false)
 	
-				local OK = fgui.Create("FHButton", ContentFrame)
-				OK:SetSize(100, 22)
-				OK:SetPos((cfw / 2) - 50, cfh - 50)
-				OK:SetText("OK")
+				self:SetSize(210, 186)
+				self:ShowCloseButton(false)
+				self:SetDeleteOnClose(false)
+	
+				self:SetVisible(false)
+				self:Close()
+	
+				timer.Simple(0, function() -- Do setup on next tick to avoid fucky business
+					local ContentFrame = self:GetContentFrame()
+					local cfw, cfh = self:GetWide() - 20, self:GetTall() - 10 -- Uses self instead of content frame because jank
 		
-				OK.DoClick = function()
-					self.FH.VarTable[self.FH.Var] = self.FH.ColorMixer:GetColor()
+					local OK = fgui.Create("FHButton", ContentFrame)
+					OK:SetSize(100, 22)
+					OK:SetPos((cfw / 2) - 50, cfh - 50)
+					OK:SetText("OK")
+			
+					OK.DoClick = function()
+						self.FH.VarTable[self.FH.Var] = self.FH.ColorMixer:GetColor()
+	
+						self:Close()
+					end
+	
+					local ColorMixer = vgui.Create("DColorMixer", ContentFrame)
+					ColorMixer:SetPalette(false)
+					ColorMixer:SetWangs(false)
+					ColorMixer:SetSize(180, 116)
+					ColorMixer:SetPos((cfw / 2) - 90, 6)
+	
+					self.FH.ColorMixer = ColorMixer
+	
+					local ColorMixerChildren = ColorMixer:GetChildren()
+	
+					local ColorMixerHandle = ColorMixerChildren[4]:GetChildren()[1]
+					ColorMixerHandle:SetSize(15, 15)
+					ColorMixerHandle:SetCursor("arrow")
+	
+					ColorMixerHandle.Paint = function(self, w, h)
+						surface.DrawCircle((w / 2), (h / 2), 5, fgui.colors.white)
+						surface.DrawCircle((w / 2), (h / 2), 4, fgui.colors.black)
+						surface.DrawCircle((w / 2), (h / 2), 6, fgui.colors.black)
+					end
+				end)
+			end,
 
-					self:Close()
+			Paint = function(self, w, h) -- Same(ish) as FHFrame
+				local MP = self.FH.MP
+	
+				if not IsValid(MP) then
+					self:Remove()
+					return
 				end
-
-				local ColorMixer = vgui.Create("DColorMixer", ContentFrame)
-				ColorMixer:SetPalette(false)
-				ColorMixer:SetWangs(false)
-				ColorMixer:SetSize(180, 116)
-				ColorMixer:SetPos((cfw / 2) - 90, 6)
-
-				self.FH.ColorMixer = ColorMixer
-
-				local ColorMixerChildren = ColorMixer:GetChildren()
-
-				local ColorMixerHandle = ColorMixerChildren[4]:GetChildren()[1]
-				ColorMixerHandle:SetSize(15, 15)
-				ColorMixerHandle:SetCursor("arrow")
-
-				ColorMixerHandle.Paint = function(self, w, h)
-					surface.DrawCircle((w / 2), (h / 2), 5, fgui.colors.white)
-					surface.DrawCircle((w / 2), (h / 2), 4, fgui.colors.black)
-					surface.DrawCircle((w / 2), (h / 2), 6, fgui.colors.black)
+	
+				surface.SetDrawColor(fgui.colors.black)
+				surface.DrawRect(0, 0, w, h)
+	
+				local grad = 55
+	
+				for i = 1, grad do
+					local c = grad - i
+	
+					surface.SetDrawColor(c, c, c, 255)
+					surface.DrawLine(0, i, w, i)
 				end
-			end)
-		end,
-
-		Paint = function(self, w, h) -- Same(ish) as FHFrame
-			local MP = self.FH.MP
-
-			if not IsValid(MP) then
-				self:Remove()
-				return
+	
+				surface.SetDrawColor(fgui.colors.outline)
+				surface.DrawOutlinedRect(0, 0, w, h)
+	
+				surface.SetFont(MP:GetFont())
+				surface.SetTextColor(MP:GetTitleColor())
+	
+				local tw, th = surface.GetTextSize(self.FH.Title)
+	
+				surface.SetTextPos((w / 2) - (tw / 2), 13 - (th / 2))
+				surface.DrawText(self.FH.Title)
 			end
-
-			surface.SetDrawColor(fgui.colors.black)
-			surface.DrawRect(0, 0, w, h)
-
-			local grad = 55
-
-			for i = 1, grad do
-				local c = grad - i
-
-				surface.SetDrawColor(c, c, c, 255)
-				surface.DrawLine(0, i, w, i)
-			end
-
-			surface.SetDrawColor(fgui.colors.outline)
-			surface.DrawOutlinedRect(0, 0, w, h)
-
-			surface.SetFont(MP:GetFont())
-			surface.SetTextColor(MP:GetTitleColor())
-
-			local tw, th = surface.GetTextSize(self.FH.Title)
-
-			surface.SetTextPos((w / 2) - (tw / 2), 13 - (th / 2))
-			surface.DrawText(self.FH.Title)
-		end
+		}
 	},
 
 	FHBinder = {
-		base = "DBinder",
+		Base = "DBinder",
 
-		customParams = {
-			LabelText = ""
-		},
-
-		customFunctions = {
+		Registry = {
 			SetVarTable = function(self, varloc, var)
-				if not varloc then
-					return error("Invalid Variable Table Provided")
-				end
-
-				if not var then
-					return error("No Variable Provided")
-				end
-
-				self.FH.VarTable = varloc
-				self.FH.Var = var
-
-				fgui.vth[#fgui.vth + 1] = self
+				fgui.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -1330,77 +1269,71 @@ fgui.objects = {
 
 			GetLabel = function(self)
 				return self.FH.LabelText
-			end
-		},
+			end,
 
-		Init = function(self)
-			local font = fgui.functions.GetFurthestParent(self):GetFont()
+			Init = function(self)
+				local font = fgui.functions.GetFurthestParent(self):GetFont()
+	
+				self:SetTextColor(fgui.colors.white)
+				self:SetFont(font)
+	
+				self:SetCursor("arrow")
+	
+				timer.Simple(0, function()
+					surface.SetFont(font)
 
-			self:SetTextColor(fgui.colors.white)
-			self:SetFont(font)
+					local label = self:GetLabel()
+	
+					local tw, th = surface.GetTextSize(label)
+	
+					local Label = vgui.Create("DLabel", self:GetParent())
+					Label:SetTextColor(fgui.colors.white)
+					Label:SetFont(font)
+					Label:SetText(label)
+					Label:SetPos(self:GetX() + ((self:GetWide() / 2) - (tw / 2)), self:GetY() - th - 3)
+		
+					self.FH.Label = Label
+				end)
+			end,
 
-			self:SetCursor("arrow")
+			Paint = function(self, w, h)
+				surface.SetDrawColor(fgui.colors.back_obj)
+				surface.DrawRect(0, 0, w, h)
+	
+				local grad = 55
+				local step = 55 / h
+				grad = math.floor(grad / step) - 1
+	
+				local c = 55
+	
+				for i = 1, grad do
+					c = c - step
+	
+					surface.SetDrawColor(c, c, c, 255)
+					surface.DrawLine(0, i, w, i)
+				end
+	
+				surface.SetDrawColor(fgui.colors.outline)
+				surface.DrawOutlinedRect(0, 0, w, h)
+			end,
 
-			self.OnChange = function(self, new)
+			OnChange = function(self, new)
 				if self.FH.VarTable then
 					self.FH.VarTable[self.FH.Var] = new
 				end
-
+	
 				if self.FHOnChange then
 					self.FHOnChange(self, new)
 				end
 			end
-
-			timer.Simple(0, function()
-				surface.SetFont(font)
-
-				local tw, th = surface.GetTextSize(self.FH.LabelText)
-
-				local Label = vgui.Create("DLabel", self:GetParent())
-				Label:SetTextColor(fgui.colors.white)
-				Label:SetFont(font)
-				Label:SetText(self.FH.LabelText)
-				Label:SetPos(self:GetX() + ((self:GetWide() / 2) - (tw / 2)), self:GetY() - th - 3)
-	
-				self.FH.Label = Label
-			end)
-		end,
-
-		Paint = function(self, w, h)
-			surface.SetDrawColor(fgui.colors.back_obj)
-			surface.DrawRect(0, 0, w, h)
-
-			local grad = 55
-			local step = 55 / h
-			grad = math.floor(grad / step) - 1
-
-			local c = 55
-
-			for i = 1, grad do
-				c = c - step
-
-				surface.SetDrawColor(c, c, c, 255)
-				surface.DrawLine(0, i, w, i)
-			end
-
-			surface.SetDrawColor(fgui.colors.outline)
-			surface.DrawOutlinedRect(0, 0, w, h)
-		end
+		}
 	},
 
 	FHMiniMenu = {
-		base = "DFrame",
-		noParent = true,
+		Base = "DFrame",
+		NotParented = true,
 
-		customParams = {
-			Columns = {},
-			Rows = {},
-			BackgroundAlpha = 255,
-			Font = "FlowHooks",
-			TextColor = fgui.functions.CopyColor(fgui.colors.white)
-		},
-
-		customFunctions = {
+		Registry = {
 			SetFont = function(self, font)
 				if not font then
 					return error("No Font Provided")
@@ -1451,65 +1384,75 @@ fgui.objects = {
 				end
 
 				self.FH.BackgroundAlpha = alpha
-			end
-		},
+			end,
 
-		Init = function(self)
-			self:SetTitle("")
-			self:GetChildren()[4]:SetVisible(false)
+			Init = function(self)
+				self.FH = {
+					Columns = {},
+					Rows = {},
+					BackgroundAlpha = 255,
+					Font = "FlowHooks",
+					TextColor = fgui.functions.CopyColor(fgui.colors.white)
+				}
 
-			self:ShowCloseButton(false)
+				self:SetTitle("")
+				self:GetChildren()[4]:SetVisible(false)
+	
+				self:ShowCloseButton(false)
+	
+				self:SetVisible(true)
+			end,
 
-			self:SetVisible(true)
-		end,
-
-		Paint = function(self, w, h)
-			surface.SetDrawColor(fgui.colors.back_min)
-			surface.DrawRect(0, 0, w, 20)
-
-			local bgcol = fgui.functions.CopyColor(fgui.colors.back_obj)
-			bgcol.a = self.FH.BackgroundAlpha
-
-			local rows = #self.FH.Rows
-			local cols = #self.FH.Columns
-
-			surface.SetDrawColor(bgcol)
-			surface.DrawRect(0, 20, w, 20 * rows)
-
-			surface.SetDrawColor(fgui.colors.outline)
-			surface.DrawOutlinedRect(0, 0, w, h)
-
-			surface.SetFont(self.FH.Font)
-			surface.SetTextColor(self.FH.TextColor)
-
-			local step = w / cols
-
-			for i = 1, cols do
-				surface.DrawLine((i - 1) * step, 0, (i - 1) * step, h)
-
-				local cur = self.FH.Columns[i]
-
-				local tw, th = surface.GetTextSize(cur)
-
-				surface.SetTextPos(((step / 2) - (tw / 2)) + ((i - 1) * step), 10 - (th / 2))
-				surface.DrawText(cur)
-			end
-
-			for i = 1, rows do
-				surface.DrawLine(0, i * 20, w, i * 20)
-
-				for k, v in ipairs(self.FH.Rows[i]) do
-					local tw, th = surface.GetTextSize(v)
-		
-					surface.SetTextPos(((step / 2) - (tw / 2)) + ((k - 1) * step), (10 - (th / 2)) + 20)
-					surface.DrawText(v)
+			Paint = function(self, w, h)
+				surface.SetDrawColor(fgui.colors.back_min)
+				surface.DrawRect(0, 0, w, 20)
+	
+				local bgcol = fgui.functions.CopyColor(fgui.colors.back_obj)
+				bgcol.a = self.FH.BackgroundAlpha
+	
+				local rows = #self.FH.Rows
+				local cols = #self.FH.Columns
+	
+				surface.SetDrawColor(bgcol)
+				surface.DrawRect(0, 20, w, 20 * rows)
+	
+				surface.SetDrawColor(fgui.colors.outline)
+				surface.DrawOutlinedRect(0, 0, w, h)
+	
+				surface.SetFont(self.FH.Font)
+				surface.SetTextColor(self.FH.TextColor)
+	
+				local step = w / cols
+	
+				for i = 1, cols do
+					surface.DrawLine((i - 1) * step, 0, (i - 1) * step, h)
+	
+					local cur = self.FH.Columns[i]
+	
+					local tw, th = surface.GetTextSize(cur)
+	
+					surface.SetTextPos(((step / 2) - (tw / 2)) + ((i - 1) * step), 10 - (th / 2))
+					surface.DrawText(cur)
+				end
+	
+				for i = 1, rows do
+					surface.DrawLine(0, i * 20, w, i * 20)
+	
+					for k, v in ipairs(self.FH.Rows[i]) do
+						local tw, th = surface.GetTextSize(v)
+			
+						surface.SetTextPos(((step / 2) - (tw / 2)) + ((k - 1) * step), (10 - (th / 2)) + 20)
+						surface.DrawText(v)
+					end
 				end
 			end
-		end
+		}
 	}
 }
 
--- Creator Function
+for k, v in pairs(fgui.objects) do -- Register objects
+	vgui.Register(k, v.Registry, v.Base)
+end
 
 fgui.Create = function(type, parent, name)
 	if not type or not fgui.objects[type] then
@@ -1518,22 +1461,20 @@ fgui.Create = function(type, parent, name)
 
 	local current = fgui.objects[type]
 
-	if not parent and not current.noParent then
+	if not parent and not current.NotParented then
 		return error("Invalid Parent Panel Specified")
 	elseif parent and type ~= "FHContentFrame" then
-		if parent:GetName() == "DFrame" then
-			if parent.GetContentFrame then
-				parent = parent:GetContentFrame()
-			end
+		if parent:GetName() == "FHFrame" and parent.GetContentFrame then
+			parent = parent:GetContentFrame()
 		end
 	end
 
-	local FHObject = vgui.Create(current.base, parent, name)
+	local FHObject = vgui.Create(type, parent, name)
 
-	FHObject.FH = {}
+	FHObject.FH = FHObject.FH or {}
 	FHObject.FH.Type = type
 
-	if current.contentFrame then
+	if current.HasContentFrame then
 		local frame = fgui.Create("FHContentFrame", FHObject)
 		frame:Dock(FILL)
 		frame:SetDrawOutline(true)
@@ -1541,26 +1482,7 @@ fgui.Create = function(type, parent, name)
 		FHObject.FH.ContentFrame = frame
 	end
 
-	if current.customParams then -- Create custom parameters
-		for k, v in pairs(current.customParams) do
-			FHObject.FH[k] = v
-		end
-	end
-
-	if current.Paint then -- Give the object the FlowHooks look
-		FHObject.Paint = current.Paint
-	end
-
-	if current.Init then -- Change some default Derma settings for quick setup
-		current.Init(FHObject)
-	end
-	if current.customFunctions then -- Register custom functions
-		for k, v in pairs(current.customFunctions) do
-			FHObject[k] = v
-		end
-	end
-
-	if type == "FHFrame" then
+	if type == "FHFrame" then -- Create a unique color picker for that specific FHFrame
 		FHObject.FH.ColorPicker = fgui.Create("FHColorPicker")
 		FHObject.FH.ColorPicker.FH.MP = FHObject
 	end
