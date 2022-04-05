@@ -245,8 +245,12 @@ fgui.objects = {
 					AccentColor = fgui.functions.CopyColor(fgui.colors.accent),
 					Title = "Frame " .. math.random(0, 12345),
 					TitleColor = fgui.functions.CopyColor(fgui.colors.white),
-					Font = "FlowHooks"
+					Font = "FlowHooks",
+
+					ColorPicker = fgui.Create("FHColorPicker")
 				}
+
+				self.FH.ColorPicker.FH.MP = self
 
 				self:SetTitle("") -- Hide default window title
 				self:GetChildren()[4]:SetVisible(false)
@@ -1016,17 +1020,19 @@ fgui.objects = {
 				surface.SetDrawColor(fgui.colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
 	
-				local grad = 55
-				local step = 55 / h
-				grad = math.floor(grad / step) - 1
-	
-				local c = 55
-	
-				for i = 1, grad do
-					c = c - step
-	
-					surface.SetDrawColor(c, c, c, 255)
-					surface.DrawLine(0, i, w, i)
+				if not self:IsDown() then
+					local grad = 55
+					local step = 55 / (h * 1.5)
+					grad = math.floor(grad / step) - 1
+		
+					local c = 55
+		
+					for i = 1, grad do
+						c = c - step
+		
+						surface.SetDrawColor(c, c, c, 255)
+						surface.DrawLine(0, i, w, i)
+					end
 				end
 	
 				surface.SetDrawColor(fgui.colors.outline)
@@ -1079,18 +1085,20 @@ fgui.objects = {
 			Paint = function(self, w, h)
 				surface.SetDrawColor(fgui.colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
-	
-				local grad = 55
-				local step = 55 / h
-				grad = math.floor(grad / step) - 1
-	
-				local c = 55
-	
-				for i = 1, grad do
-					c = c - step
-	
-					surface.SetDrawColor(c, c, c, 255)
-					surface.DrawLine(0, i, w, i)
+				
+				if not self:IsDown() then
+					local grad = 55
+					local step = 55 / (h * 1.5)
+					grad = math.floor(grad / step) - 1
+		
+					local c = 55
+		
+					for i = 1, grad do
+						c = c - step
+		
+						surface.SetDrawColor(c, c, c, 255)
+						surface.DrawLine(0, i, w, i)
+					end
 				end
 	
 				surface.SetDrawColor(fgui.colors.outline)
@@ -1300,17 +1308,19 @@ fgui.objects = {
 				surface.SetDrawColor(fgui.colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
 	
-				local grad = 55
-				local step = 55 / h
-				grad = math.floor(grad / step) - 1
-	
-				local c = 55
-	
-				for i = 1, grad do
-					c = c - step
-	
-					surface.SetDrawColor(c, c, c, 255)
-					surface.DrawLine(0, i, w, i)
+				if not self:IsDown() then
+					local grad = 55
+					local step = 55 / (h * 1.5)
+					grad = math.floor(grad / step) - 1
+		
+					local c = 55
+		
+					for i = 1, grad do
+						c = c - step
+		
+						surface.SetDrawColor(c, c, c, 255)
+						surface.DrawLine(0, i, w, i)
+					end
 				end
 	
 				surface.SetDrawColor(fgui.colors.outline)
@@ -1480,11 +1490,6 @@ fgui.Create = function(type, parent, name)
 		frame:SetDrawOutline(true)
 
 		FHObject.FH.ContentFrame = frame
-	end
-
-	if type == "FHFrame" then -- Create a unique color picker for that specific FHFrame
-		FHObject.FH.ColorPicker = fgui.Create("FHColorPicker")
-		FHObject.FH.ColorPicker.FH.MP = FHObject
 	end
 
 	return FHObject
