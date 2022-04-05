@@ -9,7 +9,7 @@ local vars = {
 
 local test = fgui.Create("FHFrame")
 
-test:SetTitle("STORMY IS SUPER FAT AND BLACK AND GAY")
+test:SetTitle("hello hey hi howdy hola alloha ciao")
 test:SetSize(600, 700)
 test:Center()
 
@@ -96,6 +96,10 @@ testmini:SetBackgroundAlpha(100)
 testmini:AddColumn("hi")
 testmini:AddColumn("hey")
 testmini:AddRow({"wow", 327})
+
+local testlabel = fgui.Create("FHLabel", test)
+testlabel:SetPos(25, 600)
+testlabel:SetText("I am a label!")
 
 test:MakePopup()
 
