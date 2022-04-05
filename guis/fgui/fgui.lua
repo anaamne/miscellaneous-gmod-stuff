@@ -98,6 +98,8 @@
 				- AddColumn(columnName, index)		=>			Creates a column at optional index (Places at end if no index is given)
 				- AddRow(...)						=>			Creates a row with given data (Format as a table with 1 key for each column, ex: {"Column 1", "Column 2", "Column 3"})
 				- SetBackgroundAlpha(newAlpha)		=>			Sets backround alpha for the rows in the mini menu
+
+		FHLabel (DLabel)
 ]]
 
 fgui = fgui or {}
@@ -1455,6 +1457,17 @@ fgui.objects = {
 						surface.DrawText(v)
 					end
 				end
+			end
+		}
+	},
+
+	FHLabel = {
+		Base = "DLabel",
+
+		Registry = {
+			Init = function(self)
+				self:SetTextColor(fgui.colors.white)
+				self:SetFont(fgui.functions.GetFurthestParent(self):GetFont())
 			end
 		}
 	}
