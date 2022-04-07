@@ -46,10 +46,11 @@
 			Functions:
 				- SetVarTable(table, key)			=>			Sets the tabbed menu's table key to update on value change (Returns the name of the tab)
 				- GetVarTable()						=>			Returns the tabbed menu's VarTable and key name
-				- AddTab(newTabName)				=>			Creates a tab and returns the content frame of the tab (Works like DPropertySheet:AddSheet)
+				- AddTab(name, icon, sX, sY, tt)	=>			Creates a tab and returns the content frame of the tab (Works like DPropertySheet:AddSheet)
 				- SetTabBackground(newState)		=>			Sets rendering of the background behind tabs
 				- GetTabBackground()				=>			Returns current rendering state of the background behind tabs
 				- SetValue(value)					=>			Used internally to update the tabbed menu to the specified tab
+				- SizeTabsToWidth()					=>			Evenly sizes the tabbed menu's tabs to fill the width of the tabbed menu
 
 		FHList (DListView; DO *NOT* OVERRIDE OnRowSelected FOR THIS OBJECT! USE FHOnRowSelected INSTEAD!)
 			Functions:
@@ -758,6 +759,32 @@ fgui.objects = {
 
 						break
 					end
+				end
+			end,
+
+			SizeTabsToWidth = function(self)
+				local tabs = self:GetItems()
+				local width = (self:GetWide() / #tabs) - 20
+
+				local MP = fgui.functions.GetFurthestParent(self)
+				surface.SetFont(MP:GetFont())
+
+				for _, v in ipairs(tabs) do
+					local tab = v.Tab
+					local text = tab:GetText()
+
+					local tw, _ = surface.GetTextSize(text)
+					local step = false
+
+					while tw < width do
+						text = step and text .. " " or " " .. text
+						tw, _ = surface.GetTextSize(text)
+
+						step = not step
+					end
+
+					tab:SetText(text)
+					tab:InvalidateLayout()
 				end
 			end,
 
