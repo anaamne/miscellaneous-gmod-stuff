@@ -9,7 +9,7 @@ local vars = {
 
 local test = fgui.Create("FHFrame")
 
-test:SetTitle("hello hey hi howdy hola alloha ciao")
+test:SetTitle("Super Awesome Test Menu")
 test:SetSize(600, 700)
 test:Center()
 
