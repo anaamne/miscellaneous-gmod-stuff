@@ -771,7 +771,11 @@ fgui.objects = {
 
 				for _, v in ipairs(tabs) do
 					local tab = v.Tab
-					local text = tab:GetText()
+
+					tab.FH = tab.FH or {}
+
+					local text = tab.FH.Text or tab:GetText()
+					tab.FH.Text = tab.FH.Text or text
 
 					local tw, _ = surface.GetTextSize(text)
 					local step = false
