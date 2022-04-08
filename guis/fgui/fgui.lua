@@ -711,6 +711,8 @@ fgui.objects = {
 			end,
 
 			SizeTabsToWidth = function(self)
+				self:InvalidateParent(true)
+
 				local tabs = self:GetItems()
 				local width = (self:GetWide() / #tabs) - 20
 
