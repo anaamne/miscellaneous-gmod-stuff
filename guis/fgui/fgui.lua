@@ -1,7 +1,7 @@
 --[[
 	leme's FlowHooks vgui base
 
-	Valid Objects (These support the functions of their default Derma counterparts as well. If no functions are listed under it then it simply doesn't have any custom FlowHooks ablities)
+	Valid Objects (These support the functions of their default Derma counterparts as well. If no functions are listed under it then it simply doesn't have any custom functions)
 		FHFrame (DFrame that comes with a content frame)
 			Functions:
 				- SetAccentColor(newColor)			=>			Sets the frame's accent color (Added fgui elements will use the same color)
