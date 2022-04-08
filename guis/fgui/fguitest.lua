@@ -93,6 +93,11 @@ testcolor:SetSize(100, 25)
 testcolor:SetText("hiyUWP(WHI")
 testcolor:SetVarTable(vars, "testcolor")
 
+local testcolor = fgui.Create("FHColorButton", hello)
+testcolor:SetPos(150, 25)
+testcolor:SetSize(100, 25)
+testcolor:SetText("numero dos")
+
 local testbind = fgui.Create("FHBinder", test)
 testbind:SetSize(100, 24)
 testbind:SetPos(25, 550)
