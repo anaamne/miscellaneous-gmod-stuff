@@ -1079,8 +1079,6 @@ fgui.objects = {
 						if fgui.clipboard and IsColor(fgui.clipboard) then
 							self:SetColor(fgui.clipboard)
 						end
-
-						print(self:GetColor(), fgui.functions.CopyColor(fgui.clipboard))
 					end)
 				end)
 			end,
