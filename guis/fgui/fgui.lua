@@ -69,7 +69,7 @@
 			Functions:
 				- SetCallback(function)				=>			Sets the callback function for the button (Same as overriding DoClick, you can do either to accomplish the same task)
 
-		FHColorButton (DButton; DO *NOT* OVERRIDE DoClick FOR THIS OBJECT! Use FHDoClick INSTEAD!)
+		FHColorButton (DButton; DO *NOT* OVERRIDE DoClick NOR DoRightClick FOR THIS OBJECT! Use FHDoClick OR FHDoRightClick INSTEAD!)
 			Functions:
 				- SetVarTable(table, key)			=>			Sets the color button's table key to update on value change (Returns the color)
 				- GetVarTable()						=>			Returns the color button's VarTable and key name
@@ -114,6 +114,7 @@ surface.CreateFont("FlowHooks", {
 
 fgui.timer = "fgui_SlowTick"
 fgui.vth = {} -- VarTable holders
+fgui.clipboard = nil -- For color copy / pasting
 
 fgui.colors = {
 	black = Color(0, 0, 0, 255),
@@ -550,6 +551,7 @@ fgui.objects = {
 
 	FHDropDown = {
 		Base = "DComboBox",
+		HasDMenu = true,
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
@@ -569,68 +571,19 @@ fgui.objects = {
 					if not value then
 						return error("Invalid Value Provided")
 					end
-	
-					local MP = self.FH.MP or fgui.functions.GetFurthestParent(self)
-					self.FH.MP = self.FH.MP or MP
-	
 					local i = self.FH.AddChoice(self, value, data, select, icon)
 	
-					local newChild = self.DMenu:AddOption(value, function()
+					self.DMenu:AddOption(value, function()
 						self:ChooseOptionID(i)
 					end)
-	
-					newChild:SetCursor("arrow")
-	
-					newChild:SetTextColor(fgui.colors.white)
-					newChild:SetFont(MP:GetFont())
-	
-					newChild.Paint = function(self, w, h)
-						surface.SetDrawColor(fgui.colors.back_obj)
-						surface.DrawRect(0, 0, w, h)
-	
-						if self:IsHovered() then
-							local accent = fgui.functions.CopyColor(MP:GetAccentColor())
-							accent.a = accent.a / 4
-	
-							surface.SetDrawColor(accent)
-							surface.DrawRect(0, 0, w, h)
-						end
-		
-						surface.SetDrawColor(fgui.colors.outline)
-						surface.DrawOutlinedRect(0, 0, w, h)
-					end
 				end
 
-				local MP = fgui.functions.GetFurthestParent(self)
-	
 				self:SetCursor("arrow")
 	
 				self:SetTextColor(fgui.colors.white)
-				self:SetFont(MP:GetFont())
+				self:SetFont(fgui.functions.GetFurthestParent(self):GetFont())
 	
 				self:GetChildren()[1].Paint = function() end -- Hide the dropdown's arrow
-	
-				-- Custom DMenu Handling
-	
-				self.DMenuOpen = false
-				self.DMenu = vgui.Create("DMenu", MP)
-	
-				self.DMenu:SetDeleteSelf(false)
-				self.DMenu:Hide()
-	
-				self.IsMenuOpen = function(self)
-					return self.DMenuOpen
-				end
-			
-				self.OpenMenu = function(self)
-					self.DMenu:Open(MP:GetX() + self:GetX() + self:GetParent():GetX(), MP:GetY() + self:GetY() + self:GetParent():GetY() + self:GetTall())
-					self.DMenu:SetVisible(true)
-				end
-			
-				self.CloseMenu = function(self)
-					self.DMenu:Hide()
-					self.DMenu:SetVisible(false)
-				end
 			end,
 
 			Paint = function(self, w, h)
@@ -649,11 +602,6 @@ fgui.objects = {
 				else
 					surface.DrawLine(w - (h / 2), 3, w - (h / 2), h - 3)
 					surface.DrawLine((w - h) + 3, h / 2, w - 3, h / 2)
-				end
-	
-				if self.DMenu then
-					self.DMenuOpen = self.DMenu:IsVisible()
-					self.DMenu:SetMinimumWidth(self:GetWide())
 				end
 			end,
 
@@ -1076,6 +1024,7 @@ fgui.objects = {
 
 	FHColorButton = {
 		Base = "DButton",
+		HasDMenu = true,
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
@@ -1093,13 +1042,17 @@ fgui.objects = {
 					return error("No Color Provided")
 				end
 
-				self.FH.VarTable[self.FH.Var] = color
+				local varloc = self.FH.VarTable and self.FH.VarTable or self.FH
+				local var = self.FH.Var and self.FH.Var or "Color"
 
-				self.FH.Color = color
+				varloc[var] = color
 			end,
 
 			GetColor = function(self)
-				return self.FH.Color
+				local varloc = self.FH.VarTable and self.FH.VarTable or self.FH
+				local var = self.FH.Var and self.FH.Var or "Color"
+
+				return varloc[var]
 			end,
 
 			Init = function(self)
@@ -1113,6 +1066,20 @@ fgui.objects = {
 				self:SetFont(fgui.functions.GetFurthestParent(self):GetFont())
 	
 				self:SetCursor("arrow")
+
+				timer.Simple(0, function()
+					self.DMenu:AddOption("Copy Color", function()
+						fgui.clipboard = fgui.functions.CopyColor(self:GetColor())
+					end)
+
+					self.DMenu:AddOption("Paste Color", function()
+						if fgui.clipboard and IsColor(fgui.clipboard) then
+							self:SetColor(fgui.clipboard)
+						end
+
+						print(self:GetColor(), fgui.functions.CopyColor(fgui.clipboard))
+					end)
+				end)
 			end,
 
 			Paint = function(self, w, h)
@@ -1159,6 +1126,14 @@ fgui.objects = {
 
 				if self.FHDoClick then
 					self.FHDoClick(self)
+				end
+			end,
+
+			DoRightClick = function(self)
+				self:OpenMenu()
+
+				if self.FHDoRightClick then
+					self.FHDoRightClick(self)
 				end
 			end
 		}
@@ -1534,6 +1509,69 @@ fgui.Create = function(type, parent, name)
 		frame:SetDrawOutline(true)
 
 		FHObject.FH.ContentFrame = frame
+	end
+
+	if current.HasDMenu then
+		local MP = fgui.functions.GetFurthestParent(FHObject)
+
+		FHObject.DMenuOpen = false
+		FHObject.DMenu = vgui.Create("DMenu", MP)
+
+		local DMenu = FHObject.DMenu
+		local ogAddOption = DMenu.AddOption
+
+		DMenu.AddOption = function(...)
+			local NewOption = ogAddOption(...)
+
+			NewOption:SetCursor("arrow")
+	
+			NewOption:SetTextColor(fgui.colors.white)
+			NewOption:SetFont(MP:GetFont())
+	
+			NewOption.Paint = function(self, w, h)
+				surface.SetDrawColor(fgui.colors.back_obj)
+				surface.DrawRect(0, 0, w, h)
+	
+				if self:IsHovered() then
+					local accent = fgui.functions.CopyColor(MP:GetAccentColor())
+					accent.a = accent.a / 4
+	
+					surface.SetDrawColor(accent)
+					surface.DrawRect(0, 0, w, h)
+				end
+		
+				surface.SetDrawColor(fgui.colors.outline)
+				surface.DrawOutlinedRect(0, 0, w, h)
+			end
+		end
+	
+		DMenu:SetDeleteSelf(false)
+		DMenu:Hide()
+	
+		FHObject.IsMenuOpen = function(self)
+			return self.DMenuOpen
+		end
+		
+		FHObject.OpenMenu = function(self)
+			self.DMenu:Open(self:LocalToScreen(0, self:GetTall()))
+			self.DMenu:SetVisible(true)
+		end
+		
+		FHObject.CloseMenu = function(self)
+			self.DMenu:Hide()
+			self.DMenu:SetVisible(false)
+		end
+
+		local ogPaint = FHObject.Paint
+
+		FHObject.Paint = function(self, w, h)
+			ogPaint(self, w, h)
+
+			if self.DMenu then
+				self.DMenuOpen = self.DMenu:IsVisible()
+				self.DMenu:SetMinimumWidth(self:GetWide())
+			end
+		end
 	end
 
 	return FHObject
