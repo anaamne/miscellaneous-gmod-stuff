@@ -1072,6 +1072,7 @@ fgui.objects = {
 				timer.Simple(0, function()
 					self.DMenu:AddOption("Copy Color", function()
 						fgui.clipboard = fgui.functions.CopyColor(self:GetColor())
+						SetClipboardText(table.concat(fgui.clipboard:ToTable(), ", "))
 					end)
 
 					self.DMenu:AddOption("Paste Color", function()
