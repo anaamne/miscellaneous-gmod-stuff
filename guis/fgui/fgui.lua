@@ -98,7 +98,8 @@
 				- GetTextColor()					=>			Returns the mini menu's text color
 				- AddColumn(columnName, index)		=>			Creates a column at optional index (Places at end if no index is given)
 				- AddRow(...)						=>			Creates a row with given data (Format as a table with 1 key for each column, ex: {"Column 1", "Column 2", "Column 3"})
-				- SetBackgroundAlpha(newAlpha)		=>			Sets backround alpha for the rows in the mini menu
+				- SetBackgroundAlpha(newAlpha)		=>			Sets backround alpha for the rows of the mini menu
+				- GetBackgroundAlpha()				=>			Returns the background alpha for the rows of the mini menu
 
 		FHLabel (DLabel)
 ]]
@@ -1403,6 +1404,10 @@ fgui.objects = {
 				end
 
 				self.FH.BackgroundAlpha = alpha
+			end,
+
+			GetBackgroundAlpha = function(self)
+				return self.FH.BackgroundAlpha
 			end,
 
 			Init = function(self)
