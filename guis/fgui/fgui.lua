@@ -713,31 +713,34 @@ fgui.objects = {
 
 			SizeTabsToWidth = function(self)
 				self:InvalidateParent(true)
-
+			
 				local tabs = self:GetItems()
-				local width = (self:GetWide() / #tabs) - 20
-
+				local awidth = (self:GetWide() / #tabs) - 20
+				local width = math.floor(awidth)
+			
 				local MP = fgui.functions.GetFurthestParent(self)
 				surface.SetFont(MP:GetFont())
-
-				for _, v in ipairs(tabs) do
+			
+				for k, v in ipairs(tabs) do
 					local tab = v.Tab
-
+			
 					tab.FH = tab.FH or {}
-
+			
 					local text = tab.FH.Text or tab:GetText()
 					tab.FH.Text = tab.FH.Text or text
-
+			
 					local tw, _ = surface.GetTextSize(text)
 					local step = false
-
-					while tw < width do
+			
+					local max = k == #tabs and awidth or width
+			
+					while tw < max do
 						text = step and text .. " " or " " .. text
 						tw, _ = surface.GetTextSize(text)
-
+			
 						step = not step
 					end
-
+			
 					tab:SetText(text)
 					tab:InvalidateLayout()
 				end
