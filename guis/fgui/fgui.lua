@@ -729,6 +729,8 @@ fgui.objects = {
 			
 				local MP = fgui.functions.GetFurthestParent(self)
 				surface.SetFont(MP:GetFont())
+
+				local subamount = 0
 			
 				for k, v in ipairs(tabs) do
 					local tab = v.Tab
@@ -741,10 +743,15 @@ fgui.objects = {
 					local tw, _ = surface.GetTextSize(text)
 					local step = false
 			
-					local max = k == #tabs and awidth or width
+					local max = (k == #tabs and awidth or width) - subamount
+
+					if subamount ~= 0 then
+						max = max - subamount
+						subamount = 0
+					end
 
 					if tw > max then
-						max = tw - max
+						subamount = (tw - max) / 2
 					end
 			
 					while tw < max do
