@@ -47,6 +47,7 @@
 				- SetVarTable(table, key)			=>			Sets the tabbed menu's table key to update on value change (Returns the name of the tab)
 				- GetVarTable()						=>			Returns the tabbed menu's VarTable and key name
 				- AddTab(name, icon, sX, sY, tt)	=>			Creates a tab and returns the content frame of the tab (Works like DPropertySheet:AddSheet)
+				- AddTabs(vararg tabs)				=>			Creates tabs passed as seperate arguments (No icon, etc) (Ex: menu:AddTabs("tab1", "tab2", "tab3"))
 				- SetTabBackground(newState)		=>			Sets rendering of the background behind tabs
 				- GetTabBackground()				=>			Returns current rendering state of the background behind tabs
 				- SetValue(value)					=>			Used internally to update the tabbed menu to the specified tab
@@ -681,6 +682,14 @@ fgui.objects = {
 				return ContentFrame
 			end,
 
+			AddTabs = function(self, ...)
+				local tabs = {...}
+
+				for _, v in ipairs(tabs) do
+					self:AddTab(v)
+				end
+			end,
+
 			SetTabBackground = function(self, active)
 				if active == nil then
 					return error("No Boolean Provided")
@@ -715,7 +724,7 @@ fgui.objects = {
 				self:InvalidateParent(true)
 			
 				local tabs = self:GetItems()
-				local awidth = (self:GetWide() / #tabs) - 20
+				local awidth = math.ceil((self:GetWide() / #tabs) - 20)
 				local width = math.floor(awidth)
 			
 				local MP = fgui.functions.GetFurthestParent(self)
@@ -733,6 +742,10 @@ fgui.objects = {
 					local step = false
 			
 					local max = k == #tabs and awidth or width
+
+					if tw > max then
+						max = tw - max
+					end
 			
 					while tw < max do
 						text = step and text .. " " or " " .. text
@@ -1582,7 +1595,7 @@ fgui.Create = function(type, parent, name)
 			end
 		end
 	end
-
+	
 	return FHObject
 end
 
