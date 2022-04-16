@@ -107,6 +107,8 @@
 
 fgui = fgui or {}
 
+local fguitable = fgui
+
 surface.CreateFont("FlowHooks", {
 	font = "Verdana",
 	size = 12,
@@ -114,11 +116,11 @@ surface.CreateFont("FlowHooks", {
 	outline = true
 })
 
-fgui.timer = "fgui_SlowTick"
-fgui.vth = {} -- VarTable holders
-fgui.clipboard = nil -- For color copy / pasting
+fguitable.timer = "fgui_SlowTick"
+fguitable.vth = {} -- VarTable holders
+fguitable.clipboard = nil -- For color copy / pasting
 
-fgui.colors = {
+fguitable.colors = {
 	black = Color(0, 0, 0, 255),
 	white = Color(255, 255, 255, 255),
 
@@ -132,9 +134,9 @@ fgui.colors = {
 	gray = Color(150, 150, 150, 255) -- For text boxes
 }
 
-fgui.colors.grey = fgui.colors.gray -- We are anonymous
+fguitable.colors.grey = fguitable.colors.gray -- We are anonymous
 
-fgui.functions = {
+fguitable.functions = {
 	GetFurthestParent = function(base) -- Used to get FHFrame's accent color from any child object
 		if not base then
 			return error("Invalid Panel Provided")
@@ -146,7 +148,7 @@ fgui.functions = {
 			return cparent
 		end
 
-		return fgui.functions.GetFurthestParent(cparent)
+		return fguitable.functions.GetFurthestParent(cparent)
 	end,
 
 	CopyColor = function(color) -- Used for modification of the accent's alpha without affecting the original
@@ -173,11 +175,15 @@ fgui.functions = {
 		obj.FH.VarTable = varloc
 		obj.FH.Var = var
 
-		fgui.vth[#fgui.vth + 1] = obj
+		fguitable.vth[#fguitable.vth + 1] = obj
+	end,
+
+	GenerateRandomString = function()
+		return string.char(math.random(97, 122)) .. tostring(math.random(-123456, 123456))
 	end
 }
 
-fgui.objects = {
+fguitable.objects = {
 	FHFrame = {
 		Base = "DFrame",
 
@@ -248,12 +254,12 @@ fgui.objects = {
 
 			Init = function(self)
 				self.FH = {
-					AccentColor = fgui.functions.CopyColor(fgui.colors.accent),
+					AccentColor = fguitable.functions.CopyColor(fguitable.colors.accent),
 					Title = "Frame " .. math.random(0, 12345),
-					TitleColor = fgui.functions.CopyColor(fgui.colors.white),
+					TitleColor = fguitable.functions.CopyColor(fguitable.colors.white),
 					Font = "FlowHooks",
 
-					ColorPicker = fgui.Create("FHColorPicker")
+					ColorPicker = fguitable.Create("FHColorPicker")
 				}
 
 				self.FH.ColorPicker.FH.MP = self
@@ -264,7 +270,7 @@ fgui.objects = {
 				local closeButton = vgui.Create("DButton", self) -- Custom close button
 				closeButton:SetSize(24, 24)
 				closeButton:SetFont(self.FH.Font)
-				closeButton:SetTextColor(fgui.colors.white)
+				closeButton:SetTextColor(fguitable.colors.white)
 				closeButton:SetText("X")
 				closeButton:SetCursor("arrow")
 	
@@ -273,10 +279,10 @@ fgui.objects = {
 				end
 	
 				closeButton.Paint = function(self, w, h)
-					surface.SetDrawColor(fgui.colors.back_obj)
+					surface.SetDrawColor(fguitable.colors.back_obj)
 					surface.DrawRect(0, 0, w, h)
 	
-					surface.SetDrawColor(fgui.colors.outline)
+					surface.SetDrawColor(fguitable.colors.outline)
 					surface.DrawOutlinedRect(0, 0, w, h)
 				end
 					
@@ -293,7 +299,7 @@ fgui.objects = {
 			Paint = function(self, w, h)
 				self.FH.CloseButton:SetPos(w - self.FH.CloseButton:GetWide(), 0)
 	
-				surface.SetDrawColor(fgui.colors.black)
+				surface.SetDrawColor(fguitable.colors.black)
 				surface.DrawRect(0, 0, w, h)
 	
 				local grad = 55
@@ -305,7 +311,7 @@ fgui.objects = {
 					surface.DrawLine(0, i, w, i)
 				end
 	
-				surface.SetDrawColor(fgui.colors.outline)
+				surface.SetDrawColor(fguitable.colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 	
 				surface.SetFont(self:GetFont())
@@ -347,11 +353,11 @@ fgui.objects = {
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fgui.colors.back)
+				surface.SetDrawColor(fguitable.colors.back)
 				surface.DrawRect(0, 0, w, h)
 	
 				if self:GetDrawOutline() then
-					surface.SetDrawColor(fgui.colors.outline)
+					surface.SetDrawColor(fguitable.colors.outline)
 					surface.DrawOutlinedRect(0, 0, w, h)
 				end
 			end
@@ -396,8 +402,8 @@ fgui.objects = {
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetFont(fgui.functions.GetFurthestParent(self):GetFont())
-				surface.SetTextColor(fgui.colors.white)
+				surface.SetFont(fguitable.functions.GetFurthestParent(self):GetFont())
+				surface.SetTextColor(fguitable.colors.white)
 
 				local title = self:GetTitle()
 	
@@ -411,7 +417,7 @@ fgui.objects = {
 				h = h - 1
 				ty = ty + (th / 2)
 	
-				surface.SetDrawColor(fgui.colors.outline)
+				surface.SetDrawColor(fguitable.colors.outline)
 				surface.DrawLine(0, ty, tx - 3, ty)
 				surface.DrawLine(tx + tw + 3, ty, w, ty)
 				surface.DrawLine(w, ty, w, h)
@@ -426,7 +432,7 @@ fgui.objects = {
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
-				fgui.functions.RegisterVarTable(self, varloc, var)
+				fguitable.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -434,14 +440,14 @@ fgui.objects = {
 			end,
 
 			Init = function(self)
-				local MP = fgui.functions.GetFurthestParent(self)
+				local MP = fguitable.functions.GetFurthestParent(self)
 	
 				local checkbox = self:GetChildren()[1]
 	
 				checkbox:SetCursor("arrow")
 	
 				checkbox.Paint = function(self, w, h)
-					surface.SetDrawColor(fgui.colors.back_obj)
+					surface.SetDrawColor(fguitable.colors.back_obj)
 					surface.DrawRect(0, 0, w, h)
 		
 					if self:GetChecked() then
@@ -449,11 +455,11 @@ fgui.objects = {
 						surface.DrawRect(2, 2, w - 4, h - 4)
 					end
 		
-					surface.SetDrawColor(fgui.colors.outline)
+					surface.SetDrawColor(fguitable.colors.outline)
 					surface.DrawOutlinedRect(0, 0, w, h)
 				end
 	
-				self:SetTextColor(fgui.colors.white)
+				self:SetTextColor(fguitable.colors.white)
 				self:SetFont(MP:GetFont())
 			end,
 
@@ -474,7 +480,7 @@ fgui.objects = {
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
-				fgui.functions.RegisterVarTable(self, varloc, var)
+				fguitable.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -482,17 +488,17 @@ fgui.objects = {
 			end,
 
 			Init = function(self)
-				local MP = fgui.functions.GetFurthestParent(self)
+				local MP = fguitable.functions.GetFurthestParent(self)
 
 				self:GetTextArea().Paint = function(self, w, h) -- Paint number area
 					local y = (h / 2) - 7.5
 					h = 15
 	
-					surface.SetDrawColor(fgui.colors.back_obj)
+					surface.SetDrawColor(fguitable.colors.back_obj)
 					surface.DrawRect(0, y, w, h)
 	
 					surface.SetFont(MP:GetFont())
-					surface.SetTextColor(fgui.colors.white)
+					surface.SetTextColor(fguitable.colors.white)
 	
 					local val = self:GetValue()
 					local tw, th = surface.GetTextSize(val)
@@ -500,7 +506,7 @@ fgui.objects = {
 					surface.SetTextPos((w / 2) - (tw / 2), y + (h / 2) - (th / 2))
 					surface.DrawText(val)
 	
-					surface.SetDrawColor(fgui.colors.outline)
+					surface.SetDrawColor(fguitable.colors.outline)
 					surface.DrawOutlinedRect(0, y, w, h)
 				end
 	
@@ -509,7 +515,7 @@ fgui.objects = {
 				local label = children[3]
 	
 				label:GetChildren()[1]:SetEnabled(false) -- Disable that stupid popup panel
-				label:SetTextColor(fgui.colors.white) -- Setup label
+				label:SetTextColor(fguitable.colors.white) -- Setup label
 				label:SetFont(MP:GetFont())
 	
 				local bar = children[2]
@@ -519,7 +525,7 @@ fgui.objects = {
 				bar.Paint = function(self, w, h) -- Paint custom horizontal bar
 					local y = h / 2
 	
-					surface.SetDrawColor(fgui.colors.outline)
+					surface.SetDrawColor(fguitable.colors.outline)
 					surface.DrawLine(5, y, w - 5, y)
 				end
 	
@@ -531,10 +537,10 @@ fgui.objects = {
 					local x = (w / 2) - 5
 					w = 10
 	
-					surface.SetDrawColor(fgui.colors.back)
+					surface.SetDrawColor(fguitable.colors.back)
 					surface.DrawRect(x, 0, w, h)
 	
-					surface.SetDrawColor(fgui.colors.outline)
+					surface.SetDrawColor(fguitable.colors.outline)
 					surface.DrawOutlinedRect(x, 0, w, h)
 				end
 			end,
@@ -557,7 +563,7 @@ fgui.objects = {
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
-				fgui.functions.RegisterVarTable(self, varloc, var)
+				fguitable.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -582,20 +588,20 @@ fgui.objects = {
 
 				self:SetCursor("arrow")
 	
-				self:SetTextColor(fgui.colors.white)
-				self:SetFont(fgui.functions.GetFurthestParent(self):GetFont())
+				self:SetTextColor(fguitable.colors.white)
+				self:SetFont(fguitable.functions.GetFurthestParent(self):GetFont())
 	
 				self:GetChildren()[1].Paint = function() end -- Hide the dropdown's arrow
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fgui.colors.back_obj)
+				surface.SetDrawColor(fguitable.colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
 	
-				surface.SetDrawColor(fgui.colors.back)
+				surface.SetDrawColor(fguitable.colors.back)
 				surface.DrawRect(w - h, 0, w - h, h)
 	
-				surface.SetDrawColor(fgui.colors.outline)
+				surface.SetDrawColor(fguitable.colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 				surface.DrawLine(w - h, 0, w - h, h)
 	
@@ -628,7 +634,7 @@ fgui.objects = {
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
-				fgui.functions.RegisterVarTable(self, varloc, var)
+				fguitable.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -636,17 +642,17 @@ fgui.objects = {
 			end,
 
 			AddTab = function(self, name, icon, noStretchX, noStretchY, tooltip)
-				local ContentFrame = fgui.Create("FHContentFrame", self)
+				local ContentFrame = fguitable.Create("FHContentFrame", self)
 				ContentFrame:SetDrawOutline(false)
 
 				local data = self:AddSheet(name, ContentFrame, icon, noStretchX, noStretchY, tooltip)
 
-				local MP = self.FH.MP or fgui.functions.GetFurthestParent(self)
+				local MP = self.FH.MP or fguitable.functions.GetFurthestParent(self)
 				self.FH.MP = self.FH.MP or MP
 
 				data.Tab:SetCursor("arrow")
 
-				data.Tab:SetTextColor(fgui.colors.white)
+				data.Tab:SetTextColor(fguitable.colors.white)
 				data.Tab:SetFont(MP:GetFont())
 
 				local ogclick = data.Tab.DoClick
@@ -663,18 +669,18 @@ fgui.objects = {
 					h = 21
 
 					if self:IsActive() then
-						surface.SetDrawColor(fgui.colors.back)
+						surface.SetDrawColor(fguitable.colors.back)
 						surface.DrawRect(0, 0, w, h)
 
-						surface.SetDrawColor(fgui.colors.outline)
+						surface.SetDrawColor(fguitable.colors.outline)
 						surface.DrawLine(0, 0, 0, h)
 						surface.DrawLine(w - 1, 0, w - 1, h)
 
-						surface.SetDrawColor(fgui.functions.GetFurthestParent(self):GetAccentColor())
+						surface.SetDrawColor(fguitable.functions.GetFurthestParent(self):GetAccentColor())
 						surface.DrawLine(0, 0, w, 0)
 						surface.DrawLine(0, 1, w, 1)
 					else
-						surface.SetDrawColor(fgui.colors.back_obj)
+						surface.SetDrawColor(fguitable.colors.back_obj)
 						surface.DrawRect(0, 0, w, h)
 					end
 				end
@@ -727,7 +733,7 @@ fgui.objects = {
 				local awidth = math.ceil((self:GetWide() / #tabs) - 20)
 				local width = math.floor(awidth)
 			
-				local MP = fgui.functions.GetFurthestParent(self)
+				local MP = fguitable.functions.GetFurthestParent(self)
 				surface.SetFont(MP:GetFont())
 
 				local subamount = 0
@@ -785,10 +791,10 @@ fgui.objects = {
 	
 					h = 20
 	
-					surface.SetDrawColor(fgui.colors.back_min)
+					surface.SetDrawColor(fguitable.colors.back_min)
 					surface.DrawRect(0, 0, w, h)
 	
-					surface.SetDrawColor(fgui.colors.outline)
+					surface.SetDrawColor(fguitable.colors.outline)
 					surface.DrawLine(0, 0, w, 0)
 					surface.DrawLine(0, 0, 0, h)
 					surface.DrawLine(w - 1, 0, w - 1, h)
@@ -796,10 +802,10 @@ fgui.objects = {
 			end,
 	
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fgui.colors.back)
+				surface.SetDrawColor(fguitable.colors.back)
 				surface.DrawRect(0, 0, w, h)
 	
-				surface.SetDrawColor(fgui.colors.outline)
+				surface.SetDrawColor(fguitable.colors.outline)
 				surface.DrawOutlinedRect(0, 20, w, h - 20)
 				surface.DrawLine(0, 20, w, 20)
 			end
@@ -811,7 +817,7 @@ fgui.objects = {
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
-				fgui.functions.RegisterVarTable(self, varloc, var)
+				fguitable.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -841,7 +847,7 @@ fgui.objects = {
 						return error("Tried to Override Existing Column")
 					end
 	
-					local MP = self.FH.MP or fgui.functions.GetFurthestParent(self)
+					local MP = self.FH.MP or fguitable.functions.GetFurthestParent(self)
 					self.FH.MP = self.FH.MP or MP
 	
 					local Column = self.FH.AddColumn(self, name, pos)
@@ -849,14 +855,14 @@ fgui.objects = {
 					local ColumnButton = Column:GetChildren()[1]
 	
 					ColumnButton:SetCursor("arrow")
-					ColumnButton:SetTextColor(fgui.colors.white)
+					ColumnButton:SetTextColor(fguitable.colors.white)
 					ColumnButton:SetFont(MP:GetFont())
 	
 					ColumnButton.Paint = function(self, w, h)
-						surface.SetDrawColor(fgui.colors.back_min)
+						surface.SetDrawColor(fguitable.colors.back_min)
 						surface.DrawRect(0, 0, w, h)
 	
-						surface.SetDrawColor(fgui.colors.outline)
+						surface.SetDrawColor(fguitable.colors.outline)
 						surface.DrawOutlinedRect(0, 0, w, h)
 					end
 	
@@ -870,13 +876,13 @@ fgui.objects = {
 						return error ("No Content Provided")
 					end
 	
-					local MP = self.FH.MP or fgui.functions.GetFurthestParent(self)
+					local MP = self.FH.MP or fguitable.functions.GetFurthestParent(self)
 					self.FH.MP = self.FH.MP or MP
 	
 					local Line = self.FH.AddLine(self, ...)
 	
 					for _, v in ipairs(Line:GetChildren()) do
-						v:SetTextColor(fgui.colors.white)
+						v:SetTextColor(fguitable.colors.white)
 						v:SetFont(MP:GetFont())
 					end
 	
@@ -885,7 +891,7 @@ fgui.objects = {
 							return 
 						end
 	
-						local accent = fgui.functions.CopyColor(MP:GetAccentColor())
+						local accent = fguitable.functions.CopyColor(MP:GetAccentColor())
 	
 						if self:IsHovered() and not self:IsLineSelected() then
 							accent.a = accent.a / 4
@@ -901,7 +907,7 @@ fgui.objects = {
 				local scrollbar = self:GetChildren()[2]
 	
 				scrollbar.Paint = function(self, w, h)
-					surface.SetDrawColor(fgui.colors.outline_b)
+					surface.SetDrawColor(fguitable.colors.outline_b)
 					surface.DrawRect(0, 0, w, h)
 				end
 	
@@ -909,20 +915,20 @@ fgui.objects = {
 					v:SetCursor("arrow")
 	
 					v.Paint = function(self, w, h)
-						surface.SetDrawColor(fgui.colors.back)
+						surface.SetDrawColor(fguitable.colors.back)
 						surface.DrawRect(0, 0, w, h)
 		
-						surface.SetDrawColor(fgui.colors.outline)
+						surface.SetDrawColor(fguitable.colors.outline)
 						surface.DrawOutlinedRect(0, 0, w, h)
 					end
 				end
 			end,		
 	
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fgui.colors.back_obj)
+				surface.SetDrawColor(fguitable.colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
 	
-				surface.SetDrawColor(fgui.colors.outline)
+				surface.SetDrawColor(fguitable.colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 			end,
 
@@ -943,7 +949,7 @@ fgui.objects = {
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
-				fgui.functions.RegisterVarTable(self, varloc, var)
+				fguitable.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -951,9 +957,9 @@ fgui.objects = {
 			end,
 
 			Init = function(self)
-				local MP = fgui.functions.GetFurthestParent(self)
+				local MP = fguitable.functions.GetFurthestParent(self)
 	
-				self:SetTextColor(fgui.colors.white)
+				self:SetTextColor(fguitable.colors.white)
 				self:SetFont(MP:GetFont())
 	
 				self:SetPaintBackground(false)
@@ -970,13 +976,13 @@ fgui.objects = {
 				-- and to avoid rendering the text manually, this workaround will suffice
 	
 				timer.Simple(0, function()
-					local ContentFrame = fgui.Create("FHContentFrame", self:GetParent())
+					local ContentFrame = fguitable.Create("FHContentFrame", self:GetParent())
 					ContentFrame:Dock(NODOCK)
 					ContentFrame:SetSize(self:GetSize())
 					ContentFrame:SetPos(self:GetPos())
 		
 					ContentFrame.Paint = function(self, w, h)
-						surface.SetDrawColor(fgui.colors.gray)
+						surface.SetDrawColor(fguitable.colors.gray)
 						surface.DrawRect(0, 0, w, h)
 					end
 		
@@ -1017,14 +1023,14 @@ fgui.objects = {
 			end,
 
 			Init = function(self)
-				self:SetTextColor(fgui.colors.white)
-				self:SetFont(fgui.functions.GetFurthestParent(self):GetFont())
+				self:SetTextColor(fguitable.colors.white)
+				self:SetFont(fguitable.functions.GetFurthestParent(self):GetFont())
 	
 				self:SetCursor("arrow")
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fgui.colors.back_obj)
+				surface.SetDrawColor(fguitable.colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
 	
 				if not self:IsDown() then
@@ -1042,7 +1048,7 @@ fgui.objects = {
 					end
 				end
 	
-				surface.SetDrawColor(fgui.colors.outline)
+				surface.SetDrawColor(fguitable.colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 			end
 		}
@@ -1056,7 +1062,7 @@ fgui.objects = {
 			SetVarTable = function(self, varloc, var)
 				self.FH.Color = varloc[var]
 
-				fgui.functions.RegisterVarTable(self, varloc, var)
+				fguitable.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -1083,32 +1089,32 @@ fgui.objects = {
 
 			Init = function(self)
 				self.FH = {
-					Color = fgui.functions.CopyColor(fgui.colors.white)
+					Color = fguitable.functions.CopyColor(fguitable.colors.white)
 				}
 
 				self.SetValue = self.SetColor
 
-				self:SetTextColor(fgui.colors.white)
-				self:SetFont(fgui.functions.GetFurthestParent(self):GetFont())
+				self:SetTextColor(fguitable.colors.white)
+				self:SetFont(fguitable.functions.GetFurthestParent(self):GetFont())
 	
 				self:SetCursor("arrow")
 
 				timer.Simple(0, function()
 					self.DMenu:AddOption("Copy Color", function()
-						fgui.clipboard = fgui.functions.CopyColor(self:GetColor())
-						SetClipboardText(table.concat(fgui.clipboard:ToTable(), ", "))
+						fguitable.clipboard = fguitable.functions.CopyColor(self:GetColor())
+						SetClipboardText(table.concat(fguitable.clipboard:ToTable(), ", "))
 					end)
 
 					self.DMenu:AddOption("Paste Color", function()
-						if fgui.clipboard and IsColor(fgui.clipboard) then
-							self:SetColor(fgui.clipboard)
+						if fguitable.clipboard and IsColor(fguitable.clipboard) then
+							self:SetColor(fguitable.clipboard)
 						end
 					end)
 				end)
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fgui.colors.back_obj)
+				surface.SetDrawColor(fguitable.colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
 				
 				if not self:IsDown() then
@@ -1126,7 +1132,7 @@ fgui.objects = {
 					end
 				end
 	
-				surface.SetDrawColor(fgui.colors.outline)
+				surface.SetDrawColor(fguitable.colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 	
 				local _, th = surface.GetTextSize(self:GetText())
@@ -1137,7 +1143,7 @@ fgui.objects = {
 			end,
 
 			DoClick = function(self)
-				local MP = self.FH.MP or fgui.functions.GetFurthestParent(self)
+				local MP = self.FH.MP or fguitable.functions.GetFurthestParent(self)
 				self.FH.MP = self.FH.MP or MP
 
 				local MPPicker = self.FH.MP.FH.ColorPicker
@@ -1217,7 +1223,7 @@ fgui.objects = {
 					local ContentFrame = self:GetContentFrame()
 					local cfw, cfh = self:GetWide() - 20, self:GetTall() - 10 -- Uses self instead of content frame because jank
 		
-					local OK = fgui.Create("FHButton", ContentFrame)
+					local OK = fguitable.Create("FHButton", ContentFrame)
 					OK:SetSize(100, 22)
 					OK:SetPos((cfw / 2) - 50, cfh - 50)
 					OK:SetText("OK")
@@ -1243,9 +1249,9 @@ fgui.objects = {
 					ColorMixerHandle:SetCursor("arrow")
 	
 					ColorMixerHandle.Paint = function(self, w, h)
-						surface.DrawCircle((w / 2), (h / 2), 5, fgui.colors.white)
-						surface.DrawCircle((w / 2), (h / 2), 4, fgui.colors.black)
-						surface.DrawCircle((w / 2), (h / 2), 6, fgui.colors.black)
+						surface.DrawCircle((w / 2), (h / 2), 5, fguitable.colors.white)
+						surface.DrawCircle((w / 2), (h / 2), 4, fguitable.colors.black)
+						surface.DrawCircle((w / 2), (h / 2), 6, fguitable.colors.black)
 					end
 				end)
 			end,
@@ -1258,7 +1264,7 @@ fgui.objects = {
 					return
 				end
 	
-				surface.SetDrawColor(fgui.colors.black)
+				surface.SetDrawColor(fguitable.colors.black)
 				surface.DrawRect(0, 0, w, h)
 	
 				local grad = 55
@@ -1270,7 +1276,7 @@ fgui.objects = {
 					surface.DrawLine(0, i, w, i)
 				end
 	
-				surface.SetDrawColor(fgui.colors.outline)
+				surface.SetDrawColor(fguitable.colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 	
 				surface.SetFont(MP:GetFont())
@@ -1289,7 +1295,7 @@ fgui.objects = {
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
-				fgui.functions.RegisterVarTable(self, varloc, var)
+				fguitable.functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -1313,9 +1319,9 @@ fgui.objects = {
 			end,
 
 			Init = function(self)
-				local font = fgui.functions.GetFurthestParent(self):GetFont()
+				local font = fguitable.functions.GetFurthestParent(self):GetFont()
 	
-				self:SetTextColor(fgui.colors.white)
+				self:SetTextColor(fguitable.colors.white)
 				self:SetFont(font)
 	
 				self:SetCursor("arrow")
@@ -1328,7 +1334,7 @@ fgui.objects = {
 					local tw, th = surface.GetTextSize(label)
 	
 					local Label = vgui.Create("DLabel", self:GetParent())
-					Label:SetTextColor(fgui.colors.white)
+					Label:SetTextColor(fguitable.colors.white)
 					Label:SetFont(font)
 					Label:SetText(label)
 					Label:SetPos(self:GetX() + ((self:GetWide() / 2) - (tw / 2)), self:GetY() - th - 3)
@@ -1338,7 +1344,7 @@ fgui.objects = {
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fgui.colors.back_obj)
+				surface.SetDrawColor(fguitable.colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
 	
 				if not self:IsDown() then
@@ -1356,7 +1362,7 @@ fgui.objects = {
 					end
 				end
 	
-				surface.SetDrawColor(fgui.colors.outline)
+				surface.SetDrawColor(fguitable.colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 			end,
 
@@ -1439,7 +1445,7 @@ fgui.objects = {
 					Rows = {},
 					BackgroundAlpha = 255,
 					Font = "FlowHooks",
-					TextColor = fgui.functions.CopyColor(fgui.colors.white)
+					TextColor = fguitable.functions.CopyColor(fguitable.colors.white)
 				}
 
 				self:SetTitle("")
@@ -1451,10 +1457,10 @@ fgui.objects = {
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fgui.colors.back_min)
+				surface.SetDrawColor(fguitable.colors.back_min)
 				surface.DrawRect(0, 0, w, 20)
 	
-				local bgcol = fgui.functions.CopyColor(fgui.colors.back_obj)
+				local bgcol = fguitable.functions.CopyColor(fguitable.colors.back_obj)
 				bgcol.a = self.FH.BackgroundAlpha
 	
 				local rows = #self.FH.Rows
@@ -1463,7 +1469,7 @@ fgui.objects = {
 				surface.SetDrawColor(bgcol)
 				surface.DrawRect(0, 20, w, 20 * rows)
 	
-				surface.SetDrawColor(fgui.colors.outline)
+				surface.SetDrawColor(fguitable.colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 	
 				surface.SetFont(self.FH.Font)
@@ -1501,23 +1507,23 @@ fgui.objects = {
 
 		Registry = {
 			Init = function(self)
-				self:SetTextColor(fgui.colors.white)
-				self:SetFont(fgui.functions.GetFurthestParent(self):GetFont())
+				self:SetTextColor(fguitable.colors.white)
+				self:SetFont(fguitable.functions.GetFurthestParent(self):GetFont())
 			end
 		}
 	}
 }
 
-for k, v in pairs(fgui.objects) do -- Register objects
+for k, v in pairs(fguitable.objects) do -- Register objects
 	vgui.Register(k, v.Registry, v.Base)
 end
 
-fgui.Create = function(type, parent, name)
-	if not type or not fgui.objects[type] then
+fguitable.Create = function(type, parent, name)
+	if not type or not fguitable.objects[type] then
 		return error("Invalid FlowHooks Object (" .. type .. ")")
 	end
 
-	local current = fgui.objects[type]
+	local current = fguitable.objects[type]
 
 	if not parent and not current.NotParented then
 		return error("Invalid Parent Panel Specified")
@@ -1533,7 +1539,7 @@ fgui.Create = function(type, parent, name)
 	FHObject.FH.Type = type
 
 	if current.HasContentFrame then
-		local frame = fgui.Create("FHContentFrame", FHObject)
+		local frame = fguitable.Create("FHContentFrame", FHObject)
 		frame:Dock(FILL)
 		frame:SetDrawOutline(true)
 
@@ -1541,7 +1547,7 @@ fgui.Create = function(type, parent, name)
 	end
 
 	if current.HasDMenu then
-		local MP = fgui.functions.GetFurthestParent(FHObject)
+		local MP = fguitable.functions.GetFurthestParent(FHObject)
 
 		FHObject.DMenuOpen = false
 		FHObject.DMenu = vgui.Create("DMenu", MP)
@@ -1554,22 +1560,22 @@ fgui.Create = function(type, parent, name)
 
 			NewOption:SetCursor("arrow")
 	
-			NewOption:SetTextColor(fgui.colors.white)
+			NewOption:SetTextColor(fguitable.colors.white)
 			NewOption:SetFont(MP:GetFont())
 	
 			NewOption.Paint = function(self, w, h)
-				surface.SetDrawColor(fgui.colors.back_obj)
+				surface.SetDrawColor(fguitable.colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
 	
 				if self:IsHovered() then
-					local accent = fgui.functions.CopyColor(MP:GetAccentColor())
+					local accent = fguitable.functions.CopyColor(MP:GetAccentColor())
 					accent.a = accent.a / 4
 	
 					surface.SetDrawColor(accent)
 					surface.DrawRect(0, 0, w, h)
 				end
 		
-				surface.SetDrawColor(fgui.colors.outline)
+				surface.SetDrawColor(fguitable.colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 			end
 		end
@@ -1606,16 +1612,34 @@ fgui.Create = function(type, parent, name)
 	return FHObject
 end
 
-timer.Create("fgui_SlowTick", 0.2, 0, function()
-	for _, v in ipairs(fgui.vth) do
-		if not IsValid(v) or not v:IsVisible() or not v.FH or not v.FH.VarTable or not v.FH.Var then -- Just in case something goes wrong
-			continue
+fguitable.CreateVarTableTimer = function()
+	timer.Create(fguitable.timer, 0.2, 0, function()
+		for _, v in ipairs(fguitable.vth) do
+			if not IsValid(v) or not v:IsVisible() or not v.FH or not v.FH.VarTable or not v.FH.Var then -- Just in case something goes wrong
+				continue
+			end
+	
+			if v.FH.Type == "FHCheckBox" then -- Funny SetValue calls OnChange and I'm not gonna override SetValue
+				v:SetChecked(v.FH.VarTable[v.FH.Var])
+			else
+				v:SetValue(v.FH.VarTable[v.FH.Var])
+			end
 		end
+	end)
+end
 
-		if v.FH.Type == "FHCheckBox" then -- Funny SetValue calls OnChange and I'm not gonna override SetValue
-			v:SetChecked(v.FH.VarTable[v.FH.Var])
-		else
-			v:SetValue(v.FH.VarTable[v.FH.Var])
-		end
-	end
-end)
+fguitable.CreateVarTableTimer() -- Create the timer when the script is loaded
+
+fguitable.Hide = function() -- Destroys the fgui globals and returns the new fgui table (Except the elements)
+	local backup = table.Copy(fguitable)
+	fgui = nil
+
+	timer.Remove(backup.timer)
+
+	backup.timer = backup.functions.GenerateRandomString()
+	backup.CreateVarTableTimer()
+
+	fguitable = backup
+
+	return backup
+end
