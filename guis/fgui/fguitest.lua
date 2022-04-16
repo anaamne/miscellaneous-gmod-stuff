@@ -1,5 +1,9 @@
 include("fgui.lua")
 
+print(_G.fgui) -- Prints original fgui table
+local fgui = fgui.Hide()
+print(_G.fgui) -- Should be nil after obfuscation
+
 -- Shitty quick test menu
 
 local vars = {
