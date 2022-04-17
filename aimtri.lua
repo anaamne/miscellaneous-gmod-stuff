@@ -5,7 +5,7 @@
 ]]
 
 local stuff = {
-	Order = {
+	Order = { -- Scan in this order
 		HITGROUP_HEAD,
 		HITGROUP_CHEST,
 		HITGROUP_STOMACH
@@ -48,7 +48,7 @@ local stuff = {
 	TickInterval = engine.TickInterval()
 }
 
-local function GetEyePos()
+local function GetEyePos() -- Quickerish ways of getting CalcView information from the CalcView hook
 	return stuff.CalcView.EyePos
 end
 
@@ -63,7 +63,7 @@ end
 local function FixAngle(ang)
 	ang = ang or angle_zero
 	
-	return Angle(math.Clamp(math.NormalizeAngle(ang.pitch), -89, 89), math.NormalizeAngle(ang.yaw), math.NormalizeAngle(ang.roll))
+	return Angle(math.Clamp(math.NormalizeAngle(ang.pitch), -89, 89), math.NormalizeAngle(ang.yaw), math.NormalizeAngle(ang.roll)) -- Fixes an angle to (-89, 89), (-180, 180), (-180, 180)
 end
 
 local function WeaponCanShoot(weapon)
@@ -73,7 +73,7 @@ local function WeaponCanShoot(weapon)
 
 	local name = weapon:GetPrintName():lower()
 
-	for _, v in ipairs(stuff.NotGuns) do
+	for _, v in ipairs(stuff.NotGuns) do -- Some guns are retarded
 		if name == v then
 			return false
 		end
@@ -81,7 +81,7 @@ local function WeaponCanShoot(weapon)
 		if name:find(v) then
 			local breakouter = false
 
-			for _, t in ipairs(stuff.ActuallyGuns) do
+			for _, t in ipairs(stuff.ActuallyGuns) do -- language.Add is dumb
 				if name:find(t) then
 					breakouter = true
 					break
@@ -111,25 +111,25 @@ local function IsVisible(pos, ent)
 	})
 	
 	if ent then
-		return tr.Entity == ent
+		return tr.Entity == ent -- Tracer hit the entity we wanted it to
 	else
-		return tr.Fraction == 1
+		return tr.Fraction == 1 -- Trace didn't hit anything
 	end
 end
 
-local function ValidEntity(ent)
+local function ValidEntity(ent) -- Don't try to aim at dumb shit
 	if not IsValid(ent) then
 		return false
 	end
 
-	if ent:GetClass() ~= "player" then
+	if ent:GetClass() ~= "player" then -- Some checks below are player only checks
 		return true
 	end
 
 	return ent ~= LocalPlayer() and ent:Alive() and ent:Team() ~= TEAM_SPECTATOR and ent:GetObserverMode() == 0 and not ent:IsDormant()
 end
 
-local function GetSortedPlayers()
+local function GetSortedPlayers() -- Sorts players by distance (Should be used for rendering ESP but I didn't include ESP here so it's not super useful)
 	local ret = {}
 	
 	for _, v in ipairs(player.GetAll()) do
@@ -149,7 +149,7 @@ local function GetSortedPlayers()
 	return ret
 end
 
-local function Sign(p1, p2, p3)
+local function Sign(p1, p2, p3) -- https://en.wikipedia.org/wiki/Barycentric_coordinate_system
 	if not p1 or not p2 or not p3 then return 0 end
 
 	return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y)
@@ -171,7 +171,7 @@ local function IsPointInTriangle(pt, tri)
 	return not (n and p)
 end
 
-local function GetTarget()
+local function GetTarget() -- Gets the player whose OBBCenter is closest to the center of the screen
 	local x, y = ScrW() * 0.5, ScrH() * 0.5
 
 	local best = math.huge
@@ -182,7 +182,7 @@ local function GetTarget()
 
 		local cur = math.Dist(pos.x, pos.y, x, y)
 
-		if cur < best and IsPointInTriangle(pos, stuff.FOVTri) then
+		if cur < best and IsPointInTriangle(pos, stuff.FOVTri) then -- Closest player inside the FOV triangle
 			best = cur
 			entity = v
 		end
@@ -191,7 +191,7 @@ local function GetTarget()
 	return entity
 end
 
-local function GetHitBoxPositions(entity)
+local function GetHitBoxPositions(entity) -- Scans hitboxes for aim points
 	if not IsValid(entity) then
 		return nil
 	end
@@ -231,7 +231,7 @@ local function GetHitBoxPositions(entity)
 	return data
 end
 
-local function GetBoneDataPosition(bonename)
+local function GetBoneDataPosition(bonename) -- Turns bone names into hitgroups so I don't have to do some dumb if-else shit
 	if not bonename then
 		return nil
 	end
@@ -253,12 +253,12 @@ local function GetBoneDataPosition(bonename)
 	return nil
 end
 
-local function GetBonePositions(entity)
+local function GetBonePositions(entity) -- Scans bones
 	if not IsValid(entity) then
 		return nil
 	end
 
-	entity:SetupBones()
+	entity:SetupBones() -- Prevent some matrix issues
 	entity:InvalidateBoneCache()
 
 	local data = {
@@ -270,7 +270,7 @@ local function GetBonePositions(entity)
 	for bone = 0, entity:GetBoneCount() - 1 do
 		local name = entity:GetBoneName(bone)
 
-		if not name or name == "__INVALIDBONE__" then continue end
+		if not name or name == "__INVALIDBONE__" then continue end -- Fuck you and your retarded models
 
 		name = name:lower()
 
@@ -297,13 +297,13 @@ local function GetAimPosition(entity)
 		return nil
 	end
 
-	local data = GetHitBoxPositions(entity) or GetBonePositions(entity) or {
+	local data = GetHitBoxPositions(entity) or GetBonePositions(entity) or { -- OBBCenter fallback (For error models and whatnot)
 		[HITGROUP_HEAD] = {
 			entity:LocalToWorld(entity:OBBCenter())
 		}
 	}
 
-	for _, set in ipairs(stuff.Order) do
+	for _, set in ipairs(stuff.Order) do -- Scans through the positions to find visible ones
 		if not data[set] then continue end
 
 		for _, v in ipairs(data[set]) do
@@ -347,18 +347,18 @@ hook.Add("CreateMove", "", function(cmd)
 		local pos = GetAimPosition(GetTarget())
 		
 		if pos then
-			pos = pos - (LocalPlayer():GetVelocity() * stuff.TickInterval)
+			pos = pos + (LocalPlayer():GetVelocity() * stuff.TickInterval) -- Shitty engine prediction for LocalPlayer
 
 			cmd:SetViewAngles(FixAngle((pos - GetEyePos()):Angle()))
 
-			if not cmd:KeyDown(IN_ATTACK) and WeaponCanShoot(LocalPlayer():GetActiveWeapon()) then
+			if not cmd:KeyDown(IN_ATTACK) and WeaponCanShoot(LocalPlayer():GetActiveWeapon()) then -- Tap fires with fully automatic weapons but it's fine
 				cmd:AddKey(IN_ATTACK)
 			end
 		end
 	end
 end)
 
-hook.Add("CalcView", "", function(ply, pos, ang, fov)
+hook.Add("CalcView", "", function(ply, pos, ang, fov) -- Gets CalcView information because EyePos() and EyeAngles() are only reliable in certain situations
 	stuff.CalcView.EyePos = pos
 	stuff.CalcView.EyeAngles = ang
 	stuff.CalcView.FOV = fov
