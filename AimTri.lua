@@ -347,7 +347,7 @@ hook.Add("CreateMove", "", function(cmd)
 		local pos = GetAimPosition(GetTarget())
 		
 		if pos then
-			pos = pos + (LocalPlayer():GetVelocity() * stuff.TickInterval) -- Shitty engine prediction for LocalPlayer
+			pos = pos - (LocalPlayer():GetVelocity() * stuff.TickInterval) -- Shitty engine prediction for LocalPlayer
 
 			cmd:SetViewAngles(FixAngle((pos - GetEyePos()):Angle()))
 
