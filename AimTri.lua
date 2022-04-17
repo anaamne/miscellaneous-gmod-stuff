@@ -171,26 +171,6 @@ local function IsPointInTriangle(pt, tri)
 	return not (n and p)
 end
 
-local function GetTarget() -- Gets the player whose OBBCenter is closest to the center of the screen
-	local x, y = ScrW() * 0.5, ScrH() * 0.5
-
-	local best = math.huge
-	local entity = nil
-
-	for _, v in ipairs(GetSortedPlayers()) do
-		local pos = v:LocalToWorld(v:OBBCenter()):ToScreen()
-
-		local cur = math.Dist(pos.x, pos.y, x, y)
-
-		if cur < best and IsPointInTriangle(pos, stuff.FOVTri) then -- Closest player inside the FOV triangle
-			best = cur
-			entity = v
-		end
-	end
-
-	return entity
-end
-
 local function GetHitBoxPositions(entity) -- Scans hitboxes for aim points
 	if not IsValid(entity) then
 		return nil
@@ -292,7 +272,7 @@ local function GetBonePositions(entity) -- Scans bones
 	return data
 end
 
-local function GetAimPosition(entity)
+local function GetAimPositions(entity)
 	if not IsValid(entity) then
 		return nil
 	end
@@ -302,6 +282,16 @@ local function GetAimPosition(entity)
 			entity:LocalToWorld(entity:OBBCenter())
 		}
 	}
+
+	return data
+end
+
+local function GetAimPosition(entity)
+	if not IsValid(entity) then
+		return nil
+	end
+
+	local data = GetAimPositions(entity)
 
 	for _, set in ipairs(stuff.Order) do -- Scans through the positions to find visible ones
 		if not data[set] then continue end
@@ -314,6 +304,46 @@ local function GetAimPosition(entity)
 	end
 
 	return nil
+end
+
+local function GetTarget(quick) -- Gets the player whose OBBCenter is closest to the center of the screen
+	local x, y = ScrW() * 0.5, ScrH() * 0.5
+
+	local best = math.huge
+	local entity = nil
+
+	for _, v in ipairs(GetSortedPlayers()) do
+		local pos = v:LocalToWorld(v:OBBCenter()):ToScreen() -- Quick checks OBB only
+	
+		local cur = math.Dist(pos.x, pos.y, x, y)
+	
+		if cur < best and IsPointInTriangle(pos, stuff.FOVTri) then -- Closest player inside the FOV triangle
+			best = cur
+			entity = v
+		end
+
+		if quick then continue end
+
+		local data = GetAimPositions(v)
+
+		for _, set in ipairs(stuff.Order) do
+			if not data[set] then continue end
+	
+			for _, d in ipairs(data[set]) do
+				if not IsVisible(d, v) then continue end
+
+				pos = d:ToScreen()
+				cur = math.Dist(pos.x, pos.y, x, y)
+
+				if cur < best and IsPointInTriangle(pos, stuff.FOVTri) then
+					best = cur
+					entity = v
+				end
+			end
+		end
+	end
+
+	return entity
 end
 
 hook.Add("DrawOverlay", "", function()
