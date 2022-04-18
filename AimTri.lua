@@ -70,7 +70,7 @@ local function FixAngle(ang)
 end
 
 local function WeaponCanShoot(weapon)
-	if not IsValid(weapon) then
+	if not IsValid(weapon) or not weapon:CanPrimaryAttack() then
 		return false
 	end
 
