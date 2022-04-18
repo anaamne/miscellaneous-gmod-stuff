@@ -252,8 +252,8 @@ local function GetBonePositions(entity) -- Scans bones
 		return nil
 	end
 
-	entity:SetupBones() -- Prevent some matrix issues
-	entity:InvalidateBoneCache()
+	entity:InvalidateBoneCache() -- Prevent some matrix issues
+	entity:SetupBones()
 
 	local data = {
 		[HITGROUP_HEAD] = {},
@@ -434,7 +434,7 @@ hook.Add("CreateMove", "", function(cmd)
 			
 			if pos then
 				pos = PredictPos(pos, target)
-	
+
 				cmd:SetViewAngles(FixAngle((pos - GetEyePos()):Angle()))
 	
 				if not cmd:KeyDown(IN_ATTACK) and WeaponCanShoot(LocalPlayer():GetActiveWeapon()) then -- Tap fires with fully automatic weapons but it's fine
