@@ -388,7 +388,7 @@ hook.Add("CreateMove", "", function(cmd)
 		if pos then
 			pos = pos - (LocalPlayer():GetVelocity() * stuff.TickInterval) -- Shitty engine prediction for LocalPlayer
 
-			cmd:SetViewAngles(FixAngle((pos - GetEyePos()):Angle() - LocalPlayer():GetViewPunchAngles()))
+			cmd:SetViewAngles(FixAngle((pos - GetEyePos()):Angle()))
 
 			if not cmd:KeyDown(IN_ATTACK) and WeaponCanShoot(LocalPlayer():GetActiveWeapon()) then -- Tap fires with fully automatic weapons but it's fine
 				if stuff.WaitTicks > 1 then
