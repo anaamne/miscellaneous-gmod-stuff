@@ -70,7 +70,7 @@ local function FixAngle(ang)
 end
 
 local function WeaponCanShoot(weapon)
-	if not IsValid(weapon) or not weapon:CanPrimaryAttack() then
+	if not IsValid(weapon) or not (weapon.CanPrimaryAttack and weapon:CanPrimaryAttack() or true) then
 		return false
 	end
 
@@ -349,6 +349,16 @@ local function GetTarget(quick) -- Gets the player whose OBBCenter is closest to
 	return entity
 end
 
+local function PredictPos(pos, target)
+	pos = pos or vector_origin
+
+	if not IsValid(target) then
+		return pos
+	end
+
+	return pos + ((target:GetVelocity() * stuff.TickInterval * RealFrameTime()) - (LocalPlayer():GetVelocity() * stuff.TickInterval))
+end
+
 hook.Add("Move", "", function()
 	if not IsFirstTimePredicted() then return end
 
@@ -383,19 +393,25 @@ end)
 
 hook.Add("CreateMove", "", function(cmd)
 	if input.IsButtonDown(stuff.AimKey) then
-		local pos = GetAimPosition(GetTarget())
-		
-		if pos then
-			pos = pos - (LocalPlayer():GetVelocity() * stuff.TickInterval) -- Shitty engine prediction for LocalPlayer
+		local target = GetTarget()
 
-			cmd:SetViewAngles(FixAngle((pos - GetEyePos()):Angle()))
-
-			if not cmd:KeyDown(IN_ATTACK) and WeaponCanShoot(LocalPlayer():GetActiveWeapon()) then -- Tap fires with fully automatic weapons but it's fine
-				if stuff.WaitTicks > 1 then
-					cmd:AddKey(IN_ATTACK)
-				else
-					stuff.WaitTicks = stuff.WaitTicks + 1
+		if IsValid(target) then
+			local pos = GetAimPosition(target)
+			
+			if pos then
+				pos = PredictPos(pos, target)
+	
+				cmd:SetViewAngles(FixAngle((pos - GetEyePos()):Angle()))
+	
+				if not cmd:KeyDown(IN_ATTACK) and WeaponCanShoot(LocalPlayer():GetActiveWeapon()) then -- Tap fires with fully automatic weapons but it's fine
+					if stuff.WaitTicks > 1 then
+						cmd:AddKey(IN_ATTACK)
+					elseif stuff.WaitTicks < 5 then
+						stuff.WaitTicks = stuff.WaitTicks + 1
+					end
 				end
+			else
+				stuff.WaitTicks = 0
 			end
 		else
 			stuff.WaitTicks = 0
