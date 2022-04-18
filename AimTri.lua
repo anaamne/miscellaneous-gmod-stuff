@@ -383,11 +383,11 @@ local function GetLerp()
 end
 
 local function PredictPos(pos, target)
-	pos = pos or vector_origin
-
 	if not IsValid(target) then
 		return pos
 	end
+
+	pos = pos or vector_origin
 
 	return pos + (target:GetVelocity() * stuff.TickInterval * GetLerp()) - (LocalPlayer():GetVelocity() * stuff.TickInterval)
 end
