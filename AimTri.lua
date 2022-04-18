@@ -58,8 +58,7 @@ local stuff = {
 	TickInterval = engine.TickInterval(),
 
 	FOV = 16,
-	AimKey = MOUSE_5,
-	WaitTicks = 0
+	AimKey = MOUSE_5
 }
 
 local function GetEyePos() -- Quickerish ways of getting CalcView information from the CalcView hook
@@ -426,7 +425,7 @@ hook.Add("DrawOverlay", "", function()
 end)
 
 hook.Add("CreateMove", "", function(cmd)
-	if input.IsButtonDown(stuff.AimKey) then
+	if input.IsButtonDown(stuff.AimKey) and WeaponCanShoot(LocalPlayer():GetActiveWeapon()) then
 		local target = GetTarget()
 
 		if IsValid(target) then
@@ -436,22 +435,12 @@ hook.Add("CreateMove", "", function(cmd)
 				pos = PredictPos(pos, target)
 
 				cmd:SetViewAngles(FixAngle((pos - GetEyePos()):Angle()))
-	
-				if not cmd:KeyDown(IN_ATTACK) and WeaponCanShoot(LocalPlayer():GetActiveWeapon()) then -- Tap fires with fully automatic weapons but it's fine
-					if stuff.WaitTicks > 1 then
-						cmd:AddKey(IN_ATTACK)
-					elseif stuff.WaitTicks < 5 then
-						stuff.WaitTicks = stuff.WaitTicks + 1
-					end
+
+				if not cmd:KeyDown(IN_ATTACK) then
+					cmd:AddKey(IN_ATTACK)
 				end
-			else
-				stuff.WaitTicks = 0
 			end
-		else
-			stuff.WaitTicks = 0
 		end
-	else
-		stuff.WaitTicks = 0
 	end
 end)
 
