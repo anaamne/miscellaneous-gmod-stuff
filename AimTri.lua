@@ -395,7 +395,7 @@ end
 hook.Add("Move", "", function()
 	if not IsFirstTimePredicted() then return end
 
-	stuff.ServerTime = CurTime()
+	stuff.ServerTime = CurTime() + stuff.TickInterval
 end)
 
 hook.Add("DrawOverlay", "", function()
