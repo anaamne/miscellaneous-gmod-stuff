@@ -389,7 +389,7 @@ local function PredictPos(pos, target)
 
 	pos = pos or vector_origin
 
-	return pos + (target:GetVelocity() * stuff.TickInterval * GetLerp()) - (LocalPlayer():GetVelocity() * stuff.TickInterval)
+	return pos + (target:GetVelocity() * (stuff.TickInterval * GetLerp())) - (LocalPlayer():GetVelocity() * stuff.TickInterval)
 end
 
 hook.Add("Move", "", function()
