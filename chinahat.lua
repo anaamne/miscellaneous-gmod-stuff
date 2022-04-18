@@ -1,5 +1,5 @@
 --[[
-	https://github.com/awesomeusername69420/meth_tools
+	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
 	
 	Rice Mode: Activated
 	
