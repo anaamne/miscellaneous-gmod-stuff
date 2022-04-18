@@ -112,7 +112,7 @@ local function WeaponCanShoot(weapon)
 	return stuff.ServerTime >= weapon:GetNextPrimaryFire()
 end
 
-local function IsVisible(pos, ent)
+local function IsVisible(pos, entity)
 	pos = pos or vector_origin
 	
 	local tr = util.TraceLine({
@@ -123,23 +123,23 @@ local function IsVisible(pos, ent)
 		ignoreworld = false
 	})
 	
-	if ent then
-		return tr.Entity == ent -- Tracer hit the entity we wanted it to
+	if entity then
+		return tr.Entity == entity -- Tracer hit the entity we wanted it to
 	else
 		return tr.Fraction == 1 -- Trace didn't hit anything
 	end
 end
 
-local function ValidEntity(ent) -- Don't try to aim at dumb shit
-	if not IsValid(ent) then
+local function ValidEntity(entity) -- Don't try to aim at dumb shit
+	if not IsValid(entity) then
 		return false
 	end
 
-	if ent:GetClass() ~= "player" then -- Some checks below are player only checks
+	if entity:GetClass() ~= "player" then -- Some checks below are player only checks
 		return true
 	end
 
-	return ent ~= LocalPlayer() and ent:Alive() and ent:Team() ~= TEAM_SPECTATOR and ent:GetObserverMode() == 0 and not ent:IsDormant()
+	return entity ~= LocalPlayer() and entity:Alive() and entity:Team() ~= TEAM_SPECTATOR and entity:GetObserverMode() == 0 and not entity:IsDormant()
 end
 
 local function GetSortedPlayers() -- Sorts players by distance (Should be used for rendering ESP but I didn't include ESP here so it's not super useful)
@@ -235,7 +235,7 @@ local function GetBoneDataPosition(bonename) -- Turns bone names into hitgroups 
 		return HITGROUP_HEAD
 	end
 
-	if bonename:find("spine") then
+	if bonename:find("spine") then -- Due to the nature of this, bone scanning will have more points than hitbox scanning, but bones aren't centered to the hitbox
 		return HITGROUP_CHEST
 	end
 
@@ -445,6 +445,8 @@ hook.Add("CreateMove", "", function(cmd)
 end)
 
 hook.Add("CalcView", "", function(ply, pos, ang, fov) -- Gets CalcView information because EyePos() and EyeAngles() are only reliable in certain situations
+	if not IsValid(ply) then return end
+
 	stuff.CalcView.EyePos = pos
 	stuff.CalcView.EyeAngles = ang
 	stuff.CalcView.FOV = fov
