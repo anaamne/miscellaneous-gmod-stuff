@@ -44,9 +44,11 @@ local stuff = {
 	},
 
 	ServerTime = CurTime(),
+	TickInterval = engine.TickInterval(),
+
 	FOV = 16,
 	AimKey = MOUSE_5,
-	TickInterval = engine.TickInterval()
+	WaitTicks = 0
 }
 
 local function GetEyePos() -- Quickerish ways of getting CalcView information from the CalcView hook
@@ -389,9 +391,17 @@ hook.Add("CreateMove", "", function(cmd)
 			cmd:SetViewAngles(FixAngle((pos - GetEyePos()):Angle()))
 
 			if not cmd:KeyDown(IN_ATTACK) and WeaponCanShoot(LocalPlayer():GetActiveWeapon()) then -- Tap fires with fully automatic weapons but it's fine
-				cmd:AddKey(IN_ATTACK)
+				if stuff.WaitTicks > 1 then
+					cmd:AddKey(IN_ATTACK)
+				else
+					stuff.WaitTicks = stuff.WaitTicks + 1
+				end
 			end
+		else
+			stuff.WaitTicks = 0
 		end
+	else
+		stuff.WaitTicks = 0
 	end
 end)
 
