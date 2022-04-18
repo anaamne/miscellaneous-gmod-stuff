@@ -43,6 +43,7 @@ local stuff = {
 		{x = 0, y = 0},
 	},
 
+	ServerTime = CurTime(),
 	FOV = 16,
 	AimKey = MOUSE_5,
 	TickInterval = engine.TickInterval()
@@ -96,7 +97,7 @@ local function WeaponCanShoot(weapon)
 		end
 	end
 
-	return true
+	return stuff.ServerTime >= weapon:GetNextPrimaryFire()
 end
 
 local function IsVisible(pos, ent)
@@ -345,6 +346,12 @@ local function GetTarget(quick) -- Gets the player whose OBBCenter is closest to
 
 	return entity
 end
+
+hook.Add("Move", "", function()
+	if not IsFirstTimePredicted() then return end
+
+	stuff.ServerTime = CurTime()
+end)
 
 hook.Add("DrawOverlay", "", function()
 	local w = ScrW()
