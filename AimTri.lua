@@ -327,11 +327,12 @@ local function GetTarget(quick) -- Gets the player whose OBBCenter is closest to
 	local entity = nil
 
 	for _, v in ipairs(GetSortedPlayers()) do
-		local pos = v:LocalToWorld(v:OBBCenter()):ToScreen() -- Quick checks OBB only
+		local obbpos = v:LocalToWorld(v:OBBCenter())
+		local pos = obbpos:ToScreen() -- Quick checks OBB only
 	
 		local cur = math.Dist(pos.x, pos.y, x, y)
 	
-		if cur < best and IsPointInTriangle(pos, stuff.FOVTri) then -- Closest player inside the FOV triangle
+		if IsVisible(obbpos, v) and cur < best and IsPointInTriangle(pos, stuff.FOVTri) then -- Closest player inside the FOV triangle
 			best = cur
 			entity = v
 		end
