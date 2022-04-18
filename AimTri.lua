@@ -401,7 +401,7 @@ end)
 hook.Add("DrawOverlay", "", function()
 	local w = ScrW()
 	local x, y = w * 0.5, ScrH() * 0.5
-	local fovrad = (math.tan(math.rad(stuff.FOV)) / math.tan(math.rad(GetFOV() * 0.5)) * w) / 2.6
+	local fovrad = (math.tan(math.rad(stuff.FOV)) / math.tan(math.rad(GetFOV() * 0.5)) * w) / 2.6 -- Converts FOV into radius that could be used to draw an FOV circle
 
 	-- I don't understand this either, I just threw some shit together and it happened to work
 
