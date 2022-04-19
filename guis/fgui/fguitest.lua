@@ -32,9 +32,13 @@ testslider:SetPos(25, 75)
 local testdropdown = fgui.Create("FHDropDown", test)
 testdropdown:SetSize(100, 15)
 testdropdown:SetPos(25, 125)
-testdropdown:AddChoice("A")
-testdropdown:AddChoice("B")
-testdropdown:AddChoice("C")
+testdropdown:AddChoice("hello")
+testdropdown:AddChoices("A", "B", "C")
+testdropdown:AddChoices({
+	"D",
+	"E",
+	"F"
+})
 
 local testtab = fgui.Create("FHTabbedMenu", test)
 testtab:SetSize(300, 100)
