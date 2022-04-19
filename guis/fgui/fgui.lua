@@ -41,13 +41,14 @@
 				- SetVarTable(table, key)			=>			Sets the dropdown's table key to update on value change (Returns the text of the option)
 				- GetVarTable()						=>			Returns the dropdown's VarTable and key name
 				- AddChoice()						=>			A modified version of DComboBox:AddChoice (Works the exact same)
+				- AddChoices(choices)				=>			Creates options passed as seperate arguments OR a table of choices (Ex: dropdown:AddChoices("option1", "option2", "option3")) (Returns a table of created indexes)
 
 		FHTabbedMenu (DPropertySheet)
 			Functions:
 				- SetVarTable(table, key)			=>			Sets the tabbed menu's table key to update on value change (Returns the name of the tab)
 				- GetVarTable()						=>			Returns the tabbed menu's VarTable and key name
 				- AddTab(name, icon, sX, sY, tt)	=>			Creates a tab and returns the content frame of the tab (Works like DPropertySheet:AddSheet)
-				- AddTabs(vararg tabs)				=>			Creates tabs passed as seperate arguments (No icon, etc) (Ex: menu:AddTabs("tab1", "tab2", "tab3"))
+				- AddTabs(tabs)						=>			Creates tabs passed as seperate arguments OR a table of arguments (No icon, etc) (Ex: menu:AddTabs("tab1", "tab2", "tab3")) (Returns a table of the content frames)
 				- SetTabBackground(newState)		=>			Sets rendering of the background behind tabs
 				- GetTabBackground()				=>			Returns current rendering state of the background behind tabs
 				- SetValue(value)					=>			Used internally to update the tabbed menu to the specified tab
@@ -570,6 +571,23 @@ fguitable.objects = {
 				return self.FH.VarTable, self.FH.Var
 			end,
 
+			AddChoices = function(self, ...)
+				local data = {...}
+
+				if type(data[1]) == "table" then
+					data = data[1]
+				end
+
+				local created = {}
+
+				for _, v in pairs(data) do
+					local i = self:AddChoice(v)
+					created[#created + 1] = i
+				end
+
+				return created
+			end,
+
 			Init = function(self)
 				self.FH = {
 					AddChoice = self.AddChoice
@@ -579,11 +597,14 @@ fguitable.objects = {
 					if not value then
 						return error("Invalid Value Provided")
 					end
+
 					local i = self.FH.AddChoice(self, value, data, select, icon)
 	
 					self.DMenu:AddOption(value, function()
 						self:ChooseOptionID(i)
 					end)
+
+					return i
 				end
 
 				self:SetCursor("arrow")
@@ -689,11 +710,20 @@ fguitable.objects = {
 			end,
 
 			AddTabs = function(self, ...)
-				local tabs = {...}
+				local data = {...}
 
-				for _, v in ipairs(tabs) do
-					self:AddTab(v)
+				if type(data[1]) == "table" then
+					data = data[1]
 				end
+
+				local created = {}
+
+				for _, v in pairs(data) do
+					local i = self:AddTab(v)
+					created[#created + 1] = i
+				end
+
+				return created
 			end,
 
 			SetTabBackground = function(self, active)
