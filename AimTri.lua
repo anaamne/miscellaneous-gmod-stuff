@@ -373,11 +373,10 @@ local function GetLerp()
 	local ratio = math.Clamp(cl_interp_ratio, sv_client_min_interp_ratio, sv_client_max_interp_ratio)
 	local rate = math.Clamp(cl_updaterate, sv_minupdaterate, sv_maxupdaterate)
  
-	local lerp = ratio / rate
- 
-	if lerp <= cl_interp then
-        lerp = cl_interp
-    end
+ 	local minlerp = sv_client_min_interp_ratio / sv_minupdaterate
+	local maxlerp = sv_client_max_interp_ratio / sv_maxupdaterate
+
+	local lerp = math.Clamp(ratio / rate, minlerp, maxlerp)
  
 	return lerp
 end
