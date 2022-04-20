@@ -76,7 +76,6 @@ local stuff = {
 			if weapon.dt.Safe then return false end
 			if weapon:Clip1() == 0 then return false end
 			if weapon.BurstAmount and weapon.BurstAmount > 0 then return false end
-			
 
 			return true
 		end,
@@ -123,19 +122,19 @@ local stuff = {
 			if not IsValid(weapon) then return false end
 
 			if IsValid(weapon:GetHolster_Entity()) then return false end
-    		if weapon:GetHolster_Time() > 0 then return false end
-    		if weapon:GetReloading() then return false end
-    		if weapon:GetWeaponOpDelay() > CurTime() then return false end
-    		if weapon:GetHeatLocked() then return false end
-    		if weapon:GetState() == ArcCW.STATE_CUSTOMIZE then return false end
-    		if weapon:BarrelHitWall() > 0 then return false end
-    		if weapon:GetNWState() == ArcCW.STATE_SPRINT and not (weapon:GetBuff_Override("Override_ShootWhileSprint", weapon.ShootWhileSprint)) then return false end
-    		if (weapon:GetBurstCount() or 0) >= weapon:GetBurstLength() then return false end
-    		if weapon:GetNeedCycle() then return false end
-    		if weapon:GetCurrentFiremode().Mode == 0 then return false end
+			if weapon:GetHolster_Time() > 0 then return false end
+			if weapon:GetReloading() then return false end
+			if weapon:GetWeaponOpDelay() > CurTime() then return false end
+			if weapon:GetHeatLocked() then return false end
+			if weapon:GetState() == ArcCW.STATE_CUSTOMIZE then return false end
+			if weapon:BarrelHitWall() > 0 then return false end
+			if weapon:GetNWState() == ArcCW.STATE_SPRINT and not (weapon:GetBuff_Override("Override_ShootWhileSprint", weapon.ShootWhileSprint)) then return false end
+			if (weapon:GetBurstCount() or 0) >= weapon:GetBurstLength() then return false end
+			if weapon:GetNeedCycle() then return false end
+			if weapon:GetCurrentFiremode().Mode == 0 then return false end
 			if weapon:GetBuff_Override("Override_TriggerDelay", weapon.TriggerDelay) and weapon:GetTriggerDelta() < 1 then return false end
-    		if weapon:GetBuff_Hook("Hook_ShouldNotFire") then return false end
-    		if weapon:GetBuff_Hook("Hook_ShouldNotFireFirst") then return false end
+			if weapon:GetBuff_Hook("Hook_ShouldNotFire") then return false end
+			if weapon:GetBuff_Hook("Hook_ShouldNotFireFirst") then return false end
 
 			return true
 		end
@@ -533,9 +532,7 @@ hook.Add("CreateMove", "", function(cmd)
 			local pos = GetAimPosition(target)
 			
 			if pos then
-				pos = PredictPos(pos, target)
-
-				cmd:SetViewAngles(FixAngle((pos - GetEyePos()):Angle()))
+				cmd:SetViewAngles(FixAngle((PredictPos(pos, target) - GetEyePos()):Angle()))
 
 				if not cmd:KeyDown(IN_ATTACK) then
 					cmd:AddKey(IN_ATTACK)
