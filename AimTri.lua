@@ -54,6 +54,71 @@ local stuff = {
 		sv_client_max_interp_ratio = GetConVar("sv_client_max_interp_ratio")
 	},
 
+	ExtraChecks = {
+		-- These are taken directly from the weapon's base code with minor changes
+		-- I couldn't be bothered to clean any of it up
+
+		bobs = function(weapon) -- M9K
+			if not IsValid(weapon) then return false end
+
+			if not weapon.Owner:IsPlayer() then return false end
+			if weapon.Owner:KeyDown(IN_SPEED) or weapon.Owner:KeyDown(IN_RELOAD) then return false end
+
+			return true
+		end,
+
+		cw = function(weapon)
+			if not IsValid(weapon) then return false end
+
+			if not weapon:canFireWeapon(1) or not weapon:canFireWeapon(2) or not weapon:canFireWeapon(3) then return false end
+			if weapon.Owner:KeyDown(IN_USE) and CustomizableWeaponry.quickGrenade.canThrow(weapon) then return false end
+			if weapon.dt.State == CW_AIMING and weapon.dt.M203Active and weapon.M203Chamber then return false end
+			if weapon.dt.Safe then return false end
+			if weapon:Clip1() == 0 then return false end
+			if weapon.BurstAmount and weapon.BurstAmount > 0 then return false end
+			
+
+			return true
+		end,
+
+		fas2 = function(weapon)
+			if not IsValid(weapon) then return false end
+
+			if weapon.FireMode == "safe" then return false end
+			if weapon.BurstAmount > 0 and weapon.dt.Shots >= weapon.BurstAmount then return false end
+			if weapon.ReloadState ~= 0 then return false end
+			if weapon.dt.Status == FAS_STAT_CUSTOMIZE then return false end
+			if weapon.Cooking or weapon.FuseTime then return false end
+			if weapon.Owner:KeyDown(IN_USE) and weapon:CanThrowGrenade() then return false end
+			if weapon.dt.Status == FAS_STAT_SPRINT or weapon.dt.Status == FAS_STAT_QUICKGRENADE then return false end
+			if weapon:Clip1() <= 0 or weapon.Owner:WaterLevel() >= 3 then return false end
+			if weapon.CockAfterShot and not weapon.Cocked then return false end
+
+			return true
+		end,
+
+		arccw = function(weapon)
+			if not IsValid(weapon) then return false end
+
+			if IsValid(weapon:GetHolster_Entity()) then return false end
+    		if weapon:GetHolster_Time() > 0 then return false end
+    		if weapon:GetReloading() then return false end
+    		if weapon:GetWeaponOpDelay() > CurTime() then return false end
+    		if weapon:GetHeatLocked() then return false end
+    		if weapon:GetState() == ArcCW.STATE_CUSTOMIZE then return false end
+    		if weapon:BarrelHitWall() > 0 then return false end
+    		if weapon:GetNWState() == ArcCW.STATE_SPRINT and not (weapon:GetBuff_Override("Override_ShootWhileSprint", weapon.ShootWhileSprint)) then return false end
+    		if (weapon:GetBurstCount() or 0) >= weapon:GetBurstLength() then return false end
+    		if weapon:GetNeedCycle() then return false end
+    		if weapon:GetCurrentFiremode().Mode == 0 then return false end
+			if weapon:GetBuff_Override("Override_TriggerDelay", weapon.TriggerDelay) and weapon:GetTriggerDelta() < 1 then return false end
+    		if weapon:GetBuff_Hook("Hook_ShouldNotFire") then return false end
+    		if weapon:GetBuff_Hook("Hook_ShouldNotFireFirst") then return false end
+
+			return true
+		end
+	},
+
 	ServerTime = CurTime(),
 	TickInterval = engine.TickInterval(),
 
@@ -77,6 +142,14 @@ local function FixAngle(ang)
 	ang = ang or angle_zero
 	
 	return Angle(math.Clamp(math.NormalizeAngle(ang.pitch), -89, 89), math.NormalizeAngle(ang.yaw), math.NormalizeAngle(ang.roll)) -- Fixes an angle to (-89, 89), (-180, 180), (-180, 180)
+end
+
+local function GetBase(weapon)
+	if not IsValid(weapon) or not weapon.Base then
+		return nil
+	end
+
+	return weapon.Base:lower():Split("_")[1]
 end
 
 local function WeaponCanShoot(weapon)
@@ -109,7 +182,14 @@ local function WeaponCanShoot(weapon)
 		end
 	end
 
-	return stuff.ServerTime >= weapon:GetNextPrimaryFire()
+	local base = GetBase(weapon) or ""
+	local ExtraCheck = true 
+
+	if stuff.ExtraChecks[base] then
+		ExtraCheck = stuff.ExtraChecks[base](weapon)
+	end
+
+	return stuff.ServerTime >= weapon:GetNextPrimaryFire() and ExtraCheck
 end
 
 local function IsVisible(pos, entity)
