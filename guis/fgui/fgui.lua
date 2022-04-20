@@ -1658,8 +1658,6 @@ fguitable.CreateVarTableTimer = function()
 	end)
 end
 
-fguitable.CreateVarTableTimer() -- Create the timer when the script is loaded
-
 fguitable.Hide = function() -- Destroys the fgui globals and returns the new fgui table (Except the elements)
 	local backup = table.Copy(fguitable)
 	fgui = nil
@@ -1673,3 +1671,5 @@ fguitable.Hide = function() -- Destroys the fgui globals and returns the new fgu
 
 	return backup
 end
+
+fguitable.CreateVarTableTimer() -- Create the timer when the script is loaded
