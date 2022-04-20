@@ -97,6 +97,28 @@ local stuff = {
 			return true
 		end,
 
+		tfa = function(weapon)
+			if not IsValid(weapon) then return false end
+
+			local weapon2 = weapon:GetTable()
+
+			local v = hook.Run("TFA_PreCanPrimaryAttack", weapon)
+			if v ~= nil then return v end
+
+			if weapon:IsSafety() then return false end
+			if weapon:GetSprintProgress() >= 0.1 and not weapon:GetStatL("AllowSprintAttack", false) then return false end
+			if weapon:GetStatL("Primary.ClipSize") <= 0 and weapon:Ammo1() < weapon:GetStatL("Primary.AmmoConsumption") then return false end
+			if weapon:GetPrimaryClipSize(true) > 0 and weapon:Clip1() < weapon:GetStatL("Primary.AmmoConsumption") then return false end
+			if weapon2.GetStatL(weapon, "Primary.FiresUnderwater") == false and weapon:GetOwner():WaterLevel() >= 3 then return false end
+
+			v = hook.Run("TFA_CanPrimaryAttack", self)
+			if v ~= nil then return v end
+
+			if weapon:CheckJammed() then return false end
+
+			return true
+		end,
+
 		arccw = function(weapon)
 			if not IsValid(weapon) then return false end
 
