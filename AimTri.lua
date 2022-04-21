@@ -579,8 +579,6 @@ hook.Add("CreateMove", "", function(cmd)
 		return
 	end
 
-	print(WeaponCanShoot(LocalPlayer():GetActiveWeapon()))
-
 	if input.IsButtonDown(stuff.AimKey) and WeaponCanShoot(LocalPlayer():GetActiveWeapon()) then
 		local target = GetTarget()
 
