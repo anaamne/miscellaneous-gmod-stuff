@@ -145,6 +145,12 @@ local stuff = {
 		end
 	},
 
+	BuildModeNetVars = {
+		"BuildMode", -- Libby's
+		"buildmode", -- Fun Server
+		"_Kyle_Buildmode" -- Workshop addon
+	},
+
 	og = LocalPlayer():EyeAngles(),
 
 	ServerTime = CurTime(),
@@ -242,12 +248,26 @@ local function IsVisible(pos, entity, hitgroup)
 	end
 end
 
+local function InBuildMode(player)
+	if not IsValid(player) or not player:IsPlayer() then
+		return false
+	end
+
+	for _, v in ipairs(stuff.BuildModeNetVars) do
+		if player:GetNWBool(v, false) then
+			return true
+		end
+	end
+
+	return false
+end
+
 local function ValidEntity(entity) -- Don't try to aim at dumb shit
 	if not IsValid(entity) then
 		return false
 	end
 
-	if entity:GetClass() ~= "player" then -- Some checks below are player only checks
+	if not entity:IsPlayer() then -- Some checks below are player only checks
 		return true
 	end
 
@@ -438,6 +458,8 @@ local function GetTarget(quick) -- Gets the player whose OBBCenter is closest to
 	local entity = nil
 
 	for _, v in ipairs(GetSortedPlayers()) do
+		if InBuildMode(v) then continue end
+
 		local obbpos = v:LocalToWorld(v:OBBCenter())
 		local pos = obbpos:ToScreen() -- Quick checks OBB only
 	
