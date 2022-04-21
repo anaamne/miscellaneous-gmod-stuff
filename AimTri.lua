@@ -544,7 +544,7 @@ hook.Add("CreateMove", "", function(cmd)
 	stuff.og = stuff.og or cmd:GetViewAngles()
 
 	if cmd:KeyDown(IN_USE) then
-		stuff.og = cmd:GetViewAngles()
+		stuff.og = cmd:GetViewAngles() -- Half assed fix for prop rotating
 	else
 		local sensitivity = stuff.ConVars.sensitivity:GetFloat() / 256
 		stuff.og = FixAngle(stuff.og + Angle(cmd:GetMouseY() * sensitivity, cmd:GetMouseX() * (0 - sensitivity), 0))
