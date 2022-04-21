@@ -451,7 +451,7 @@ local function GetAimPosition(entity)
 	return nil
 end
 
-local function GetTarget(quick) -- Gets the player whose OBBCenter is closest to the center of the screen
+local function GetTarget(quick) -- Gets the player whose aimbot points are closest to the center of the screen
 	local x, y = ScrW() * 0.5, ScrH() * 0.5
 
 	local best = math.huge
