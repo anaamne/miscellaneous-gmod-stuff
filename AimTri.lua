@@ -213,7 +213,7 @@ local function WeaponCanShoot(weapon)
 	return stuff.ServerTime >= weapon:GetNextPrimaryFire() and ExtraCheck
 end
 
-local function IsVisible(pos, entity)
+local function IsVisible(pos, entity, hitgroup)
 	pos = pos or vector_origin
 	
 	local tr = util.TraceLine({
@@ -225,7 +225,11 @@ local function IsVisible(pos, entity)
 	})
 	
 	if entity then
-		return tr.Entity == entity -- Tracer hit the entity we wanted it to
+		if hitgroup then
+			return tr.Entity == entity and tr.HitGroup == hitgroup -- Tracer hit the entity we wanted it to and the hitgroup we asked for
+		else
+			return tr.Entity == entity -- Tracer hit the entity we wanted it to
+		end
 	else
 		return tr.Fraction == 1 -- Trace didn't hit anything
 	end
