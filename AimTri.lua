@@ -106,6 +106,9 @@ local stuff = {
 			local v = hook.Run("TFA_PreCanPrimaryAttack", weapon)
 			if v ~= nil then return v end
 
+			local stat = weapon:GetStatus()
+			if stat == TFA.Enum.STATUS_RELOADING_WAIT or stat == TFA.Enum.STATUS_RELOADING then return false end
+
 			if weapon:IsSafety() then return false end
 			if weapon:GetSprintProgress() >= 0.1 and not weapon:GetStatL("AllowSprintAttack", false) then return false end
 			if weapon:GetStatL("Primary.ClipSize") <= 0 and weapon:Ammo1() < weapon:GetStatL("Primary.AmmoConsumption") then return false end
@@ -508,6 +511,27 @@ local function UpdateCalcViewData(data) -- Gets CalcView information because Eye
 	stuff.CalcView.FOV = data.fov
 end
 
+local function FixMovement(cmd)
+	if not cmd then return end
+
+	local MovementVector = Vector(cmd:GetForwardMove(), cmd:GetSideMove(), 0)
+
+	local CMDAngle = cmd:GetViewAngles()
+	local Yaw = CMDAngle.yaw - stuff.og.yaw + MovementVector:Angle().yaw
+	
+	if (CMDAngle.pitch + 90) % 360 > 180 then
+		Yaw = 180 - Yaw
+	end
+	
+	Yaw = ((Yaw + 180) % 360) - 180
+	
+	local Speed = math.sqrt((MovementVector.x * MovementVector.x) + (MovementVector.y * MovementVector.y))
+	Yaw = math.rad(Yaw)
+	
+	cmd:SetForwardMove(math.cos(Yaw) * Speed)
+	cmd:SetSideMove(math.sin(Yaw) * Speed)
+end
+
 hook.Add("Move", "", function()
 	if not IsFirstTimePredicted() then return end
 
@@ -555,6 +579,8 @@ hook.Add("CreateMove", "", function(cmd)
 		return
 	end
 
+	print(WeaponCanShoot(LocalPlayer():GetActiveWeapon()))
+
 	if input.IsButtonDown(stuff.AimKey) and WeaponCanShoot(LocalPlayer():GetActiveWeapon()) then
 		local target = GetTarget()
 
@@ -563,6 +589,7 @@ hook.Add("CreateMove", "", function(cmd)
 			
 			if pos then
 				cmd:SetViewAngles(FixAngle((PredictPos(pos, target) - GetEyePos()):Angle()))
+				FixMovement(cmd)
 
 				if not cmd:KeyDown(IN_ATTACK) then
 					cmd:AddKey(IN_ATTACK)
