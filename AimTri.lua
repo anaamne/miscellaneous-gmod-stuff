@@ -51,7 +51,9 @@ local stuff = {
 		sv_minupdaterate = GetConVar("sv_minupdaterate"),
 		sv_maxupdaterate = GetConVar("sv_maxupdaterate"),
 		sv_client_min_interp_ratio = GetConVar("sv_client_min_interp_ratio"),
-		sv_client_max_interp_ratio = GetConVar("sv_client_max_interp_ratio")
+		sv_client_max_interp_ratio = GetConVar("sv_client_max_interp_ratio"),
+
+		sensitivity = GetConVar("sensitivity")
 	},
 
 	ExtraChecks = {
@@ -139,6 +141,8 @@ local stuff = {
 			return true
 		end
 	},
+
+	og = LocalPlayer():EyeAngles(),
 
 	ServerTime = CurTime(),
 	TickInterval = engine.TickInterval(),
@@ -496,6 +500,14 @@ local function PredictPos(pos, target)
 	return pos + (target:GetVelocity() * (stuff.TickInterval * GetLerp())) - (LocalPlayer():GetVelocity() * stuff.TickInterval)
 end
 
+local function UpdateCalcViewData(data) -- Gets CalcView information because EyePos() and EyeAngles() are only reliable in certain situations
+	if not data then return end
+
+	stuff.CalcView.EyePos = data.origin
+	stuff.CalcView.EyeAngles = data.angles
+	stuff.CalcView.FOV = data.fov
+end
+
 hook.Add("Move", "", function()
 	if not IsFirstTimePredicted() then return end
 
@@ -529,6 +541,20 @@ hook.Add("DrawOverlay", "", function()
 end)
 
 hook.Add("CreateMove", "", function(cmd)
+	stuff.og = stuff.og or cmd:GetViewAngles()
+
+	if cmd:KeyDown(IN_USE) then
+		stuff.og = cmd:GetViewAngles()
+	else
+		local sensitivity = stuff.ConVars.sensitivity:GetFloat() / 256
+		stuff.og = FixAngle(stuff.og + Angle(cmd:GetMouseY() * sensitivity, cmd:GetMouseX() * (0 - sensitivity), 0))
+	end
+
+	if cmd:CommandNumber() == 0 then
+		cmd:SetViewAngles(stuff.og)
+		return
+	end
+
 	if input.IsButtonDown(stuff.AimKey) and WeaponCanShoot(LocalPlayer():GetActiveWeapon()) then
 		local target = GetTarget()
 
@@ -546,10 +572,44 @@ hook.Add("CreateMove", "", function(cmd)
 	end
 end)
 
-hook.Add("CalcView", "", function(ply, pos, ang, fov) -- Gets CalcView information because EyePos() and EyeAngles() are only reliable in certain situations
+hook.Add("CalcView", "", function(ply, pos, ang, fov, zn, zf)
 	if not IsValid(ply) then return end
 
-	stuff.CalcView.EyePos = pos
-	stuff.CalcView.EyeAngles = ang
-	stuff.CalcView.FOV = fov
+	local CalcAng = stuff.og * 1
+
+	local view = {
+		origin = pos,
+		angles = CalcAng,
+		fov = fov,
+		znear = zn,
+		zfar = zf
+	}
+
+	local vehicle = ply:GetVehicle()
+
+	if IsValid(vehicle) then
+		UpdateCalcViewData(view)
+
+		return hook.Run("CalcVehicleView", vehicle ,ply, view)
+	end
+
+	local weapon = ply:GetActiveWeapon()
+
+	if IsValid(weapon) then
+		local wCalcView = weapon.CalcView
+
+		if wCalcView then
+			local WeaponAngle = angle_zero
+
+			view.origin, WeaponAngle, view.fov = wCalcView(weapon, ply, view.origin * 1, CalcAng * 1, view.fov)
+
+			if GetBase(weapon) ~= "arccw" then
+				view.angles = WeaponAngle
+			end
+		end
+	end
+
+	UpdateCalcViewData(view)
+
+	return view
 end)
