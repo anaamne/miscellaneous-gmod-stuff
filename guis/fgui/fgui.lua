@@ -263,6 +263,9 @@ fguitable.objects = {
 					ColorPicker = fguitable.Create("FHColorPicker")
 				}
 
+				self:SetCursor("arrow") -- Prevent cursor change when dragging
+				self.SetCursor = function() end
+
 				self.FH.ColorPicker.FH.MP = self
 
 				self:SetTitle("") -- Hide default window title
@@ -1558,7 +1561,7 @@ fguitable.Create = function(type, parent, name)
 	if not parent and not current.NotParented then
 		return error("Invalid Parent Panel Specified")
 	elseif parent and type ~= "FHContentFrame" then
-		if parent:GetName() == "FHFrame" and parent.GetContentFrame then
+		if parent.FH.Type == "FHFrame" and parent.GetContentFrame then
 			parent = parent:GetContentFrame()
 		end
 	end
