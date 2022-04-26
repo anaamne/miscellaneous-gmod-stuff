@@ -44,6 +44,16 @@ local stuff = {
 	},
 
 	ConVars = {
+		cl_interp = GetConVar("cl_interp"),
+		cl_updaterate = GetConVar("cl_updaterate"),
+		cl_interp_ratio = GetConVar("cl_interp_ratio"),
+
+		sv_minupdaterate = GetConVar("sv_minupdaterate"),
+		sv_maxupdaterate = GetConVar("sv_maxupdaterate"),
+		sv_client_min_interp_ratio = GetConVar("sv_client_min_interp_ratio"),
+		sv_client_max_interp_ratio = GetConVar("sv_client_max_interp_ratio"),
+		sv_gravity = GetConVar("sv_gravity"),
+
 		sensitivity = GetConVar("sensitivity")
 	},
 
@@ -140,6 +150,10 @@ local stuff = {
 		"BuildMode", -- Libby's
 		"buildmode", -- Fun Server
 		"_Kyle_Buildmode" -- Workshop addon
+	},
+
+	GodModeNetVars = {
+		"has_god" -- Fun Server + LBG
 	},
 
 	og = LocalPlayer():EyeAngles(),
@@ -239,6 +253,22 @@ local function IsVisible(pos, entity, hitgroup)
 	end
 end
 
+local function InGodMode(player)
+	if not IsValid(player) or not player:IsPlayer() then
+		return false
+	end
+
+	if player:HasGodMode() then return true end -- This doesn't work by default
+
+	for _, v in ipairs(stuff.GodModeNetVars) do
+		if player:GetNWBool(v, false) then
+			return true
+		end
+	end
+
+	return false
+end
+
 local function InBuildMode(player)
 	if not IsValid(player) or not player:IsPlayer() then
 		return false
@@ -312,6 +342,8 @@ local function GetHitBoxPositions(entity) -- Scans hitboxes for aim points
 		return nil
 	end
 
+	local null = true
+
 	local data = {
 		[HITGROUP_HEAD] = {},
 		[HITGROUP_CHEST] = {},
@@ -341,7 +373,13 @@ local function GetHitBoxPositions(entity) -- Scans hitboxes for aim points
 			maxs:Rotate(ang)
 
 			table.insert(data[hitgroup], pos + ((mins + maxs) * 0.5))
+
+			null = false
 		end
+	end
+
+	if null then
+		return nil -- No hitboxes found
 	end
 
 	return data
@@ -377,6 +415,8 @@ local function GetBonePositions(entity) -- Scans bones
 	entity:InvalidateBoneCache() -- Prevent some matrix issues
 	entity:SetupBones()
 
+	local null = true
+
 	local data = {
 		[HITGROUP_HEAD] = {},
 		[HITGROUP_CHEST] = {},
@@ -403,6 +443,12 @@ local function GetBonePositions(entity) -- Scans bones
 		if not pos then continue end
 
 		table.insert(data[boneloc], pos)
+
+		null = false
+	end
+
+	if null then
+		return nil -- No bones found
 	end
 
 	return data
@@ -485,6 +531,27 @@ local function GetTarget(quick) -- Gets the player whose aimbot points are close
 	return entity
 end
 
+local function GetLerp()
+	local cl_interp = stuff.ConVars.cl_interp:GetFloat()
+	local cl_updaterate = stuff.ConVars.cl_updaterate:GetFloat()
+	local cl_interp_ratio = stuff.ConVars.cl_interp_ratio:GetInt()
+
+	local sv_minupdaterate = stuff.ConVars.sv_minupdaterate:GetInt()
+	local sv_maxupdaterate = stuff.ConVars.sv_maxupdaterate:GetInt()
+	local sv_client_min_interp_ratio = stuff.ConVars.sv_client_min_interp_ratio:GetFloat()
+	local sv_client_max_interp_ratio = stuff.ConVars.sv_client_max_interp_ratio:GetFloat()
+ 
+	local ratio = math.Clamp(cl_interp_ratio, sv_client_min_interp_ratio, sv_client_max_interp_ratio)
+	local rate = math.Clamp(cl_updaterate, sv_minupdaterate, sv_maxupdaterate)
+ 
+ 	local minlerp = sv_client_min_interp_ratio / sv_minupdaterate
+	local maxlerp = sv_client_max_interp_ratio / sv_maxupdaterate
+
+	local lerp = math.Clamp(ratio / rate, minlerp, maxlerp)
+ 
+	return lerp
+end
+
 local function PredictPos(pos, target)
 	if not IsValid(target) then
 		return pos
@@ -492,7 +559,7 @@ local function PredictPos(pos, target)
 
 	pos = pos or vector_origin
 
-	return pos + (target:GetVelocity() * stuff.TickInterval * RealFrameTime()) - (LocalPlayer():GetVelocity() * stuff.TickInterval)
+	return pos + (target:GetVelocity() * stuff.TickInterval * GetLerp()) - (LocalPlayer():GetVelocity() * stuff.TickInterval)
 end
 
 local function UpdateCalcViewData(data) -- Gets CalcView information because EyePos() and EyeAngles() are only reliable in certain situations
@@ -522,6 +589,32 @@ local function FixMovement(cmd)
 	
 	cmd:SetForwardMove(math.cos(Yaw) * Speed)
 	cmd:SetSideMove(math.sin(Yaw) * Speed)
+end
+
+local function CalculateAimAngle(pos, target)
+	if not IsValid(target) then return angle_zero end
+
+	pos = pos or vector_origin
+
+	local weapon = LocalPlayer():GetActiveWeapon()
+
+	if IsValid(weapon) then
+		if weapon:GetClass() == "weapon_vj_flaregun" then
+			local distance = pos:Distance(LocalPlayer():GetPos())
+
+			pos = target:LocalToWorld(target:OBBCenter()) + (vector_up * (distance * 0.04))
+
+        	local velocity = target:GetAbsVelocity()
+        	
+        	velocity.z = not target:IsOnGround() and velocity.z - (stuff.ConVars.sv_gravity:GetFloat()  * stuff.TickInterval) or velocity.z
+
+        	local comptime = (distance / 3500) + stuff.ConVars.cl_interp:GetFloat()
+
+        	pos = pos + (velocity * comptime)
+		end
+	end
+
+	return FixAngle((PredictPos(pos, target) - GetEyePos()):Angle())
 end
 
 hook.Add("Move", "", function()
@@ -578,7 +671,7 @@ hook.Add("CreateMove", "", function(cmd)
 			local pos = GetAimPosition(target)
 			
 			if pos then
-				cmd:SetViewAngles(FixAngle((PredictPos(pos, target) - GetEyePos()):Angle()))
+				cmd:SetViewAngles(CalculateAimAngle(pos, target))
 				FixMovement(cmd)
 
 				if not cmd:KeyDown(IN_ATTACK) then
@@ -607,7 +700,7 @@ hook.Add("CalcView", "", function(ply, pos, ang, fov, zn, zf)
 	if IsValid(vehicle) then
 		UpdateCalcViewData(view)
 
-		return hook.Run("CalcVehicleView", vehicle ,ply, view)
+		return hook.Run("CalcVehicleView", vehicle, ply, view)
 	end
 
 	local weapon = ply:GetActiveWeapon()
