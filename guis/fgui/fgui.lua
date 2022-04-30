@@ -1787,8 +1787,15 @@ fguitable.Objects = {
 					end
 				end
 
+				surface.SetFont(fguitable.FontName) -- This will not be changable
+				surface.SetTextColor(fguitable.Colors.white)
+
 				for _, v in ipairs(nearbyents) do
 					if v == parent and not self.FH.DrawParent then
+						continue
+					end
+
+					if (v:IsPlayer() and not v:Alive()) or ((v:IsNPC() or v:IsNextBot()) and v:Health() < 1) then -- Entity is supposedly dead, don't render
 						continue
 					end
 
@@ -1806,11 +1813,21 @@ fguitable.Objects = {
 
                     if math.Dist(x, y, rx, ry) > w then continue end
 
+                    local cx = x + (rx * x)
+                    local cy = y + (ry * y)
+
 					surface.SetDrawColor(validents[v:GetClass()])
-					surface.DrawRect(x + (rx * x) - 4, y + (ry * y) - 4, 8, 8)
+					surface.DrawRect(cx - 4, cy - 4, 8, 8)
 
 					surface.SetDrawColor(fguitable.Colors.outline)
-					surface.DrawOutlinedRect(x + (rx * x) - 4, y + (ry * y) - 4, 8, 8)
+					surface.DrawOutlinedRect(cx - 4, cy - 4, 8, 8)
+
+					if v:IsDormant() then
+						local tw, th = surface.GetTextSize("?")
+
+						surface.SetTextPos(cx - (tw / 2), cy - (th / 2))
+						surface.DrawText("?")
+					end
 				end
 			end
 		}
