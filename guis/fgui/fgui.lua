@@ -104,24 +104,39 @@
 				- GetBackgroundAlpha()				=>			Returns the background alpha for the rows of the mini menu
 
 		FHLabel (DLabel)
+
+		FHRadar (DFrame) (Not parented to anything)
+			Functions:
+				- SetEntities(entites)				=>			Takes a table of entity classes that the radar will display as well as what color they will use (Ex: {player = Color(255, 0, 0)})
+				- GetEntities()						=>			Returns the table of entity classes the radar is using
+				- SetBackgroundAlpha(newAlpha)		=>			Changes the radar's background color
+				- GetBackgroundAlpha()				=>			Returns the radar's background color
+				- SetRange(newRange)				=>			Sets how far the radar will show entities
+				- GetRange()						=>			Returns the current range the radar is using
+				- SetParentEntity(newParent)		=>			Sets the entity the radar will base its calculations around (Defaults to LocalPlayer so you don't need to call this usually)
+				- GetParentEntity()					=>			Returns the entity the radar is currently based around (If it's valid)
+				- SetDrawParentEntity(newState)		=>			Controls if the radar will render the parent entity on the radar or not
+				- GetDrawParentEntity()				=>			Returns if the radar is rendering its parent entity or not
 ]]
 
 fgui = fgui or {}
 
 local fguitable = fgui
 
-surface.CreateFont("FlowHooks", {
+fguitable.FontName = string.char(math.random(97, 122)) .. tostring(math.random(-123456, 123456))
+
+surface.CreateFont(fguitable.FontName, {
 	font = "Verdana",
 	size = 12,
 	antialias = false,
 	outline = true
 })
 
-fguitable.timer = "fgui_SlowTick"
-fguitable.vth = {} -- VarTable holders
-fguitable.clipboard = nil -- For color copy / pasting
+fguitable.TimerName = "fgui_SlowTick"
+fguitable.VarTableHolders = {} -- VarTable holders
+fguitable.Clipboard = nil -- For color copy / pasting
 
-fguitable.colors = {
+fguitable.Colors = {
 	black = Color(0, 0, 0, 255),
 	white = Color(255, 255, 255, 255),
 
@@ -135,9 +150,9 @@ fguitable.colors = {
 	gray = Color(150, 150, 150, 255) -- For text boxes
 }
 
-fguitable.colors.grey = fguitable.colors.gray -- We are anonymous
+fguitable.Colors.grey = fguitable.Colors.gray -- We are anonymous
 
-fguitable.functions = {
+fguitable.Functions = {
 	GetFurthestParent = function(base) -- Used to get FHFrame's accent color from any child object
 		if not base then
 			return error("Invalid Panel Provided")
@@ -149,7 +164,7 @@ fguitable.functions = {
 			return cparent
 		end
 
-		return fguitable.functions.GetFurthestParent(cparent)
+		return fguitable.Functions.GetFurthestParent(cparent)
 	end,
 
 	CopyColor = function(color) -- Used for modification of the accent's alpha without affecting the original
@@ -176,15 +191,48 @@ fguitable.functions = {
 		obj.FH.VarTable = varloc
 		obj.FH.Var = var
 
-		fguitable.vth[#fguitable.vth + 1] = obj
+		fguitable.VarTableHolders[#fguitable.VarTableHolders + 1] = obj
 	end,
 
-	GenerateRandomString = function()
+	GenerateRandomString = function() -- Use for timer names
 		return string.char(math.random(97, 122)) .. tostring(math.random(-123456, 123456))
+	end,
+
+	DrawFilledCircle = function(x, y, radius, segment) -- Used for radar
+		local cir = {
+			{
+				x = x,
+				y = y,
+				u = 0.5,
+				v = 0.5
+			}
+		}
+
+		for i = 0, segment do
+			local rad = math.rad((i / segment) * -360)
+
+			cir[#cir + 1] = {
+				x = x + (math.sin(rad) * radius),
+				y = y + (math.cos(rad) * radius),
+				u = (math.sin(rad) / 2) + 0.5,
+				v = (math.cos(rad) / 2) + 0.5
+			}
+		end
+
+		local Orad = math.rad(0)
+
+		cir[#cir + 1] = {
+			x = x + (math.sin(Orad) * radius),
+			y = y + (math.cos(Orad) * radius),
+			u = (math.sin(Orad) / 2) + 0.5,
+			v = (math.cos(Orad) / 2) + 0.5
+		}
+
+		surface.DrawPoly(cir)
 	end
 }
 
-fguitable.objects = {
+fguitable.Objects = {
 	FHFrame = {
 		Base = "DFrame",
 
@@ -255,10 +303,10 @@ fguitable.objects = {
 
 			Init = function(self)
 				self.FH = {
-					AccentColor = fguitable.functions.CopyColor(fguitable.colors.accent),
+					AccentColor = fguitable.Functions.CopyColor(fguitable.Colors.accent),
 					Title = "Frame " .. math.random(0, 12345),
-					TitleColor = fguitable.functions.CopyColor(fguitable.colors.white),
-					Font = "FlowHooks",
+					TitleColor = fguitable.Functions.CopyColor(fguitable.Colors.white),
+					Font = fguitable.FontName,
 
 					ColorPicker = fguitable.Create("FHColorPicker")
 				}
@@ -274,7 +322,7 @@ fguitable.objects = {
 				local closeButton = vgui.Create("DButton", self) -- Custom close button
 				closeButton:SetSize(24, 24)
 				closeButton:SetFont(self.FH.Font)
-				closeButton:SetTextColor(fguitable.colors.white)
+				closeButton:SetTextColor(fguitable.Colors.white)
 				closeButton:SetText("X")
 				closeButton:SetCursor("arrow")
 	
@@ -283,10 +331,10 @@ fguitable.objects = {
 				end
 	
 				closeButton.Paint = function(self, w, h)
-					surface.SetDrawColor(fguitable.colors.back_obj)
+					surface.SetDrawColor(fguitable.Colors.back_obj)
 					surface.DrawRect(0, 0, w, h)
 	
-					surface.SetDrawColor(fguitable.colors.outline)
+					surface.SetDrawColor(fguitable.Colors.outline)
 					surface.DrawOutlinedRect(0, 0, w, h)
 				end
 					
@@ -303,7 +351,7 @@ fguitable.objects = {
 			Paint = function(self, w, h)
 				self.FH.CloseButton:SetPos(w - self.FH.CloseButton:GetWide(), 0)
 	
-				surface.SetDrawColor(fguitable.colors.black)
+				surface.SetDrawColor(fguitable.Colors.black)
 				surface.DrawRect(0, 0, w, h)
 	
 				local grad = 55
@@ -315,7 +363,7 @@ fguitable.objects = {
 					surface.DrawLine(0, i, w, i)
 				end
 	
-				surface.SetDrawColor(fguitable.colors.outline)
+				surface.SetDrawColor(fguitable.Colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 	
 				surface.SetFont(self:GetFont())
@@ -357,11 +405,11 @@ fguitable.objects = {
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fguitable.colors.back)
+				surface.SetDrawColor(fguitable.Colors.back)
 				surface.DrawRect(0, 0, w, h)
 	
 				if self:GetDrawOutline() then
-					surface.SetDrawColor(fguitable.colors.outline)
+					surface.SetDrawColor(fguitable.Colors.outline)
 					surface.DrawOutlinedRect(0, 0, w, h)
 				end
 			end
@@ -406,8 +454,8 @@ fguitable.objects = {
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetFont(fguitable.functions.GetFurthestParent(self):GetFont())
-				surface.SetTextColor(fguitable.colors.white)
+				surface.SetFont(fguitable.Functions.GetFurthestParent(self):GetFont())
+				surface.SetTextColor(fguitable.Colors.white)
 
 				local title = self:GetTitle()
 	
@@ -421,9 +469,9 @@ fguitable.objects = {
 				h = h - 1
 				ty = ty + (th / 2)
 	
-				surface.SetDrawColor(fguitable.colors.outline)
-				surface.DrawLine(0, ty, tx - 3, ty)
-				surface.DrawLine(tx + tw + 3, ty, w, ty)
+				surface.SetDrawColor(fguitable.Colors.outline)
+				surface.DrawLine(0, ty, tx, ty)
+				surface.DrawLine(tx + tw, ty, w, ty)
 				surface.DrawLine(w, ty, w, h)
 				surface.DrawLine(w, h, 0, h)
 				surface.DrawLine(0, h, 0, ty)
@@ -436,7 +484,7 @@ fguitable.objects = {
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
-				fguitable.functions.RegisterVarTable(self, varloc, var)
+				fguitable.Functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -444,14 +492,14 @@ fguitable.objects = {
 			end,
 
 			Init = function(self)
-				local MP = fguitable.functions.GetFurthestParent(self)
+				local MP = fguitable.Functions.GetFurthestParent(self)
 	
 				local checkbox = self:GetChildren()[1]
 	
 				checkbox:SetCursor("arrow")
 	
 				checkbox.Paint = function(self, w, h)
-					surface.SetDrawColor(fguitable.colors.back_obj)
+					surface.SetDrawColor(fguitable.Colors.back_obj)
 					surface.DrawRect(0, 0, w, h)
 		
 					if self:GetChecked() then
@@ -459,11 +507,11 @@ fguitable.objects = {
 						surface.DrawRect(2, 2, w - 4, h - 4)
 					end
 		
-					surface.SetDrawColor(fguitable.colors.outline)
+					surface.SetDrawColor(fguitable.Colors.outline)
 					surface.DrawOutlinedRect(0, 0, w, h)
 				end
 	
-				self:SetTextColor(fguitable.colors.white)
+				self:SetTextColor(fguitable.Colors.white)
 				self:SetFont(MP:GetFont())
 			end,
 
@@ -484,7 +532,7 @@ fguitable.objects = {
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
-				fguitable.functions.RegisterVarTable(self, varloc, var)
+				fguitable.Functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -492,17 +540,17 @@ fguitable.objects = {
 			end,
 
 			Init = function(self)
-				local MP = fguitable.functions.GetFurthestParent(self)
+				local MP = fguitable.Functions.GetFurthestParent(self)
 
 				self:GetTextArea().Paint = function(self, w, h) -- Paint number area
 					local y = (h / 2) - 7.5
 					h = 15
 	
-					surface.SetDrawColor(fguitable.colors.back_obj)
+					surface.SetDrawColor(fguitable.Colors.back_obj)
 					surface.DrawRect(0, y, w, h)
 	
 					surface.SetFont(MP:GetFont())
-					surface.SetTextColor(fguitable.colors.white)
+					surface.SetTextColor(fguitable.Colors.white)
 	
 					local val = self:GetValue()
 					local tw, th = surface.GetTextSize(val)
@@ -510,7 +558,7 @@ fguitable.objects = {
 					surface.SetTextPos((w / 2) - (tw / 2), y + (h / 2) - (th / 2))
 					surface.DrawText(val)
 	
-					surface.SetDrawColor(fguitable.colors.outline)
+					surface.SetDrawColor(fguitable.Colors.outline)
 					surface.DrawOutlinedRect(0, y, w, h)
 				end
 	
@@ -519,7 +567,7 @@ fguitable.objects = {
 				local label = children[3]
 	
 				label:GetChildren()[1]:SetEnabled(false) -- Disable that stupid popup panel
-				label:SetTextColor(fguitable.colors.white) -- Setup label
+				label:SetTextColor(fguitable.Colors.white) -- Setup label
 				label:SetFont(MP:GetFont())
 	
 				local bar = children[2]
@@ -529,7 +577,7 @@ fguitable.objects = {
 				bar.Paint = function(self, w, h) -- Paint custom horizontal bar
 					local y = h / 2
 	
-					surface.SetDrawColor(fguitable.colors.outline)
+					surface.SetDrawColor(fguitable.Colors.outline)
 					surface.DrawLine(5, y, w - 5, y)
 				end
 	
@@ -541,10 +589,10 @@ fguitable.objects = {
 					local x = (w / 2) - 5
 					w = 10
 	
-					surface.SetDrawColor(fguitable.colors.back)
+					surface.SetDrawColor(fguitable.Colors.back)
 					surface.DrawRect(x, 0, w, h)
 	
-					surface.SetDrawColor(fguitable.colors.outline)
+					surface.SetDrawColor(fguitable.Colors.outline)
 					surface.DrawOutlinedRect(x, 0, w, h)
 				end
 			end,
@@ -567,7 +615,7 @@ fguitable.objects = {
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
-				fguitable.functions.RegisterVarTable(self, varloc, var)
+				fguitable.Functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -612,20 +660,20 @@ fguitable.objects = {
 
 				self:SetCursor("arrow")
 	
-				self:SetTextColor(fguitable.colors.white)
-				self:SetFont(fguitable.functions.GetFurthestParent(self):GetFont())
+				self:SetTextColor(fguitable.Colors.white)
+				self:SetFont(fguitable.Functions.GetFurthestParent(self):GetFont())
 	
 				self:GetChildren()[1].Paint = function() end -- Hide the dropdown's arrow
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fguitable.colors.back_obj)
+				surface.SetDrawColor(fguitable.Colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
 	
-				surface.SetDrawColor(fguitable.colors.back)
+				surface.SetDrawColor(fguitable.Colors.back)
 				surface.DrawRect(w - h, 0, w - h, h)
 	
-				surface.SetDrawColor(fguitable.colors.outline)
+				surface.SetDrawColor(fguitable.Colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 				surface.DrawLine(w - h, 0, w - h, h)
 	
@@ -658,7 +706,7 @@ fguitable.objects = {
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
-				fguitable.functions.RegisterVarTable(self, varloc, var)
+				fguitable.Functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -671,12 +719,12 @@ fguitable.objects = {
 
 				local data = self:AddSheet(name, ContentFrame, icon, noStretchX, noStretchY, tooltip)
 
-				local MP = self.FH.MP or fguitable.functions.GetFurthestParent(self)
+				local MP = self.FH.MP or fguitable.Functions.GetFurthestParent(self)
 				self.FH.MP = self.FH.MP or MP
 
 				data.Tab:SetCursor("arrow")
 
-				data.Tab:SetTextColor(fguitable.colors.white)
+				data.Tab:SetTextColor(fguitable.Colors.white)
 				data.Tab:SetFont(MP:GetFont())
 
 				local ogclick = data.Tab.DoClick
@@ -693,18 +741,18 @@ fguitable.objects = {
 					h = 21
 
 					if self:IsActive() then
-						surface.SetDrawColor(fguitable.colors.back)
+						surface.SetDrawColor(fguitable.Colors.back)
 						surface.DrawRect(0, 0, w, h)
 
-						surface.SetDrawColor(fguitable.colors.outline)
+						surface.SetDrawColor(fguitable.Colors.outline)
 						surface.DrawLine(0, 0, 0, h)
 						surface.DrawLine(w - 1, 0, w - 1, h)
 
-						surface.SetDrawColor(fguitable.functions.GetFurthestParent(self):GetAccentColor())
+						surface.SetDrawColor(fguitable.Functions.GetFurthestParent(self):GetAccentColor())
 						surface.DrawLine(0, 0, w, 0)
 						surface.DrawLine(0, 1, w, 1)
 					else
-						surface.SetDrawColor(fguitable.colors.back_obj)
+						surface.SetDrawColor(fguitable.Colors.back_obj)
 						surface.DrawRect(0, 0, w, h)
 					end
 				end
@@ -766,7 +814,7 @@ fguitable.objects = {
 				local awidth = math.ceil((self:GetWide() / #tabs) - 20)
 				local width = math.floor(awidth)
 			
-				local MP = fguitable.functions.GetFurthestParent(self)
+				local MP = fguitable.Functions.GetFurthestParent(self)
 				surface.SetFont(MP:GetFont())
 
 				local subamount = 0
@@ -824,10 +872,10 @@ fguitable.objects = {
 	
 					h = 20
 	
-					surface.SetDrawColor(fguitable.colors.back_min)
+					surface.SetDrawColor(fguitable.Colors.back_min)
 					surface.DrawRect(0, 0, w, h)
 	
-					surface.SetDrawColor(fguitable.colors.outline)
+					surface.SetDrawColor(fguitable.Colors.outline)
 					surface.DrawLine(0, 0, w, 0)
 					surface.DrawLine(0, 0, 0, h)
 					surface.DrawLine(w - 1, 0, w - 1, h)
@@ -835,10 +883,10 @@ fguitable.objects = {
 			end,
 	
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fguitable.colors.back)
+				surface.SetDrawColor(fguitable.Colors.back)
 				surface.DrawRect(0, 0, w, h)
 	
-				surface.SetDrawColor(fguitable.colors.outline)
+				surface.SetDrawColor(fguitable.Colors.outline)
 				surface.DrawOutlinedRect(0, 20, w, h - 20)
 				surface.DrawLine(0, 20, w, 20)
 			end
@@ -850,7 +898,7 @@ fguitable.objects = {
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
-				fguitable.functions.RegisterVarTable(self, varloc, var)
+				fguitable.Functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -880,7 +928,7 @@ fguitable.objects = {
 						return error("Tried to Override Existing Column")
 					end
 	
-					local MP = self.FH.MP or fguitable.functions.GetFurthestParent(self)
+					local MP = self.FH.MP or fguitable.Functions.GetFurthestParent(self)
 					self.FH.MP = self.FH.MP or MP
 	
 					local Column = self.FH.AddColumn(self, name, pos)
@@ -888,14 +936,14 @@ fguitable.objects = {
 					local ColumnButton = Column:GetChildren()[1]
 	
 					ColumnButton:SetCursor("arrow")
-					ColumnButton:SetTextColor(fguitable.colors.white)
+					ColumnButton:SetTextColor(fguitable.Colors.white)
 					ColumnButton:SetFont(MP:GetFont())
 	
 					ColumnButton.Paint = function(self, w, h)
-						surface.SetDrawColor(fguitable.colors.back_min)
+						surface.SetDrawColor(fguitable.Colors.back_min)
 						surface.DrawRect(0, 0, w, h)
 	
-						surface.SetDrawColor(fguitable.colors.outline)
+						surface.SetDrawColor(fguitable.Colors.outline)
 						surface.DrawOutlinedRect(0, 0, w, h)
 					end
 	
@@ -909,13 +957,13 @@ fguitable.objects = {
 						return error ("No Content Provided")
 					end
 	
-					local MP = self.FH.MP or fguitable.functions.GetFurthestParent(self)
+					local MP = self.FH.MP or fguitable.Functions.GetFurthestParent(self)
 					self.FH.MP = self.FH.MP or MP
 	
 					local Line = self.FH.AddLine(self, ...)
 	
 					for _, v in ipairs(Line:GetChildren()) do
-						v:SetTextColor(fguitable.colors.white)
+						v:SetTextColor(fguitable.Colors.white)
 						v:SetFont(MP:GetFont())
 					end
 	
@@ -924,7 +972,7 @@ fguitable.objects = {
 							return 
 						end
 	
-						local accent = fguitable.functions.CopyColor(MP:GetAccentColor())
+						local accent = fguitable.Functions.CopyColor(MP:GetAccentColor())
 	
 						if self:IsHovered() and not self:IsLineSelected() then
 							accent.a = accent.a / 4
@@ -940,7 +988,7 @@ fguitable.objects = {
 				local scrollbar = self:GetChildren()[2]
 	
 				scrollbar.Paint = function(self, w, h)
-					surface.SetDrawColor(fguitable.colors.outline_b)
+					surface.SetDrawColor(fguitable.Colors.outline_b)
 					surface.DrawRect(0, 0, w, h)
 				end
 	
@@ -948,20 +996,20 @@ fguitable.objects = {
 					v:SetCursor("arrow")
 	
 					v.Paint = function(self, w, h)
-						surface.SetDrawColor(fguitable.colors.back)
+						surface.SetDrawColor(fguitable.Colors.back)
 						surface.DrawRect(0, 0, w, h)
 		
-						surface.SetDrawColor(fguitable.colors.outline)
+						surface.SetDrawColor(fguitable.Colors.outline)
 						surface.DrawOutlinedRect(0, 0, w, h)
 					end
 				end
 			end,		
 	
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fguitable.colors.back_obj)
+				surface.SetDrawColor(fguitable.Colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
 	
-				surface.SetDrawColor(fguitable.colors.outline)
+				surface.SetDrawColor(fguitable.Colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 			end,
 
@@ -982,7 +1030,7 @@ fguitable.objects = {
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
-				fguitable.functions.RegisterVarTable(self, varloc, var)
+				fguitable.Functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -990,9 +1038,9 @@ fguitable.objects = {
 			end,
 
 			Init = function(self)
-				local MP = fguitable.functions.GetFurthestParent(self)
+				local MP = fguitable.Functions.GetFurthestParent(self)
 	
-				self:SetTextColor(fguitable.colors.white)
+				self:SetTextColor(fguitable.Colors.white)
 				self:SetFont(MP:GetFont())
 	
 				self:SetPaintBackground(false)
@@ -1015,7 +1063,7 @@ fguitable.objects = {
 					ContentFrame:SetPos(self:GetPos())
 		
 					ContentFrame.Paint = function(self, w, h)
-						surface.SetDrawColor(fguitable.colors.gray)
+						surface.SetDrawColor(fguitable.Colors.gray)
 						surface.DrawRect(0, 0, w, h)
 					end
 		
@@ -1056,14 +1104,14 @@ fguitable.objects = {
 			end,
 
 			Init = function(self)
-				self:SetTextColor(fguitable.colors.white)
-				self:SetFont(fguitable.functions.GetFurthestParent(self):GetFont())
+				self:SetTextColor(fguitable.Colors.white)
+				self:SetFont(fguitable.Functions.GetFurthestParent(self):GetFont())
 	
 				self:SetCursor("arrow")
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fguitable.colors.back_obj)
+				surface.SetDrawColor(fguitable.Colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
 	
 				if not self:IsDown() then
@@ -1081,7 +1129,7 @@ fguitable.objects = {
 					end
 				end
 	
-				surface.SetDrawColor(fguitable.colors.outline)
+				surface.SetDrawColor(fguitable.Colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 			end
 		}
@@ -1095,7 +1143,7 @@ fguitable.objects = {
 			SetVarTable = function(self, varloc, var)
 				self.FH.Color = varloc[var]
 
-				fguitable.functions.RegisterVarTable(self, varloc, var)
+				fguitable.Functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -1122,32 +1170,34 @@ fguitable.objects = {
 
 			Init = function(self)
 				self.FH = {
-					Color = fguitable.functions.CopyColor(fguitable.colors.white)
+					Color = fguitable.Functions.CopyColor(fguitable.Colors.white)
 				}
 
 				self.SetValue = self.SetColor
 
-				self:SetTextColor(fguitable.colors.white)
-				self:SetFont(fguitable.functions.GetFurthestParent(self):GetFont())
+				self:SetTextColor(fguitable.Colors.white)
+				self:SetFont(fguitable.Functions.GetFurthestParent(self):GetFont())
 	
 				self:SetCursor("arrow")
 
 				timer.Simple(0, function()
 					self.DMenu:AddOption("Copy Color", function()
-						fguitable.clipboard = fguitable.functions.CopyColor(self:GetColor())
-						SetClipboardText(table.concat(fguitable.clipboard:ToTable(), ", "))
+						fguitable.Clipboard = fguitable.Functions.CopyColor(self:GetColor())
+						fguitable.clipboard = fguitable.Clipboard -- Compatability
+
+						SetClipboardText(table.concat(fguitable.Clipboard:ToTable(), ", "))
 					end)
 
 					self.DMenu:AddOption("Paste Color", function()
-						if fguitable.clipboard and IsColor(fguitable.clipboard) then
-							self:SetColor(fguitable.clipboard)
+						if fguitable.Clipboard and IsColor(fguitable.Clipboard) then
+							self:SetColor(fguitable.Clipboard)
 						end
 					end)
 				end)
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fguitable.colors.back_obj)
+				surface.SetDrawColor(fguitable.Colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
 				
 				if not self:IsDown() then
@@ -1165,7 +1215,7 @@ fguitable.objects = {
 					end
 				end
 	
-				surface.SetDrawColor(fguitable.colors.outline)
+				surface.SetDrawColor(fguitable.Colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 	
 				local _, th = surface.GetTextSize(self:GetText())
@@ -1176,7 +1226,7 @@ fguitable.objects = {
 			end,
 
 			DoClick = function(self)
-				local MP = self.FH.MP or fguitable.functions.GetFurthestParent(self)
+				local MP = self.FH.MP or fguitable.Functions.GetFurthestParent(self)
 				self.FH.MP = self.FH.MP or MP
 
 				local MPPicker = self.FH.MP.FH.ColorPicker
@@ -1282,9 +1332,9 @@ fguitable.objects = {
 					ColorMixerHandle:SetCursor("arrow")
 	
 					ColorMixerHandle.Paint = function(self, w, h)
-						surface.DrawCircle((w / 2), (h / 2), 5, fguitable.colors.white)
-						surface.DrawCircle((w / 2), (h / 2), 4, fguitable.colors.black)
-						surface.DrawCircle((w / 2), (h / 2), 6, fguitable.colors.black)
+						surface.DrawCircle((w / 2), (h / 2), 5, fguitable.Colors.white)
+						surface.DrawCircle((w / 2), (h / 2), 4, fguitable.Colors.black)
+						surface.DrawCircle((w / 2), (h / 2), 6, fguitable.Colors.black)
 					end
 				end)
 			end,
@@ -1297,7 +1347,7 @@ fguitable.objects = {
 					return
 				end
 	
-				surface.SetDrawColor(fguitable.colors.black)
+				surface.SetDrawColor(fguitable.Colors.black)
 				surface.DrawRect(0, 0, w, h)
 	
 				local grad = 55
@@ -1309,7 +1359,7 @@ fguitable.objects = {
 					surface.DrawLine(0, i, w, i)
 				end
 	
-				surface.SetDrawColor(fguitable.colors.outline)
+				surface.SetDrawColor(fguitable.Colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 	
 				surface.SetFont(MP:GetFont())
@@ -1328,7 +1378,7 @@ fguitable.objects = {
 
 		Registry = {
 			SetVarTable = function(self, varloc, var)
-				fguitable.functions.RegisterVarTable(self, varloc, var)
+				fguitable.Functions.RegisterVarTable(self, varloc, var)
 			end,
 
 			GetVarTable = function(self)
@@ -1352,9 +1402,9 @@ fguitable.objects = {
 			end,
 
 			Init = function(self)
-				local font = fguitable.functions.GetFurthestParent(self):GetFont()
+				local font = fguitable.Functions.GetFurthestParent(self):GetFont()
 	
-				self:SetTextColor(fguitable.colors.white)
+				self:SetTextColor(fguitable.Colors.white)
 				self:SetFont(font)
 	
 				self:SetCursor("arrow")
@@ -1367,7 +1417,7 @@ fguitable.objects = {
 					local tw, th = surface.GetTextSize(label)
 	
 					local Label = vgui.Create("DLabel", self:GetParent())
-					Label:SetTextColor(fguitable.colors.white)
+					Label:SetTextColor(fguitable.Colors.white)
 					Label:SetFont(font)
 					Label:SetText(label)
 					Label:SetPos(self:GetX() + ((self:GetWide() / 2) - (tw / 2)), self:GetY() - th - 3)
@@ -1377,7 +1427,7 @@ fguitable.objects = {
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fguitable.colors.back_obj)
+				surface.SetDrawColor(fguitable.Colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
 	
 				if not self:IsDown() then
@@ -1395,7 +1445,7 @@ fguitable.objects = {
 					end
 				end
 	
-				surface.SetDrawColor(fguitable.colors.outline)
+				surface.SetDrawColor(fguitable.Colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 			end,
 
@@ -1477,8 +1527,8 @@ fguitable.objects = {
 					Columns = {},
 					Rows = {},
 					BackgroundAlpha = 255,
-					Font = "FlowHooks",
-					TextColor = fguitable.functions.CopyColor(fguitable.colors.white)
+					Font = fguitable.FontName,
+					TextColor = fguitable.Functions.CopyColor(fguitable.Colors.white)
 				}
 
 				self:SetTitle("")
@@ -1490,10 +1540,10 @@ fguitable.objects = {
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetDrawColor(fguitable.colors.back_min)
+				surface.SetDrawColor(fguitable.Colors.back_min)
 				surface.DrawRect(0, 0, w, 20)
 	
-				local bgcol = fguitable.functions.CopyColor(fguitable.colors.back_obj)
+				local bgcol = fguitable.Functions.CopyColor(fguitable.Colors.back_obj)
 				bgcol.a = self.FH.BackgroundAlpha
 	
 				local rows = #self.FH.Rows
@@ -1502,7 +1552,7 @@ fguitable.objects = {
 				surface.SetDrawColor(bgcol)
 				surface.DrawRect(0, 20, w, 20 * rows)
 	
-				surface.SetDrawColor(fguitable.colors.outline)
+				surface.SetDrawColor(fguitable.Colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 	
 				surface.SetFont(self.FH.Font)
@@ -1540,23 +1590,209 @@ fguitable.objects = {
 
 		Registry = {
 			Init = function(self)
-				self:SetTextColor(fguitable.colors.white)
-				self:SetFont(fguitable.functions.GetFurthestParent(self):GetFont())
+				self:SetTextColor(fguitable.Colors.white)
+				self:SetFont(fguitable.Functions.GetFurthestParent(self):GetFont())
+			end
+		}
+	},
+
+	FHRadar = {
+		Base = "DFrame",
+
+		NotParented = true,
+
+		Registry = {
+			SetEntities = function(self, entities)
+				if not entities then
+					return error("No entities provided")
+				end
+
+				self.FH.Entities = table.Copy(entities)
+			end,
+
+			GetEntities = function(self)
+				return self.FH.Entities
+			end,
+
+			SetBackgroundAlpha = function(self, alpha)
+				if not alpha then
+					return error("No alpha provided")
+				end
+
+				self.FH.BackgroundAlpha = alpha
+			end,
+
+			GetBackgroundAlpha = function(self)
+				return self.FH.BackgroundAlpha
+			end,
+
+			SetRange = function(self, range)
+				if not range then
+					return error("No range provided")
+				end
+
+				self.FH.Range = range
+			end,
+
+			GetRange = function(self)
+				return self.FH.Range
+			end,
+
+			SetParentEntity = function(self, parent)
+				if not parent or not IsValid(parent) then
+					return error("Invalid parent entity provided")
+				end
+
+				self.FH.Parent = parent
+			end,
+
+			GetParentEntity = function(self)
+				return self.FH.Parent
+			end,
+
+			SetDrawParentEntity = function(self, active)
+				if active == nil then
+					return error("No Boolean Provided")
+				end
+
+				self.FH.DrawParent = active
+			end,
+
+			GetDrawParentEntity = function(self)
+				return self.FH.DrawParent
+			end,
+
+			OnMousePressed = function(self) -- Custom drag region
+				local mouseX, mouseY = gui.MouseX(), gui.MouseY()
+				local width, height = self:GetSize()
+				local screenX, screenY = self:LocalToScreen(0, 0)
+
+				if self.m_bSizable and (mouseX > screenX + (width - 32) and mouseY > screenY + (height - 32)) then
+					self.Sizing = {
+						mouseX - width,
+						mouseY - height
+					}
+
+					self:MouseCapture(true)
+
+					return
+				end
+			
+				if self:GetDraggable() and mouseY < screenY + height then
+					self.Dragging = {
+						mouseX - self.x,
+						mouseY - self.y
+					}
+
+					self:MouseCapture(true)
+
+					return
+				end
+			
+			end,
+
+			Init = function(self)
+				self.FH = {
+					BackgroundAlpha = 255,
+					Entities = {},
+					Range = 1000,
+					Parent = LocalPlayer(),
+					DrawParent = true
+				}
+
+				self:SetKeyboardInputEnabled(false) -- Disable focusing
+
+				self:SetCursor("arrow") -- Prevent cursor change when dragging
+				self.SetCursor = function() end
+
+				self:SetTitle("") -- Hide default window title
+				self:GetChildren()[4]:SetVisible(false)
+
+				local children = self:GetChildren() -- Hide default close button
+		
+				for i = 1, 3 do
+					children[i]:SetVisible(false)
+					children[i]:SetEnabled(false)
+				end
+			end,
+
+			Paint = function(self, w, h)
+				local x, y = w / 2, h / 2
+
+				local backcolor = fguitable.Functions.CopyColor(fguitable.Colors.back)
+				backcolor.a = self.FH.BackgroundAlpha
+
+				draw.NoTexture()
+
+				surface.SetDrawColor(backcolor)
+				fguitable.Functions.DrawFilledCircle(x, y, x, 64)
+
+				surface.SetDrawColor(fguitable.Colors.outline)
+				surface.DrawLine(0, y, w, y)
+				surface.DrawLine(x, 0, x, h)
+
+				surface.DrawCircle(x, y, x, fguitable.Colors.outline)
+
+				local parent = self.FH.Parent
+
+				if not IsValid(parent) then return end
+
+				local origin = parent:GetPos()
+
+				if not origin then return end -- Should be impossible, but some entities are weird sometimes
+
+				local range = self.FH.Range
+				local validents = self.FH.Entities
+				local nearbyents = ents.FindInSphere(origin, range)
+
+				for i = #nearbyents, 1, -1 do
+					local cur = nearbyents[i]
+
+					if not IsValid(cur) or not validents[cur:GetClass()] then -- Remove entities not in our selection
+						table.remove(nearbyents, i)
+					end
+				end
+
+				for _, v in ipairs(nearbyents) do
+					if v == parent and not self.FH.DrawParent then
+						continue
+					end
+
+					local difference = v:GetPos() - origin
+
+					local rx = difference.x / range
+					local ry = difference.y / range
+
+					local forward = parent:GetForward()
+
+					local z = math.sqrt((rx * rx) + (ry * ry))
+                    local phi = math.deg(math.rad(math.atan2(rx, ry)) - math.rad(math.atan2(forward.x, forward.y)) + 90)
+                    rx = math.cos(phi) * z
+                    ry = math.sin(phi) * z
+
+                    if math.Dist(x, y, rx, ry) > w then continue end
+
+					surface.SetDrawColor(validents[v:GetClass()])
+					surface.DrawRect(x + (rx * x) - 4, y + (ry * y) - 4, 8, 8)
+
+					surface.SetDrawColor(fguitable.Colors.outline)
+					surface.DrawOutlinedRect(x + (rx * x) - 4, y + (ry * y) - 4, 8, 8)
+				end
 			end
 		}
 	}
 }
 
-for k, v in pairs(fguitable.objects) do -- Register objects
+for k, v in pairs(fguitable.Objects) do -- Register objects
 	vgui.Register(k, v.Registry, v.Base)
 end
 
 fguitable.Create = function(type, parent, name)
-	if not type or not fguitable.objects[type] then
+	if not type or not fguitable.Objects[type] then
 		return error("Invalid FlowHooks Object (" .. type .. ")")
 	end
 
-	local current = fguitable.objects[type]
+	local current = fguitable.Objects[type]
 
 	if not parent and not current.NotParented then
 		return error("Invalid Parent Panel Specified")
@@ -1580,7 +1816,7 @@ fguitable.Create = function(type, parent, name)
 	end
 
 	if current.HasDMenu then
-		local MP = fguitable.functions.GetFurthestParent(FHObject)
+		local MP = fguitable.Functions.GetFurthestParent(FHObject)
 
 		FHObject.DMenuOpen = false
 		FHObject.DMenu = vgui.Create("DMenu", MP)
@@ -1593,22 +1829,22 @@ fguitable.Create = function(type, parent, name)
 
 			NewOption:SetCursor("arrow")
 	
-			NewOption:SetTextColor(fguitable.colors.white)
+			NewOption:SetTextColor(fguitable.Colors.white)
 			NewOption:SetFont(MP:GetFont())
 	
 			NewOption.Paint = function(self, w, h)
-				surface.SetDrawColor(fguitable.colors.back_obj)
+				surface.SetDrawColor(fguitable.Colors.back_obj)
 				surface.DrawRect(0, 0, w, h)
 	
 				if self:IsHovered() then
-					local accent = fguitable.functions.CopyColor(MP:GetAccentColor())
+					local accent = fguitable.Functions.CopyColor(MP:GetAccentColor())
 					accent.a = accent.a / 4
 	
 					surface.SetDrawColor(accent)
 					surface.DrawRect(0, 0, w, h)
 				end
 		
-				surface.SetDrawColor(fguitable.colors.outline)
+				surface.SetDrawColor(fguitable.Colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 			end
 		end
@@ -1646,8 +1882,8 @@ fguitable.Create = function(type, parent, name)
 end
 
 fguitable.CreateVarTableTimer = function()
-	timer.Create(fguitable.timer, 0.2, 0, function()
-		for _, v in ipairs(fguitable.vth) do
+	timer.Create(fguitable.TimerName, 0.2, 0, function()
+		for _, v in ipairs(fguitable.VarTableHolders) do
 			if not IsValid(v) or not v:IsVisible() or not v.FH or not v.FH.VarTable or not v.FH.Var then -- Just in case something goes wrong
 				continue
 			end
@@ -1665,9 +1901,11 @@ fguitable.Hide = function() -- Destroys the fgui globals and returns the new fgu
 	local backup = table.Copy(fguitable)
 	fgui = nil
 
-	timer.Remove(backup.timer)
+	timer.Remove(backup.TimerName)
 
-	backup.timer = backup.functions.GenerateRandomString()
+	backup.TimerName = backup.Functions.GenerateRandomString()
+	backup.timer = backup.TimerName -- Compatability
+
 	backup.CreateVarTableTimer()
 
 	fguitable = backup
@@ -1676,3 +1914,13 @@ fguitable.Hide = function() -- Destroys the fgui globals and returns the new fgu
 end
 
 fguitable.CreateVarTableTimer() -- Create the timer when the script is loaded
+
+-- Compatability with old names
+
+fguitable.timer = fguitable.TimerName
+fguitable.clipboard = fguitable.Clipboard
+
+fguitable.vth = fguitable.VarTableHolders
+fguitable.colors = fguitable.Colors
+fguitable.functions = fguitable.Functions
+fguitable.objects = fguitable.Objects
