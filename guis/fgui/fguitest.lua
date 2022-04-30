@@ -122,6 +122,14 @@ local testlabel = fgui.Create("FHLabel", test)
 testlabel:SetPos(25, 600)
 testlabel:SetText("I am a label!")
 
+local testradar = fgui.Create("FHRadar")
+testradar:SetSize(300, 300)
+testradar:SetEntities({ -- Players are red, props are purple
+	player = Color(255, 0, 0),
+	prop_physics = Color(130, 50, 255)
+})
+testradar:SetVisible(true)
+
 test:MakePopup()
 
 concommand.Add("testInvertOption", function()
