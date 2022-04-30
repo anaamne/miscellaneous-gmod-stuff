@@ -1565,12 +1565,17 @@ fguitable.Objects = {
 					TextColor = fguitable.Functions.CopyColor(fguitable.Colors.white)
 				}
 
+				self:SetKeyboardInputEnabled(false) -- Disable focusing
+
+				-- Similarities to FHFrame
+
+				self:SetCursor("arrow")
+				self.SetCursor = function() end
+
 				self:SetTitle("")
 				self:GetChildren()[4]:SetVisible(false)
 	
 				self:ShowCloseButton(false)
-	
-				self:SetVisible(true)
 			end,
 
 			Paint = function(self, w, h)
@@ -1736,13 +1741,15 @@ fguitable.Objects = {
 
 				self:SetKeyboardInputEnabled(false) -- Disable focusing
 
-				self:SetCursor("arrow") -- Prevent cursor change when dragging
+				-- Same as FHFrame
+
+				self:SetCursor("arrow")
 				self.SetCursor = function() end
 
-				self:SetTitle("") -- Hide default window title
+				self:SetTitle("")
 				self:GetChildren()[4]:SetVisible(false)
 
-				local children = self:GetChildren() -- Hide default close button
+				local children = self:GetChildren()
 		
 				for i = 1, 3 do
 					children[i]:SetVisible(false)
