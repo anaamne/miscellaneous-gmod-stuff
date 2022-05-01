@@ -233,6 +233,8 @@ fguitable.Functions = {
 		}
 
 		surface.DrawPoly(cir)
+
+		return cir
 	end,
 
 	GetFGUIInformation = function(panel) -- Used alongside GetFurthestParent to attempt to return data about a given parent panel (Allows for fallbacks and parenting to non FGUI objects)
@@ -1766,7 +1768,7 @@ fguitable.Objects = {
 				draw.NoTexture()
 
 				surface.SetDrawColor(backcolor)
-				fguitable.Functions.DrawFilledCircle(x, y, x, 64)
+				local poly = fguitable.Functions.DrawFilledCircle(x, y, x, 64)
 
 				surface.SetDrawColor(fguitable.Colors.outline)
 				surface.DrawLine(0, y, w, y)
@@ -1796,6 +1798,24 @@ fguitable.Objects = {
 
 				surface.SetFont(fguitable.FontName) -- This will not be changable
 				surface.SetTextColor(fguitable.Colors.white)
+
+				render.SetStencilWriteMask(0xFF)
+				render.SetStencilTestMask(0xFF)
+				render.SetStencilReferenceValue(0)
+				render.SetStencilPassOperation(STENCIL_KEEP)
+				render.SetStencilZFailOperation(STENCIL_KEEP)
+				render.ClearStencil()
+			
+				render.SetStencilEnable(true)
+				render.SetStencilReferenceValue(1)
+				render.SetStencilCompareFunction(STENCIL_NEVER)
+				render.SetStencilFailOperation(STENCIL_REPLACE)
+			
+				surface.SetDrawColor(fguitable.Colors.white)
+				surface.DrawPoly(poly)
+
+				render.SetStencilCompareFunction(STENCIL_EQUAL)
+				render.SetStencilFailOperation(STENCIL_KEEP)
 
 				for _, v in ipairs(nearbyents) do
 					if v == parent and not self.FH.DrawParent then
@@ -1836,6 +1856,8 @@ fguitable.Objects = {
 						surface.DrawText("?")
 					end
 				end
+
+				render.SetStencilEnable(false)
 			end
 		}
 	}
