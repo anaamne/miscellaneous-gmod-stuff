@@ -152,6 +152,8 @@ fguitable.Colors = {
 
 fguitable.Colors.grey = fguitable.Colors.gray -- We are anonymous
 
+fguitable.Functions = {}
+
 fguitable.Functions = {
 	GetFurthestParent = function(base) -- Used to get FHFrame's accent color from any child object
 		if not base then
@@ -237,23 +239,27 @@ fguitable.Functions = {
 		return cir
 	end,
 
-	GetFGUIInformation = function(panel) -- Used alongside GetFurthestParent to attempt to return data about a given parent panel (Allows for fallbacks and parenting to non FGUI objects)
+	GetMPData = function(panel) -- Used to attempt to return data about a given parent panel (Allows for fallbacks and parenting to non FGUI objects)
 		if not IsValid(panel) then
 			return nil
 		end
-
+	
 		local data = { -- Default information
+			MP = panel,
 			Font = fguitable.FontName,
 			AccentColor = fguitable.Colors.accent,
 			TitleColor = fguitable.Colors.white
 		}
-
-		if panel.FH and panel.FH.Type == "FHFrame" then
-			data.Font = panel:GetFont()
-			data.AccentColor = panel:GetAccentColor()
-			data.TitleColor = panel:GetTitleColor()
+	
+		local MP = fguitable.Functions.GetFurthestParent(panel)
+	
+		if MP and MP.FH and MP.FH.Type == "FHFrame" then
+			data.MP = MP
+			data.Font = MP:GetFont()
+			data.AccentColor = MP:GetAccentColor()
+			data.TitleColor = MP:GetTitleColor()
 		end
-
+	
 		return data
 	end
 }
@@ -480,7 +486,7 @@ fguitable.Objects = {
 			end,
 
 			Paint = function(self, w, h)
-				surface.SetFont(fguitable.Functions.GetFurthestParent(self):GetFont())
+				surface.SetFont(fguitable.Functions.GetMPData(self).Font)
 				surface.SetTextColor(fguitable.Colors.white)
 
 				local title = self:GetTitle()
@@ -518,8 +524,6 @@ fguitable.Objects = {
 			end,
 
 			Init = function(self)
-				local MPData = fguitable.Functions.GetFGUIInformation(fguitable.Functions.GetFurthestParent(self))
-	
 				local checkbox = self:GetChildren()[1]
 	
 				checkbox:SetCursor("arrow")
@@ -529,7 +533,7 @@ fguitable.Objects = {
 					surface.DrawRect(0, 0, w, h)
 		
 					if self:GetChecked() then
-						surface.SetDrawColor(MPData.AccentColor)
+						surface.SetDrawColor(fguitable.Functions.GetMPData(self).AccentColor)
 						surface.DrawRect(2, 2, w - 4, h - 4)
 					end
 		
@@ -538,7 +542,7 @@ fguitable.Objects = {
 				end
 	
 				self:SetTextColor(fguitable.Colors.white)
-				self:SetFont(MPData.Font)
+				self:SetFont(fguitable.Functions.GetMPData(self).Font)
 			end,
 
 			OnChange = function(self, new)
@@ -566,7 +570,7 @@ fguitable.Objects = {
 			end,
 
 			Init = function(self)
-				local MPData = fguitable.Functions.GetFGUIInformation(fguitable.Functions.GetFurthestParent(self))
+				local MPData = fguitable.Functions.GetMPData(self)
 
 				self:GetTextArea().Paint = function(self, w, h) -- Paint number area
 					local y = (h / 2) - 7.5
@@ -687,7 +691,7 @@ fguitable.Objects = {
 				self:SetCursor("arrow")
 	
 				self:SetTextColor(fguitable.Colors.white)
-				self:SetFont(fguitable.Functions.GetFurthestParent(self):GetFont())
+				self:SetFont(fguitable.Functions.GetMPData(self).Font)
 	
 				self:GetChildren()[1].Paint = function() end -- Hide the dropdown's arrow
 			end,
@@ -740,22 +744,19 @@ fguitable.Objects = {
 			end,
 
 			AddTab = function(self, name, icon, noStretchX, noStretchY, tooltip)
-				local TabHolder = self -- Used for less janky access
-
 				local ContentFrame = fguitable.Create("FHContentFrame", self)
 				ContentFrame:SetDrawOutline(false)
 
 				local data = self:AddSheet(name, ContentFrame, icon, noStretchX, noStretchY, tooltip)
 
-				local MPData = TabHolder.FH.MPData or fguitable.Functions.GetFGUIInformation(fguitable.Functions.GetFurthestParent(TabHolder))
-				TabHolder.FH.MPData = TabHolder.FH.MPData or MPData
-
 				data.Tab:SetCursor("arrow")
 
 				data.Tab:SetTextColor(fguitable.Colors.white)
-				data.Tab:SetFont(MPData.Font)
+				data.Tab:SetFont(fguitable.Functions.GetMPData(self).Font)
 
 				local ogclick = data.Tab.DoClick
+
+				data.Tab.FH = {}
 
 				data.Tab.DoClick = function(selfP) -- selfP because I'm lazy
 					if self.FH.VarTable then
@@ -776,7 +777,7 @@ fguitable.Objects = {
 						surface.DrawLine(0, 0, 0, h)
 						surface.DrawLine(w - 1, 0, w - 1, h)
 
-						surface.SetDrawColor(TabHolder.FH.MPData.AccentColor)
+						surface.SetDrawColor(fguitable.Functions.GetMPData(self).AccentColor)
 						surface.DrawLine(0, 0, w, 0)
 						surface.DrawLine(0, 1, w, 1)
 					else
@@ -842,8 +843,7 @@ fguitable.Objects = {
 				local awidth = math.ceil((self:GetWide() / #tabs) - 20)
 				local width = math.floor(awidth)
 			
-				local MPData = self.FH.MPData or fguitable.Functions.GetFGUIInformation(fguitable.Functions.GetFurthestParent(self))
-				self.FH.MPData = self.FH.MPData or MPData
+				surface.SetFont(fguitable.Functions.GetMPData(self).Font)
 
 				local subamount = 0
 			
@@ -955,17 +955,14 @@ fguitable.Objects = {
 					if pos and (pos <= 0 or self.Columns[pos]) then
 						return error("Tried to Override Existing Column")
 					end
-	
-					local MPData = self.FH.MPData or fguitable.Functions.GetFGUIInformation(fguitable.Functions.GetFurthestParent(self))
-					self.FH.MPData = self.FH.MPData or MPData
-	
+
 					local Column = self.FH.AddColumn(self, name, pos)
 	
 					local ColumnButton = Column:GetChildren()[1]
 	
 					ColumnButton:SetCursor("arrow")
 					ColumnButton:SetTextColor(fguitable.Colors.white)
-					ColumnButton:SetFont(MPData.Font)
+					ColumnButton:SetFont(fguitable.Functions.GetMPData(self).Font)
 	
 					ColumnButton.Paint = function(self, w, h)
 						surface.SetDrawColor(fguitable.Colors.back_min)
@@ -985,8 +982,7 @@ fguitable.Objects = {
 						return error ("No Content Provided")
 					end
 	
-					local MPData = self.FH.MPData or fguitable.Functions.GetFGUIInformation(fguitable.Functions.GetFurthestParent(self))
-					self.FH.MPData = self.FH.MPData or MPData
+					local MPData = fguitable.Functions.GetMPData(self)
 	
 					local Line = self.FH.AddLine(self, ...)
 	
@@ -1000,7 +996,7 @@ fguitable.Objects = {
 							return 
 						end
 	
-						local accent = MPData.AccentColor
+						local accent = fguitable.Functions.GetMPData(self).AccentColor
 	
 						if self:IsHovered() and not self:IsLineSelected() then
 							accent.a = accent.a / 4
@@ -1066,7 +1062,7 @@ fguitable.Objects = {
 			end,
 
 			Init = function(self)
-				local MPData = fguitable.Functions.GetFGUIInformation(fguitable.Functions.GetFurthestParent(self))
+				local MPData = fguitable.Functions.GetMPData(self)
 	
 				self:SetTextColor(fguitable.Colors.white)
 				self:SetFont(MPData.Font)
@@ -1133,7 +1129,7 @@ fguitable.Objects = {
 
 			Init = function(self)
 				self:SetTextColor(fguitable.Colors.white)
-				self:SetFont(fguitable.Functions.GetFGUIInformation(fguitable.Functions.GetFurthestParent(self)).Font)
+				self:SetFont(fguitable.Functions.GetMPData(self).Font)
 	
 				self:SetCursor("arrow")
 			end,
@@ -1204,7 +1200,7 @@ fguitable.Objects = {
 				self.SetValue = self.SetColor
 
 				self:SetTextColor(fguitable.Colors.white)
-				self:SetFont(fguitable.Functions.GetFGUIInformation(fguitable.Functions.GetFurthestParent(self)).Font)
+				self:SetFont(fguitable.Functions.GetMPData(self).Font)
 	
 				self:SetCursor("arrow")
 
@@ -1254,8 +1250,7 @@ fguitable.Objects = {
 			end,
 
 			DoClick = function(self)
-				local MP = self.FH.MP or fguitable.Functions.GetFurthestParent(self)
-				self.FH.MP = self.FH.MP or MP
+				local MP = fguitable.Functions.GetFurthestParent(self)
 
 				if not MP.FH or not IsValid(MP.FH.ColorPicker) then return end -- Not parented to an FGUI object (Or it was removed)
 
@@ -1310,10 +1305,7 @@ fguitable.Objects = {
 			end,
 
 			GetFont = function(self)
-				local MPData = self.FH.MPData or fguitable.Functions.GetFGUIInformation(fguitable.Functions.GetFurthestParent(self))
-				self.FH.MPData = self.FH.MPData or MPData
-
-				return MPData.Font
+				return fguitable.Functions.GetMPData(self).Font
 			end,
 
 			GetContentFrame = function(self)
@@ -1380,8 +1372,7 @@ fguitable.Objects = {
 					return
 				end
 
-				local MPData = self.FH.MPData or fguitable.Functions.GetFGUIInformation(MP)
-				self.FH.MPData = self.FH.MPData or MPData
+				local MPData = fguitable.Functions.GetMPData(self)
 	
 				surface.SetDrawColor(fguitable.Colors.black)
 				surface.DrawRect(0, 0, w, h)
@@ -1438,15 +1429,15 @@ fguitable.Objects = {
 			end,
 
 			Init = function(self)
-				local font = fguitable.Functions.GetFGUIInformation(fguitable.Functions.GetFurthestParent(self)).Font
+				local MPData = fguitable.Functions.GetMPData(self)
 	
 				self:SetTextColor(fguitable.Colors.white)
-				self:SetFont(font)
+				self:SetFont(MPData.Font)
 	
 				self:SetCursor("arrow")
 	
 				timer.Simple(0, function()
-					surface.SetFont(font)
+					surface.SetFont(MPData.Font)
 
 					local label = self:GetLabel()
 	
@@ -1454,7 +1445,7 @@ fguitable.Objects = {
 	
 					local Label = vgui.Create("DLabel", self:GetParent())
 					Label:SetTextColor(fguitable.Colors.white)
-					Label:SetFont(font)
+					Label:SetFont(MPData.Font)
 					Label:SetText(label)
 					Label:SetPos(self:GetX() + ((self:GetWide() / 2) - (tw / 2)), self:GetY() - th - 3)
 		
@@ -1632,7 +1623,7 @@ fguitable.Objects = {
 		Registry = {
 			Init = function(self)
 				self:SetTextColor(fguitable.Colors.white)
-				self:SetFont(fguitable.Functions.GetFGUIInformation(fguitable.Functions.GetFurthestParent(self)).Font)
+				self:SetFont(fguitable.Functions.GetMPData(self).Font)
 			end
 		}
 	},
