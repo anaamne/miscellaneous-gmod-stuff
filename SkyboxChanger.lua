@@ -94,3 +94,8 @@ concommand.Add("debugcmd", function() -- Funny name
 	PrintTable(CURRENT_SKY_TEXTURES)
 	print(SELECTED_SKY)
 end)
+
+concommand.Add("skybox_menu", function() -- Funny name
+	Main:SetVisible(true)
+	Main:MakePopup()
+end)
