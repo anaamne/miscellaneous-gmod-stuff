@@ -95,7 +95,7 @@ concommand.Add("debugcmd", function() -- Funny name
 	print(SELECTED_SKY)
 end)
 
-concommand.Add("skybox_menu", function() -- Funny name
+concommand.Add("skybox_menu", function()
 	Main:SetVisible(true)
 	Main:MakePopup()
 end)
