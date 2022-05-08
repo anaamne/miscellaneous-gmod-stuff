@@ -23,4 +23,4 @@ FGui is a FlowHooks styled vgui base to make it easy to quickly create menus wit
 More information & usage is providede at the top of `fgui.lua`
 </details>
 
-![Demo](fgui/images/demo.png)
+![Demo](images/demo.png)
