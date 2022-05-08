@@ -1,4 +1,4 @@
-FGui is a FlowHooks styled vgui base to make it easy to quickly create menus with the flowhooks style.
+FGui is a FlowHooks styled vgui base to make it easy to quickly create menus with the FlowHooks style
 
 <details>
 <summary>Current Element List</summary>
