@@ -43,9 +43,7 @@ local function GetRankCount() -- Gets the number of ranks
 	if ulx then
 		rCount = rCount + #ulx.group_names
 	end
-	
-	Cache.RankCount = rCount
-	
+
 	return rCount
 end
 
@@ -117,6 +115,7 @@ end
 timer.Create("@", 0.3, 0, function()
 	if Cache.RankCount == -1 or Cache.RankCount ~= GetRankCount() then
 		GetAdminRanks()
+		Cache.RankCount = GetRankCount()
 	end
 
 	Cache.Spectators = {}
