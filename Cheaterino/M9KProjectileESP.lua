@@ -22,7 +22,9 @@ local Cache = {
 			["$vertexalpha"] = 1,
 			["$vertexcolor"] = 1
 		})
-	}
+	},
+	
+	Grenades = {}
 }
 
 local Classes = { -- Holds the classes and time information
@@ -67,58 +69,73 @@ local function DrawCircle(pos, rad, seg, color) -- Basically surface.DrawCircle 
     end
 end
 
-local Render = { -- Render custom things for these entities
+local Render3D = { -- Render custom things for these entities
 	["m9k_released_poison"] = function(self)
 		local len = 225 -- self.Big is never true
 	
 		-- These direction names probably aren't proper, I just called them whatever
 	
-		Cache.ReleasedPoisonForward = Cache.ReleasedPoisonForward or Vector(len, 0, 0)
-		Cache.ReleasedPoisonLeft = Cache.ReleasedPoisonLeft or Vector(0, len, 0)
+		Cache.ReleasedPoisonMins = Cache.ReleasedPoisonMins or Vector(-len, -len, -len)
+		Cache.ReleasedPoisonMaxs = Cache.ReleasedPoisonMaxs or Vector(len, len, len)
 	
-		cam.Start3D()
-			render.SetMaterial(Cache.Materials.Quad)
-		
-			render.DrawQuadEasy(self:GetPos(), vector_up, len * 2, len * 2, Cache.Colors.RedA, 180)
-		
-			render.DrawLine(self:GetPos() + Cache.ReleasedPoisonForward + Cache.ReleasedPoisonLeft, self:GetPos() + Cache.ReleasedPoisonForward - Cache.ReleasedPoisonLeft, Cache.Colors.Red, true)
-			render.DrawLine(self:GetPos() - Cache.ReleasedPoisonForward + Cache.ReleasedPoisonLeft, self:GetPos() - Cache.ReleasedPoisonForward - Cache.ReleasedPoisonLeft, Cache.Colors.Red, true)
-			render.DrawLine(self:GetPos() + Cache.ReleasedPoisonLeft + Cache.ReleasedPoisonForward, self:GetPos() + Cache.ReleasedPoisonLeft - Cache.ReleasedPoisonForward, Cache.Colors.Red, true)
-			render.DrawLine(self:GetPos() - Cache.ReleasedPoisonLeft + Cache.ReleasedPoisonForward, self:GetPos() - Cache.ReleasedPoisonLeft - Cache.ReleasedPoisonForward, Cache.Colors.Red, true)
-		cam.End3D()
+		render.DrawWireframeBox(self:GetPos(), angle_zero, Cache.ReleasedPoisonMins, Cache.ReleasedPoisonMaxs, Cache.Colors.RedA, true)
 	end,
 	
 	["m9k_proxy"] = function(self)
-		cam.Start3D() -- I don't know how to do 3D circles for the cool filled in shape thinger
-			DrawCircle(self:GetPos(), 200, 64, Cache.Colors.Red)
-		cam.End3D()
+		-- I don't know how to do 3D circles for the cool filled in shape thinger
+		
+		DrawCircle(self:GetPos(), 200, 64, Cache.Colors.Red)
+	end,
+	
+	["m9k_thrown_sticky_grenade"] = function(self)
+		render.DrawWireframeSphere(self:GetPos(), 180, 10, 10, Cache.Colors.RedA, true)
+	end,
+	
+	["m9k_thrown_m61"] = function(self)
+		render.DrawWireframeSphere(self:GetPos(), 320, 10, 10, Cache.Colors.RedA, true)
+	end,
+	
+	["m9k_oribital_cannon"] = function(self)
+		render.DrawWireframeSphere(PositionOverrides[self:GetClass()](self), 4250, 10, 10, Cache.Colors.RedA, true)
 	end
 }
 
-hook.Add("HUDPaint", "@@@@@@", function()
-	surface.SetFont("BudgetLabel")
-	surface.SetTextColor(color_white)
-
-	local grenades = {}
+timer.Create("@@@@@@", 0.3, 0, function()
+	Cache.Grenades = {}
 	
 	for k, _ in pairs(Classes) do
 		for _, e in ipairs(ents.FindByClass(k)) do
-			grenades[#grenades + 1] = e
+			Cache.Grenades[#Cache.Grenades + 1] = e
 		end
 	end
-	
-	for _, v in ipairs(grenades) do
+end)
+
+hook.Add("PreDrawEffects", "@@@@@@", function()
+	for _, v in ipairs(Cache.Grenades) do
 		if not IsValid(v) then
 			continue
 		end
 	
 		local class = v:GetClass()
 		
-		if Render[class] then
-			Render[class](v)
+		if Render3D[class] then
+			Render3D[class](v)
 		end
+	end
+end)
+
+hook.Add("HUDPaint", "@@@@@@", function()
+	surface.SetFont("BudgetLabel")
+	surface.SetTextColor(color_white)
+
+	for _, v in ipairs(Cache.Grenades) do
+		if not IsValid(v) then
+			continue
+		end
+		
+		local class = v:GetClass()
 	
-		local etime = Classes[class]
+		local etime = Classes[class] or 0
 		
 		if type(etime) == "function" then
 			etime = etime(v)
