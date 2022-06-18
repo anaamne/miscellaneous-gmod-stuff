@@ -69,7 +69,19 @@ local function DrawCircle(pos, rad, seg, color) -- Basically surface.DrawCircle 
     end
 end
 
-local Render3D = { -- Render custom things for these entities
+local Render3D = { -- Render custom things for these entities	
+	["m9k_thrown_sticky_grenade"] = function(self)
+		render.DrawWireframeSphere(self:GetPos(), 180, 10, 10, Cache.Colors.RedA, true)
+	end,
+	
+	["m9k_thrown_m61"] = function(self)
+		render.DrawWireframeSphere(self:GetPos(), 320, 10, 10, Cache.Colors.RedA, true)
+	end,
+	
+	["m9k_oribital_cannon"] = function(self)
+		render.DrawWireframeSphere(PositionOverrides[self:GetClass()](self), 4250, 10, 10, Cache.Colors.RedA, true)
+	end,
+	
 	["m9k_released_poison"] = function(self)
 		local len = 225 -- self.Big is never true
 	
@@ -87,16 +99,8 @@ local Render3D = { -- Render custom things for these entities
 		DrawCircle(self:GetPos(), 200, 64, Cache.Colors.Red)
 	end,
 	
-	["m9k_thrown_sticky_grenade"] = function(self)
-		render.DrawWireframeSphere(self:GetPos(), 180, 10, 10, Cache.Colors.RedA, true)
-	end,
-	
-	["m9k_thrown_m61"] = function(self)
-		render.DrawWireframeSphere(self:GetPos(), 320, 10, 10, Cache.Colors.RedA, true)
-	end,
-	
-	["m9k_oribital_cannon"] = function(self)
-		render.DrawWireframeSphere(PositionOverrides[self:GetClass()](self), 4250, 10, 10, Cache.Colors.RedA, true)
+	["m9k_mad_c4"] = function(self)
+		render.DrawWireframeSphere(self:GetPos(), 500, 10, 10, Cache.Colors.RedA, true)
 	end
 }
 
