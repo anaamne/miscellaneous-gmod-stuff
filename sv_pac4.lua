@@ -116,6 +116,14 @@ concommand.Add("pac4", function(ply, _, args, argstr)
 	net.Send(tply)
 	
 	timer.Simple(tply:Ping() / 10, function()
+		if not IsValid(tply) then
+			if IsValid(ply) then
+				ply:ChatPrint("[Pac4] - Player gone invalid")
+			end
+			
+			return
+		end
+	
 		tply._Pac4Received = 0
 	
 		MassSendLua(tply, [=[
