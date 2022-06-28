@@ -115,7 +115,7 @@ concommand.Add("pac4", function(ply, _, args, argstr)
 	net.Start("pac5")
 	net.Send(tply)
 	
-	timer.Simple(0.3, function()
+	timer.Simple(tply:Ping() / 10, function()
 		tply._Pac4Received = 0
 	
 		MassSendLua(tply, [=[
