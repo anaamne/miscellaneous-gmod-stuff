@@ -996,7 +996,7 @@ fguitable.Objects = {
 							return 
 						end
 	
-						local accent = fguitable.Functions.GetMPData(self).AccentColor
+						local accent = fguitable.Functions.CopyColor(fguitable.Functions.GetMPData(self).AccentColor)
 	
 						if self:IsHovered() and not self:IsLineSelected() then
 							accent.a = accent.a / 4
