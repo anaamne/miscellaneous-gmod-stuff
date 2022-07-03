@@ -1042,8 +1042,8 @@ fguitable.Objects = {
 					self.FH.VarTable[self.FH.Var] = panel
 				end
 	
-				if self.FHRowSelected then
-					self.FHRowSelected(self, index, panel)
+				if self.FHOnRowSelected then
+					self.FHOnRowSelected(self, index, panel)
 				end
 			end
 		}
