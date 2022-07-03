@@ -1961,6 +1961,8 @@ fguitable.CreateVarTableTimer = function()
 	
 			if v.FH.Type == "FHCheckBox" then -- Funny SetValue calls OnChange and I'm not gonna override SetValue
 				v:SetChecked(v.FH.VarTable[v.FH.Var])
+			elseif v.FH.Type == "FHBinder" and v.Trapping then
+				continue
 			else
 				v:SetValue(v.FH.VarTable[v.FH.Var])
 			end
