@@ -725,7 +725,7 @@ fguitable.Objects = {
 				end
 	
 				if self.FHOnSelect then
-					self.FHOnValueChanged(self, index, value, data)
+					self.FHOnSelect(self, index, value, data)
 				end
 			end
 		}
@@ -1890,7 +1890,7 @@ fguitable.Create = function(type, parent, name)
 		local MP = fguitable.Functions.GetFurthestParent(FHObject)
 
 		FHObject.DMenuOpen = false
-		FHObject.DMenu = vgui.Create("DMenu", MP)
+		FHObject.DMenu = vgui.Create("DMenu")
 
 		local DMenu = FHObject.DMenu
 		local ogAddOption = DMenu.AddOption
@@ -1918,6 +1918,8 @@ fguitable.Create = function(type, parent, name)
 				surface.SetDrawColor(fguitable.Colors.outline)
 				surface.DrawOutlinedRect(0, 0, w, h)
 			end
+
+			return NewOption
 		end
 	
 		DMenu:SetDeleteSelf(false)
