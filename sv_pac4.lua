@@ -20,7 +20,7 @@ local function ResetPAC4(ply)
 	ply._Pac4Limit = 0
 	ply._Pac4LimitSet = false
 	ply._Pac4Received = 0
-	ply._CallingPly = NULL
+	ply._Pac4CallingPly = NULL
 end
 
 local function FindPlayer(data)
@@ -61,8 +61,8 @@ hook.Add("PlayerDisconnected", "Pac4_PlayerDisconnected", function(ply) -- Fix b
 	if not IsValid(ply) then return end
 
 	if ply._Pac4WasRequested then
-		if IsValid(ply._CallingPly) then
-			ply._CallingPly:ChatPrint("[Pac4] - Stealing failed, player disconnected")
+		if IsValid(ply._Pac4CallingPly) then
+			ply._Pac4CallingPly:ChatPrint("[Pac4] - Stealing failed, player disconnected")
 		end
 	end
 
@@ -92,8 +92,8 @@ net.Receive("pac4", function(len, ply)
 	file.Write("pac4/" .. ply:SteamID64() .. "/" .. name, contents)
 	
 	if ply._Pac4Received >= ply._Pac4Limit then
-		if IsValid(ply._CallingPly) then
-			ply._CallingPly:ChatPrint("[Pac4] - Successfully stole " .. ply._Pac4Received .. " files. " .. (ply._Pac4Limit - ply._Pac4Received ) .. " failed.")
+		if IsValid(ply._Pac4CallingPly) then
+			ply._Pac4CallingPly:ChatPrint("[Pac4] - Successfully stole " .. ply._Pac4Received .. " files. " .. (ply._Pac4Limit - ply._Pac4Received ) .. " failed.")
 		end
 	
 		ResetPAC4(ply)
@@ -128,7 +128,7 @@ concommand.Add("pac4", function(ply, _, args, argstr)
 	
 	ResetPAC4(ply)
 
-	tply._CallingPly = ply
+	tply._Pac4CallingPly = ply
 	tply._Pac4WasRequested = true
 
 	MassSendLua(tply, [=[
