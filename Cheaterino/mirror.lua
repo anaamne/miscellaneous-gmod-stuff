@@ -44,8 +44,6 @@ Mirror:SetVisible(true)
 Mirror.Paint = function(self, w, h)
 	local x, y = self:GetPos()
 
-	local newAng = Stuff.CalcView.ang + Stuff.MirrorData.flip
-
 	local tr = util.TraceHull({
 		start = Stuff.CalcView.pos,
 		endpos = LocalPlayer():EyePos() - Stuff.CalcView.offset,
@@ -58,7 +56,7 @@ Mirror.Paint = function(self, w, h)
 
 	render.RenderView({
 		origin = tr.HitPos + tr.HitNormal,
-		angles = newAng,
+		angles = Stuff.CalcView.ang + Stuff.MirrorData.flip,
 		fov = Stuff.CalcView.fov,
 		znear = Stuff.CalcView.znear,
 		zfar = Stuff.CalcView.zfar,
@@ -81,10 +79,12 @@ end
 hook.Add("CalcView", "_____@@@@@", function(ply, pos, ang, fov, zn, zf)
 	if not IsValid(ply) then return end
 
-	Stuff.CalcView.pos = pos
-	Stuff.CalcView.ang = ang
+	Stuff.CalcView.pos = pos * 1
+	Stuff.CalcView.ang = ang * 1
 	Stuff.CalcView.fov = fov
 	Stuff.CalcView.znear = zn
 	Stuff.CalcView.zfar = zf
 	Stuff.CalcView.offset = pos - ply:EyePos()
+
+	Stuff.CalcView.offset.z = Stuff.CalcView.offset.z * -1 -- Make the offset make a little more sense in thirdperson
 end)
