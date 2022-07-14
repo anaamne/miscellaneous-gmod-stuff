@@ -11,6 +11,10 @@ local Stuff = {
 		w = 300,
 		h = 200,
 
+		useFOV = true,
+		invertOffsetY = true,
+		doTrace = true,
+
 		trace = {
 			mins = Vector(-8, -8, -8),
 			maxs = Vector(8, 8, 8)
@@ -44,20 +48,28 @@ Mirror:SetVisible(true)
 Mirror.Paint = function(self, w, h)
 	local x, y = self:GetPos()
 
-	local tr = util.TraceHull({
-		start = Stuff.CalcView.pos,
-		endpos = LocalPlayer():EyePos() - Stuff.CalcView.offset,
-		filter = LocalPlayer(),
-		mins = Stuff.MirrorData.trace.mins,
-		maxs = Stuff.MirrorData.trace.maxs,
-	})
+	local origin
+
+	if Stuff.MirrorData.doTrace then
+		local tr = util.TraceHull({
+			start = Stuff.CalcView.pos,
+			endpos = LocalPlayer():EyePos() - Stuff.CalcView.offset,
+			filter = LocalPlayer(),
+			mins = Stuff.MirrorData.trace.mins,
+			maxs = Stuff.MirrorData.trace.maxs,
+		})
+
+		origin = tr.HitPos + tr.HitNormal
+	else
+		origin = LocalPlayer():EyePos() - Stuff.CalcView.offset
+	end
 
 	local oClip = DisableClipping(true)
 
 	render.RenderView({
-		origin = tr.HitPos + tr.HitNormal,
+		origin = origin,
 		angles = Stuff.CalcView.ang + Stuff.MirrorData.flip,
-		fov = Stuff.CalcView.fov,
+		fov = Stuff.MirrorData.useFOV and Stuff.CalcView.fov or 100,
 		znear = Stuff.CalcView.znear,
 		zfar = Stuff.CalcView.zfar,
 
@@ -86,5 +98,7 @@ hook.Add("CalcView", "_____@@@@@", function(ply, pos, ang, fov, zn, zf)
 	Stuff.CalcView.zfar = zf
 	Stuff.CalcView.offset = pos - ply:EyePos()
 
-	Stuff.CalcView.offset.z = Stuff.CalcView.offset.z * -1 -- Make the offset make a little more sense in thirdperson
+	if Stuff.MirrorData.invertOffsetY then
+		Stuff.CalcView.offset.z = Stuff.CalcView.offset.z * -1 -- Make the offset make a little more sense in thirdperson
+	end
 end)
