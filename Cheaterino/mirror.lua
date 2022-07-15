@@ -33,16 +33,12 @@ local Stuff = {
 	}
 }
 
-local Mirror = vgui.Create("DFrame")
+local Mirror = vgui.Create("DPanel")
 
-Mirror:SetTitle("")
-Mirror:ShowCloseButton(false)
 Mirror:SetSize(Stuff.MirrorData.w, Stuff.MirrorData.h)
 Mirror:SetPos(Stuff.MirrorData.x, Stuff.MirrorData.y)
 Mirror:SetMouseInputEnabled(false)
 Mirror:SetKeyboardInputEnabled(false)
-Mirror:SetDraggable(false)
-Mirror:SetSizable(false)
 Mirror:SetVisible(true)
 
 Mirror.Paint = function(self, w, h)
