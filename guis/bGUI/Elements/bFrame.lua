@@ -50,6 +50,27 @@ function PANEL:Paint(x, y, w)
 	surface.DrawText(title)
 end
 
+function PANEL:Think()
+	if self:GetDragging() then
+		local ox, oy = bGUI.GetDraggingOrigin()
+
+		self:SetPos(gui.MouseX() - ox, gui.MouseY() - oy)
+	end
+end
+
+function PANEL:OnLeftClick()
+	local x, y = self:GetPos()
+	local w = self:GetWidth()
+
+	if bGUI.CursorInBounds(x, y, x + w, y + 20) then -- TODO: Make drag region changeable
+		if bGUI.RequestDragging(self) then
+			local ox, oy = bGUI.GetDraggingOrigin()
+
+			bGUI.UpdateDraggingOrigin(ox - self:GetX(), oy - self:GetY())
+		end
+	end
+end
+
 function PANEL:PreTitleUpdate(newTitle)
 	return true
 end

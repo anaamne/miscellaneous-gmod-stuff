@@ -10,6 +10,8 @@ local PANEL = {
 	_bYPos = 0,
 	_bWidth = 0,
 	_bHeight = 0,
+	_bClickOriginX = 0,
+	_bClickOriginY = 0,
 	_bClickWidth = 0,
 	_bClickHeight = 0,
 	_bVisible = false,
@@ -34,6 +36,10 @@ function PANEL:Remove()
 end
 
 -- Accessors
+
+function PANEL:GetDragging()
+	return bGUI.GetDraggingActive() and bGUI.GetDraggingObject() == self
+end
 
 function PANEL:GetElementType()
 	return self._bElementType
@@ -87,6 +93,10 @@ end
 
 function PANEL:GetClickBounds()
 	return self._bClickWidth, self._bClickHeight
+end
+
+function PANEL:GetClickOrigin()
+	return self._bClickOriginX, self._bClickOriginY
 end
 
 function PANEL:GetVisible()
@@ -199,6 +209,14 @@ function PANEL:SetClickBounds(newWidth, newHeight)
 
 	self._bClickWidth = math.Round(newWidth)
 	self._bClickHeight = math.Round(newHeight)
+end
+
+function PANEL:SetClickOrigin(newX, newY)
+	bGUI.CheckValueType(1, newX, "number")
+	bGUI.CheckValueType(2, newY, "number")
+
+	self._bClickOriginX = math.Round(newX)
+	self._bClickOriginY = math.Round(newY)
 end
 
 function PANEL:SetVisible(newState)

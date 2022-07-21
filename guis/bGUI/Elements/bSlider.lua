@@ -54,13 +54,16 @@ function PANEL:SetDecimals(newValue)
 end
 
 function PANEL:Init()
-	self:SetSize(75, 13)
+	self:SetSize(75, 29)
 	self:SetBackgroundColor(bGUI.Colors.DarkGray)
 
 	self:SetLabel("Slider")
 end
 
 function PANEL:PaintBackground(x, y, w, h)
+	y = y + 16
+	h = h - 16
+
 	surface.SetDrawColor(self:GetBackgroundColor())
 	surface.DrawRect(x, y, w, h)
 
@@ -69,12 +72,12 @@ function PANEL:PaintBackground(x, y, w, h)
 end
 
 function PANEL:Paint(x, y, w, h)
-	local cy = y + (h / 2)
+	local cy = y + (h / 2) + 8
 
 	surface.SetDrawColor(bGUI.Colors.White)
 	surface.DrawRect(x + 4, cy - 1, w - 8, 3)
 
-	surface.DrawRect(x + 4 + self._bHandleX, y, 3, h)
+	surface.DrawRect(x + 4 + self._bHandleX, y + 16, 3, h - 16)
 
 	surface.SetFont(self:GetFont())
 	surface.SetTextColor(self:GetLabelColor())
@@ -82,18 +85,18 @@ function PANEL:Paint(x, y, w, h)
 	local label = self:GetLabel()
 	local tw, th = surface.GetTextSize(label)
 
-	surface.SetTextPos(x, y - th)
+	surface.SetTextPos(x, y + 16 - th)
 	surface.DrawText(label)
 
 	local value = self:GetValue()
 	tw, th = surface.GetTextSize(value)
 
-	surface.SetTextPos((x + w) - tw, y - th)
+	surface.SetTextPos((x + w) - tw, y + 16 - th)
 	surface.DrawText(value)
 end
 
 function PANEL:Think()
-	if bGUI.GetDraggingActive() and bGUI.GetDraggingObject() == self then
+	if self:GetDragging() then
 		local x = self:GetX() + 4
 
 		local min = self:GetMinimumValue()
@@ -115,9 +118,14 @@ function PANEL:Think()
 end
 
 function PANEL:OnLeftClick()
-	if not bGUI.GetDraggingActive() then
-		bGUI.RequestDragging(self)
-	end
+	bGUI.RequestDragging(self)
+end
+
+function PANEL:OnSizeUpdate(_, newHeight)
+	self._bHeight = newHeight + 16 -- Bypass stack overflow, might make another way to do this later.
+
+	self:SetClickBounds(self:GetWidth(), newHeight)
+	self:SetClickOrigin(0, 16)
 end
 
 function PANEL:PreValueChange(newValue)

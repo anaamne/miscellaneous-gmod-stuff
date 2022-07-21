@@ -33,7 +33,7 @@ end
 function PANEL:Init()
 	self:SetBackgroundColor(bGUI.Colors.DarkGray)
 
-	self:SetHeight(12)
+	self:SetSize(100, 12)
 	self:SetClickBounds(12, 12)
 end
 
