@@ -172,9 +172,9 @@ end
 	Used to update drag origin
 ]]
 
-function bGUI.UpdateDraggingOrigin()
-	bGUI.MouseDown.Dragging.Origin.x = gui.MouseX()
-	bGUI.MouseDown.Dragging.Origin.y = gui.MouseY()
+function bGUI.UpdateDraggingOrigin(newX, newY)
+	bGUI.MouseDown.Dragging.Origin.x = newX or gui.MouseX()
+	bGUI.MouseDown.Dragging.Origin.y = newY or gui.MouseY()
 end
 
 --[[
@@ -192,7 +192,9 @@ end
 ]]
 
 function bGUI.SetDraggingObject(newObject)
-	bGUI.CheckValueType(1, newObject, bGUI.GetType())
+	if newObject ~= nil then
+		bGUI.CheckValueType(1, newObject, bGUI.GetType())
+	end
 
 	bGUI.MouseDown.Dragging.Object = newObject
 end
@@ -208,6 +210,10 @@ function bGUI.RequestDragging(object)
 		bGUI.UpdateDraggingOrigin()
 		bGUI.SetDraggingObject(object)
 		bGUI.SetDraggingActive(true)
+
+		return true
+	else
+		return false
 	end
 end
 
@@ -233,7 +239,12 @@ end
 function bGUI.CursorInObject(object)
 	bGUI.CheckValueType(1, object, bGUI.GetType())
 
-	local x, y = object:GetX(), object:GetY()
+	local x, y = object:GetPos()
+	local cx, cy = object:GetClickOrigin()
+	
+	x = x + cx
+	y = y + cy
+
 	local w, h = object:GetClickBounds()
 
 	return bGUI.CursorInBounds(x, y, x + w, y + h)
@@ -397,9 +408,7 @@ function bGUI.CreateElement(eType, parent)
 		NewElement:SetParent(parent)
 	end
 
-	timer.Simple(0, function()
-		NewElement:Init()
-	end)
+	NewElement:Init()
 
 	return NewElement
 end
@@ -470,6 +479,7 @@ do
 
 			for _, c in ipairs(v:GetChildren()) do
 				vX, vY, vW, vH = c:GetX(), c:GetY(), c:GetWidth(), c:GetHeight()
+				render.SetScissorRect(vX, vY, vX + vW, vY + vH, true)
 				bGUI.PaintObject(c, vX, vY, vW, vH)
 
 				if Clicking and bGUI.CursorInObject(v) then
