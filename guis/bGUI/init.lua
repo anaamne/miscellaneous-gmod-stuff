@@ -101,22 +101,6 @@ function bGUI.TypeOf(obj)
 end
 
 --[[
-	Returns if something is being drug by the mouse cursor
-]]
-
-function bGUI.GetDraggingActive()
-	return bGUI.MouseDown.Dragging.Active
-end
-
---[[
-	Returns WHAT is being drug by the mouse cursor
-]]
-
-function bGUI.GetDraggingObject()
-	return bGUI.MouseDown.Dragging.Object
-end
-
---[[
 	Quick and easy way to verify function arguments, basically an easier version of assert()
 ]]
 
@@ -157,6 +141,73 @@ function bGUI.AssertValue(index, value, testValue, eMessage)
 
 	if value ~= testValue then
 		error(string.format(eMessage, index, bGUI.TypeOf(testValue), bGUI.TypeOf(value)))
+	end
+end
+
+--[[
+	Returns if something is being drug by the mouse cursor
+]]
+
+function bGUI.GetDraggingActive()
+	return bGUI.MouseDown.Dragging.Active
+end
+
+--[[
+	Returns WHAT is being drug by the mouse cursor
+]]
+
+function bGUI.GetDraggingObject()
+	return bGUI.MouseDown.Dragging.Object
+end
+
+--[[
+	Returns the drag origin
+]]
+
+function bGUI.GetDraggingOrigin()
+	return bGUI.MouseDown.Dragging.Origin.x, bGUI.MouseDown.Dragging.Origin.y
+end
+
+--[[
+	Used to update drag origin
+]]
+
+function bGUI.UpdateDraggingOrigin()
+	bGUI.MouseDown.Dragging.Origin.x = gui.MouseX()
+	bGUI.MouseDown.Dragging.Origin.y = gui.MouseY()
+end
+
+--[[
+	Used to change drag status
+]]
+
+function bGUI.SetDraggingActive(newState)
+	bGUI.CheckValueType(1, newState, "boolean")
+
+	bGUI.MouseDown.Dragging.Active = newState
+end
+
+--[[
+	Used to change drag object
+]]
+
+function bGUI.SetDraggingObject(newObject)
+	bGUI.CheckValueType(1, newObject, bGUI.GetType())
+
+	bGUI.MouseDown.Dragging.Object = newObject
+end
+
+--[[
+	Quick and easy way to enable dragging for the requested object
+]]
+
+function bGUI.RequestDragging(object)
+	bGUI.CheckValueType(1, object, bGUI.GetType())
+
+	if not bGUI.GetDraggingActive() or not IsValid(bGUI.GetDraggingObject()) then
+		bGUI.UpdateDraggingOrigin()
+		bGUI.SetDraggingObject(object)
+		bGUI.SetDraggingActive(true)
 	end
 end
 
@@ -393,9 +444,9 @@ do
 
 		local Clicking = LeftMouseDown or RightMouseDown
 
-		if not (iLeftMouseDown or iRightMouseDown) and bGUI.MouseDown.Dragging.Active then
-			bGUI.MouseDown.Dragging.Active = false
-			bGUI.MouseDown.Dragging.Object = nil
+		if not (iLeftMouseDown or iRightMouseDown) and bGUI.GetDraggingActive() then
+			bGUI.SetDraggingActive(false)
+			bGUI.SetDraggingObject(nil)
 		end
 
 		local remove = {}
@@ -425,9 +476,9 @@ do
 					PanelToClick = v
 				end
 			end
-
-			render.SetScissorRect(0, 0, 0, 0, false)
 		end
+
+		render.SetScissorRect(0, 0, 0, 0, false)
 
 		for _, v in ipairs(remove) do
 			table.remove(bGUI.PaintOrder, v)

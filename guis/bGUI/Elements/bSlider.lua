@@ -25,10 +25,12 @@ end
 function PANEL:SetValue(newValue)
 	bGUI.CheckValueType(1, newValue, "number")
 
+	newValue = math.Round(math.Clamp(newValue, self:GetMinimumValue(), self:GetMaximumValue()), self:GetDecimals())
+
 	local shouldChange = self:PreValueChange(newValue)
 	if not shouldChange then return end
 
-	self._bValue = math.Round(math.Clamp(newValue, self:GetMinimumValue(), self:GetMaximumValue()), self:GetDecimals())
+	self._bValue = newValue
 
 	self:OnValueChange(self._bValue)
 end
@@ -114,11 +116,7 @@ end
 
 function PANEL:OnLeftClick()
 	if not bGUI.GetDraggingActive() then
-		bGUI.MouseDown.Dragging.Object = self
-		bGUI.MouseDown.Dragging.Active = true
-
-		bGUI.MouseDown.Dragging.Origin.x = self:GetX()
-		bGUI.MouseDown.Dragging.Origin.y = self:GetY()
+		bGUI.RequestDragging(self)
 	end
 end
 
