@@ -58,7 +58,7 @@ function PANEL:GetParentY()
 end
 
 function PANEL:GetChildren()
-	for i = #self._bChildren, 1, -1 do
+	for i = #self._bChildren, 1, -1 do -- Remove invalid children
 		if not IsValid(self._bChildren[i]) then
 			self._bChildren[i] = nil
 		end
@@ -306,11 +306,17 @@ function PANEL:OnRightClick()
 end
 
 function PANEL:PrePositionUpdate(newX, newY)
+	for _, v in ipairs(self:GetChildren()) do
+		v:PreParentPositionUpdate(self, self:GetX(), self:GetY(), newX, newY)
+	end
+
 	return true
 end
 
 function PANEL:OnPositionUpdate(newX, newY)
-
+	for _, v in ipairs(self:GetChildren()) do
+		v:OnParentPositionUpdate(self, newX, newY)
+	end
 end
 
 function PANEL:PreSizeUpdate(newWidth, newHeight)
@@ -335,6 +341,18 @@ end
 
 function PANEL:OnParentChanged(newParent)
 	
+end
+
+function PANEL:PreParentPositionUpdate(parent, oldX, oldY, newX, newY)
+	local deltaX = self:GetX() - oldX
+	local deltaY = self:GetY() - oldY
+
+	self._bXPos = newX + deltaX -- TODO: Maybe a better way to do this?
+	self._bYPos = newY + deltaY
+end
+
+function PANEL:OnParentPositionUpdate(parent, newX, newY)
+
 end
 
 -- Make it actually do something
