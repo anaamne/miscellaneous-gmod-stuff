@@ -2,20 +2,33 @@
 	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
 ]]
 
-local function CoinFlip()
-	return math.random(1, 10) > 5
-end
+local CharRanges = {
+	{65, 90}, -- A-Z
+	{97, 122}, -- a-z
+	{48, 57}, -- 0-9
+	{33, 47}, -- ! - /
+	{58, 64}, -- : - @
+	{91, 96}, -- [ - `
+	{123, 126} -- { - ~
+}
 
-local function RandomString(len)
+local function RandomString(len, symbols)
 	assert(type(len) == "number", "Bad argument #1 to RandomString (number expected, got )" .. type(len))
 	assert(len > 0, "Bad argument #1 to RandomString (number must be > 0)")
 
+	if symbols ~= nil then
+		assert(type(symbols) == "boolean", "Bad argument #2 to RandomString (boolean expected, got )" .. type(symbols))
+	end
+
+	symbols = symbols or false
+
+	local max = symbols and #CharRanges or 3
 	local str = ""
 
 	for i = 1, len do
-		local char = CoinFlip() and math.random(65, 90) or (CoinFlip() and math.random(97, 122) or math.random(48, 57)) -- Uppercase, lowercase and numbers
+		local set = CharRanges[math.random(1, max)]
 
-		str = str .. string.char(char)
+		str = str .. string.char(math.random(set[1], set[2]))
 	end
 
 	return str
