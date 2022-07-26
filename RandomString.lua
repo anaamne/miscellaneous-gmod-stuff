@@ -20,8 +20,6 @@ local function RandomString(len, symbols)
 		assert(type(symbols) == "boolean", "Bad argument #2 to RandomString (boolean expected, got )" .. type(symbols))
 	end
 
-	symbols = symbols or false
-
 	local max = symbols and #CharRanges or 3
 	local str = ""
 
