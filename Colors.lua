@@ -24,7 +24,7 @@ color_purple = Color(150, 0, 255, 255)
 color_pink = Color(255, 0, 255, 255)
 color_brown = Color(100, 50, 0, 255)
 
--- Some tools + fixes
+-- Fixes
 
 local IsColor = IsColor
 
@@ -61,12 +61,6 @@ _ColorBackup = _ColorBackup or { -- Holds original functions
 		GetTextColor = surface.GetTextColor
 	}
 }
-
-meta_cl.GetCopy = function(col) -- Returns a copy of the provided color
-	assert(IsColor(col), "Bad argument #1 to GetCopy (Color expected, got " .. type(col) .. ")")
-
-	return Color(col:Unpack())
-end
 
 meta_im.GetColor = function(mat) -- Fix IMaterial:GetColor metatable issue
 	local col = _ColorBackup.meta_im.GetColor(mat)
