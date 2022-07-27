@@ -26,6 +26,8 @@ color_brown = Color(100, 50, 0, 255)
 
 -- Some tools + fixes
 
+local IsColor = IsColor
+
 local _Registry = debug.getregistry()
 
 local meta_cl = _Registry.Color
@@ -59,8 +61,6 @@ _ColorBackup = _ColorBackup or { -- Holds original functions
 		GetTextColor = surface.GetTextColor
 	}
 }
-
-local IsColor = IsColor
 
 meta_cl.GetCopy = function(col) -- Returns a copy of the provided color
 	assert(IsColor(col), "Bad argument #1 to GetCopy (Color expected, got " .. type(col) .. ")")
@@ -144,4 +144,40 @@ HSLToColor = function(hue, saturation, value) -- Fix HSLToColor metatable issue
 	local col = _ColorBackup.HSLToColor(hue, saturation, value)
 
 	return setmetatable(col, meta_cl)
+end
+
+vgui.GetControlTable("DColorMixer").UpdateColor = function(self, color) -- Fix DColorMixer:ValueChanged metatable issue
+	color = setmetatable(color, meta_cl)
+
+	self.Alpha:SetBarColor(ColorAlpha(color, 255))
+	self.Alpha:SetValue(color.a / 255)
+
+	if color.r != self.txtR:GetValue() then
+		self.txtR.notuserchange = true
+		self.txtR:SetValue(color.r)
+		self.txtR.notuserchange = nil
+	end
+
+	if color.g != self.txtG:GetValue() then
+		self.txtG.notuserchange = true
+		self.txtG:SetValue(color.g)
+		self.txtG.notuserchange = nil
+	end
+
+	if color.b != self.txtB:GetValue() then
+		self.txtB.notuserchange = true
+		self.txtB:SetValue(color.b)
+		self.txtB.notuserchange = nil
+	end
+
+	if color.a != self.txtA:GetValue() then
+		self.txtA.notuserchange = true
+		self.txtA:SetValue(color.a)
+		self.txtA.notuserchange = nil
+	end
+
+	self:UpdateConVars(color)
+	self:ValueChanged(color)
+
+	self.m_Color = color
 end
