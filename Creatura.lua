@@ -96,7 +96,7 @@ local Cache = {
 Cache.Bounds.Body.MaxsLength = Cache.Bounds.Body.Maxs:Length()
 Cache.Bounds.Leg.MaxsLength = Cache.Bounds.Leg.Maxs:Length()
 
-Cache.Transform.Position = LocalPlayer():GetPos() + (vector_up * Cache.Bounds.Body.MaxsLength * 30)
+Cache.Transform.Position = LocalPlayer():GetPos() + (vector_up * Cache.Bounds.Body.MaxsLength)
 Cache.Transform.Rotation = Angle(0, math.NormalizeAngle(LocalPlayer():EyeAngles().yaw), 0)
 
 Cache.Bounds.Whole.Mins = Cache.Bounds.Body.Mins + Cache.Bounds.Leg.Mins
@@ -153,14 +153,17 @@ hook.Add("Think", "creatura_Think", function()
 	local TAngle = Cache.Transform.Rotation * 1
 
 	local Forward = Cache.Transform.Rotation:Forward()
+	local PlayerMove = false
 	local Move = IsOnGround() and vector_origin or Gravity
 
 	if input.IsButtonDown(Cache.Bindings.Forward) then
 		Move = Move + (Forward * Speed)
+		PlayerMove = true
 	end
 
 	if input.IsButtonDown(Cache.Bindings.Backward) then
 		Move = Move - (Forward * Speed)
+		PlayerMove = true
 	end
 
 	if input.IsButtonDown(Cache.Bindings.Left) then
@@ -172,6 +175,12 @@ hook.Add("Think", "creatura_Think", function()
 	end
 
 	Cache.Transform.Rotation = FixAngle(TAngle)
+
+	if PlayerMove then
+		Cache.Bounds.Leg.PitchSet = math.sin(engine.TickCount() / 10) * Speed * 10
+	else
+		Cache.Bounds.Leg.PitchSet = 0
+	end
 
 	if Move ~= vector_origin then
 		local DesiredPosition = Cache.Transform.Position + Move
@@ -211,8 +220,6 @@ hook.Add("PreDrawEffects", "creatura_PreDrawEffects", function()
 	-- Legs
 	
 	local LegTop = TPosition - (Up * Cache.Bounds.Leg.MaxsLength * 1.75)
-
-	Cache.Bounds.Leg.PitchSet = math.sin(CurTime()) * 15
 
 	local LegAng = Angle(Cache.Bounds.Leg.PitchSet, 0, 0)
 
