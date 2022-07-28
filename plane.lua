@@ -82,7 +82,7 @@ Cache.Transform.Rotation.pitch = 0 -- Fix angle
 local function AngleOutOfRange(ang)
 	ang = ang or angle_zero
 	
-	return ang.pitch > 89 or ang.pitch < -89 or ang.yaw > 180 or ang.yaw < -180 or ang.roll > 180 or ang.roll < -180
+	return ang.pitch > 90 or ang.pitch < -90 or ang.yaw > 180 or ang.yaw < -180 or ang.roll > 180 or ang.roll < -180
 end
 
 local function FixAngle(ang)
@@ -90,7 +90,7 @@ local function FixAngle(ang)
 
 	if not AngleOutOfRange(ang) then return ang end
 
-	return Angle(math.Clamp(math.NormalizeAngle(ang.pitch), -89, 89), math.NormalizeAngle(ang.yaw), math.NormalizeAngle(ang.roll))
+	return Angle(math.Clamp(math.NormalizeAngle(ang.pitch), -90, 90), math.NormalizeAngle(ang.yaw), math.NormalizeAngle(ang.roll))
 end
 
 local function GetDeltaTime()
@@ -133,18 +133,6 @@ hook.Add("PreDrawEffects", "plane_PreDrawEffects", function()
 
 	local ang = Cache.Transform.Rotation
 
-	render.DrawWireframeBox(Cache.Transform.Position, ang, Cache.Bounds.Base.Mins, Cache.Bounds.Base.Maxs, Cache.Colors.Red, true)
-	render.DrawBox(Cache.Transform.Position, ang, Cache.Bounds.Base.Mins, Cache.Bounds.Base.Maxs, Cache.Colors.Red_A)
-
-	local right = ang:Right()
-	local side = right * Cache.Bounds.Wing.Offset
-
-	render.DrawWireframeBox(Cache.Transform.Position + side, ang, Cache.Bounds.Wing.Mins, Cache.Bounds.Wing.Maxs, Cache.Colors.Red, true)
-	render.DrawBox(Cache.Transform.Position + side, ang, Cache.Bounds.Wing.Mins, Cache.Bounds.Wing.Maxs, Cache.Colors.Red_A)
-
-	render.DrawWireframeBox(Cache.Transform.Position - side, ang, Cache.Bounds.Wing.Mins, Cache.Bounds.Wing.Maxs, Cache.Colors.Red, true)
-	render.DrawBox(Cache.Transform.Position - side, ang, Cache.Bounds.Wing.Mins, Cache.Bounds.Wing.Maxs, Cache.Colors.Red_A)
-
 	local forwardlength = Cache.ConVars.plane_forwardtrace_length:GetInt()
 
 	if forwardlength > 0 then
@@ -168,6 +156,18 @@ hook.Add("PreDrawEffects", "plane_PreDrawEffects", function()
 		render.DrawWireframeBox(frontpos, angle_zero, Cache.Bounds.ForwardTrace.Mins, Cache.Bounds.ForwardTrace.Maxs, col, true)
 		render.DrawBox(frontpos, angle_zero, Cache.Bounds.ForwardTrace.Mins, Cache.Bounds.ForwardTrace.Maxs, col_a)
 	end
+
+	render.DrawWireframeBox(Cache.Transform.Position, ang, Cache.Bounds.Base.Mins, Cache.Bounds.Base.Maxs, Cache.Colors.Red, true)
+	render.DrawBox(Cache.Transform.Position, ang, Cache.Bounds.Base.Mins, Cache.Bounds.Base.Maxs, Cache.Colors.Red_A)
+
+	local right = ang:Right()
+	local side = right * Cache.Bounds.Wing.Offset
+
+	render.DrawWireframeBox(Cache.Transform.Position + side, ang, Cache.Bounds.Wing.Mins, Cache.Bounds.Wing.Maxs, Cache.Colors.Red, true)
+	render.DrawBox(Cache.Transform.Position + side, ang, Cache.Bounds.Wing.Mins, Cache.Bounds.Wing.Maxs, Cache.Colors.Red_A)
+
+	render.DrawWireframeBox(Cache.Transform.Position - side, ang, Cache.Bounds.Wing.Mins, Cache.Bounds.Wing.Maxs, Cache.Colors.Red, true)
+	render.DrawBox(Cache.Transform.Position - side, ang, Cache.Bounds.Wing.Mins, Cache.Bounds.Wing.Maxs, Cache.Colors.Red_A)
 end)
 
 hook.Add("CalcView", "plane_CalcView", function(ply)
