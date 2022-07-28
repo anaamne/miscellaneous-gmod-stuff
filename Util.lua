@@ -45,10 +45,20 @@ util.TypeAssert = function(index, value, desired) -- Cleans up code a lot, check
 	end
 end
 
+-- Base HU conversion
+
 util.HUToFeet = function(units) -- Convert Hammer Units into Feet
 	util.TypeAssert(1, units, "number")
 
 	return units / 16
+end
+
+-- Unit conversions
+
+util.InchesToFeet = function(units)
+	util.TypeAssert(1, units, "number")
+
+	return units / 12
 end
 
 util.FeetToInches = function(units) -- Convert Feet into Inches
@@ -75,6 +85,20 @@ util.MetersToCentimeters = function(units) -- Convert Meters into Centimeters
 	return units * 100
 end
 
+util.InchesToMeters = function(units) -- Convert Inches into Meters
+	util.TypeAssert(1, units, "number")
+
+	return util.FeetToMeters(util.InchesToFeet(units))
+end
+
+util.MetersToInches = function(units)
+	util.TypeAssert(1, units, "number")
+
+	return util.FeetToInches(util.MetersToFeet(units))
+end
+
+-- Other HU conversions
+
 util.HUToInches = function(units) -- Convert Hammer Units into Inches
 	util.TypeAssert(1, units, "number")
 
@@ -93,6 +117,8 @@ util.HUToCentimeters = function(units) -- Convert Hammer Units into Centimeters
 	return util.MetersToCentimeters(util.HUToMeters(units))
 end
 
+-- Number stuff
+
 util.GetDecimals = function(number) -- Returns how many decimal places a number has
 	util.TypeAssert(1, number, "number")
 
@@ -100,6 +126,8 @@ util.GetDecimals = function(number) -- Returns how many decimal places a number 
 
 	return decimals[2] and #decimals[2] or 0
 end
+
+-- Color stuff
 
 util.FixColor = function(color) -- Fixes a color's R, G, B and A values
 	util.TypeAssert(1, color, "Color")
@@ -126,4 +154,18 @@ util.TableToColor = function(color) -- Fixes a table to be of the color metatabl
 	util.TypeAssert(1, color, "table")
 
 	setmetatable(color, meta_cl)
+end
+
+-- Client only stuff
+
+if not CLIENT then return end
+
+util.IsInWorld = function(position)
+	util.TypeAssert(1, position, "Vector")
+
+	return not util.TraceLine({
+		start = position,
+		endpos = position,
+		collisiongroup = COLLISION_GROUP_WORLD
+	}).HitWorld
 end
