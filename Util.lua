@@ -31,17 +31,15 @@ util.TypeAssert = function(index, value, desired) -- Cleans up code a lot, check
 
 	assert(dtype == "string", "Bad argument #3 to 'TypeAssert' (string expected, got " .. dtype .. ")")
 
-	local dbg = debug.getinfo(2)
+	local dbg = debug.getinfo(2) or {}
+	
+	local dbgname = dbg.name or dbg.short_src or dbg.source or "UNKNOWN"
 
-	if not dbg or not dbg.name then
-		ErrorNoHalt("TypeAssert - Failed to get debug information")
-		return
-	end
-
+	local base = type(value)
 	local real = util.GetObjectType(value)
 
-	if real ~= desired then
-		error(string.format("Bad argument #%d to '%s' (%s expected, got %s)", index, dbg.name, desired, real))
+	if base ~= desired and real ~= desired then
+		error(string.format("Bad argument #%d to '%s' (%s expected, got %s)", index, dbgname, desired, real))
 	end
 end
 
@@ -156,11 +154,28 @@ util.TableToColor = function(color) -- Fixes a table to be of the color metatabl
 	setmetatable(color, meta_cl)
 end
 
+-- Table stuff
+
+util.GetTableDifferenceKeys = function(one, two) -- Compares table one to table two
+	util.TypeAssert(1, one, "table")
+	util.TypeAssert(2, two, "table")
+
+	local differences = {}
+
+	for _, v in ipairs(table.GetKeys(one)) do
+		if two[v] == nil then
+			differences[#differences + 1] = v
+		end
+	end
+
+	return differences
+end
+
 -- Client only stuff
 
 if not CLIENT then return end
 
-util.IsInWorld = function(position)
+util.IsInWorld = function(position) -- Clientside version
 	util.TypeAssert(1, position, "Vector")
 
 	return not util.TraceLine({
