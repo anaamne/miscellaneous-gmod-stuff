@@ -93,6 +93,10 @@ local function FixAngle(ang)
 	return Angle(math.Clamp(math.NormalizeAngle(ang.pitch), -89, 89), math.NormalizeAngle(ang.yaw), math.NormalizeAngle(ang.roll))
 end
 
+local function GetDeltaTime()
+	return RealFrameTime() * 200
+end
+
 hook.Add("InputMouseApply", "plane_InputMouseApply", function(_, dX, dY)
 	Cache.View.Rotation.pitch = Cache.View.Rotation.pitch + (dY * Cache.ConVars.m_pitch:GetFloat())
 	Cache.View.Rotation.yaw = Cache.View.Rotation.yaw - (dX * Cache.ConVars.m_yaw:GetFloat())
@@ -101,7 +105,7 @@ hook.Add("InputMouseApply", "plane_InputMouseApply", function(_, dX, dY)
 end)
 
 hook.Add("Think", "plane_Think", function()
-	local speed = Cache.ConVars.plane_speed_turn:GetInt()
+	local speed = Cache.ConVars.plane_speed_turn:GetInt() * GetDeltaTime()
 	local ang = Cache.Transform.Rotation * 1
 
 	if input.IsButtonDown(Cache.Bindings.Forward) then
@@ -121,7 +125,7 @@ hook.Add("Think", "plane_Think", function()
 	end
 
 	Cache.Transform.Rotation = FixAngle(ang)
-	Cache.Transform.Position = Cache.Transform.Position + (Cache.Transform.Rotation:Forward() * Cache.ConVars.plane_speed:GetInt())
+	Cache.Transform.Position = Cache.Transform.Position + (Cache.Transform.Rotation:Forward() * Cache.ConVars.plane_speed:GetInt() * GetDeltaTime())
 end)
 
 hook.Add("PreDrawEffects", "plane_PreDrawEffects", function()
