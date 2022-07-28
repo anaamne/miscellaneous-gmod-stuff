@@ -56,13 +56,14 @@ local Cache = {
 	Bounds = {
 		Base = {
 			Mins = Vector(-16, -8, -6),
-			Maxs = Vector(16, 8, 6)
+			Maxs = Vector(16, 8, 6),
+			MaxsLength = nil
 		},
 
 		Wing = {
-			Offset = 14,
 			Mins = Vector(-8, -6, -3),
-			Maxs = Vector(8, 6, 3)
+			Maxs = Vector(8, 6, 3),
+			MaxsLength = nil
 		},
 
 		ForwardTrace = {
@@ -136,8 +137,10 @@ hook.Add("PreDrawEffects", "plane_PreDrawEffects", function()
 	local forwardlength = Cache.ConVars.plane_forwardtrace_length:GetInt()
 
 	if forwardlength > 0 then
+		Cache.Bounds.Base.MaxsLength = Cache.Bounds.Base.MaxsLength or Cache.Bounds.Base.Maxs:Length()
+
 		local forward = ang:Forward()
-		local front = Cache.Transform.Position + (forward * Cache.Bounds.Base.Maxs:Length())
+		local front = Cache.Transform.Position + (forward * Cache.Bounds.Base.MaxsLength)
 
 		local tr = util.TraceHull({
 			start = front,
@@ -157,11 +160,13 @@ hook.Add("PreDrawEffects", "plane_PreDrawEffects", function()
 		render.DrawBox(frontpos, angle_zero, Cache.Bounds.ForwardTrace.Mins, Cache.Bounds.ForwardTrace.Maxs, col_a)
 	end
 
+	Cache.Bounds.Wing.MaxsLength = Cache.Bounds.Wing.MaxsLength or Cache.Bounds.Wing.Maxs:Length()
+
 	render.DrawWireframeBox(Cache.Transform.Position, ang, Cache.Bounds.Base.Mins, Cache.Bounds.Base.Maxs, Cache.Colors.Red, true)
 	render.DrawBox(Cache.Transform.Position, ang, Cache.Bounds.Base.Mins, Cache.Bounds.Base.Maxs, Cache.Colors.Red_A)
 
 	local right = ang:Right()
-	local side = right * Cache.Bounds.Wing.Offset
+	local side = right * (Cache.Bounds.Wing.MaxsLength * 1.3333333333333)
 
 	render.DrawWireframeBox(Cache.Transform.Position + side, ang, Cache.Bounds.Wing.Mins, Cache.Bounds.Wing.Maxs, Cache.Colors.Red, true)
 	render.DrawBox(Cache.Transform.Position + side, ang, Cache.Bounds.Wing.Mins, Cache.Bounds.Wing.Maxs, Cache.Colors.Red_A)
