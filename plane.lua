@@ -93,14 +93,14 @@ local function FixAngle(ang)
 	return Angle(math.Clamp(math.NormalizeAngle(ang.pitch), -89, 89), math.NormalizeAngle(ang.yaw), math.NormalizeAngle(ang.roll))
 end
 
-hook.Add("InputMouseApply", "cube_InputMouseApply", function(_, dX, dY)
+hook.Add("InputMouseApply", "plane_InputMouseApply", function(_, dX, dY)
 	Cache.View.Rotation.pitch = Cache.View.Rotation.pitch + (dY * Cache.ConVars.m_pitch:GetFloat())
 	Cache.View.Rotation.yaw = Cache.View.Rotation.yaw - (dX * Cache.ConVars.m_yaw:GetFloat())
 
 	Cache.View.Rotation = FixAngle(Cache.View.Rotation)
 end)
 
-hook.Add("Think", "cube_Think", function()
+hook.Add("Think", "plane_Think", function()
 	local speed = Cache.ConVars.plane_speed_turn:GetInt()
 	local ang = Cache.Transform.Rotation * 1
 
@@ -124,7 +124,7 @@ hook.Add("Think", "cube_Think", function()
 	Cache.Transform.Position = Cache.Transform.Position + (Cache.Transform.Rotation:Forward() * Cache.ConVars.plane_speed:GetInt())
 end)
 
-hook.Add("PreDrawEffects", "cube_PreDrawEffects", function()
+hook.Add("PreDrawEffects", "plane_PreDrawEffects", function()
 	render.SetMaterial(Cache.Materials.Color)
 
 	local ang = Cache.Transform.Rotation
@@ -166,7 +166,7 @@ hook.Add("PreDrawEffects", "cube_PreDrawEffects", function()
 	end
 end)
 
-hook.Add("CalcView", "cube_CalcView", function(ply)
+hook.Add("CalcView", "plane_CalcView", function(ply)
 	if not IsValid(ply) then return end
 
 	local ang = Cache.View.Rotation * 1
