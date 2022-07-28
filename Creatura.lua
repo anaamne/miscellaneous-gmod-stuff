@@ -99,8 +99,10 @@ Cache.Bounds.Leg.MaxsLength = Cache.Bounds.Leg.Maxs:Length()
 Cache.Transform.Position = LocalPlayer():GetPos() + (vector_up * Cache.Bounds.Body.MaxsLength)
 Cache.Transform.Rotation = Angle(0, math.NormalizeAngle(LocalPlayer():EyeAngles().yaw), 0)
 
-Cache.Bounds.Whole.Mins = Cache.Bounds.Body.Mins + Cache.Bounds.Leg.Mins
 Cache.Bounds.Whole.Maxs = Cache.Bounds.Body.Maxs + Cache.Bounds.Leg.Maxs
+Cache.Bounds.Whole.Maxs.y = Cache.Bounds.Whole.Maxs.x
+
+Cache.Bounds.Whole.Mins = Cache.Bounds.Whole.Maxs * -1
 
 local function AngleOutOfRange(ang)
 	ang = ang or angle_zero
