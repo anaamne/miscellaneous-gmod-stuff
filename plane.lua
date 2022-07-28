@@ -1,7 +1,7 @@
 --[[
 	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
 
-	~ Air plane ~
+	~ Airplane ~
 
 	- Move with arrow keys
 	- ConVars:
