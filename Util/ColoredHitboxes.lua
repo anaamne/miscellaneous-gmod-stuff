@@ -61,6 +61,8 @@ end
 local function DrawEntityHitboxes(ent)
 	if not IsValid(ent) then return end
 
+	ent:SetupBones()
+
 	for set = 0, ent:GetHitboxSetCount() - 1 do
 		for hitbox = 0, ent:GetHitBoxCount(set) - 1 do
 			local bone = ent:GetHitBoxBone(hitbox, set)
