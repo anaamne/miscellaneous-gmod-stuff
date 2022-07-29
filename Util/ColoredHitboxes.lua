@@ -87,6 +87,15 @@ timer.Create("ColoredHitboxes_UpdatePlayers", 0.3, 0, function()
 	Cache.Players = player.GetAll()
 end)
 
+hook.Add("CreateClientsideRagdoll", "ColoredHitboxes_CreateClientsideRagdoll", function(creator, ragdoll)
+	if not creator:IsPlayer() then return end
+
+	ragdoll.RenderOverride = function(self)
+		self:DrawModel()
+		DrawEntityHitboxes(self)
+	end
+end)
+
 hook.Add("PreDrawEffects", "ColoredHitboxes_PreDrawEffects", function()
 	render.SetMaterial(Cache.Materials.Color)
 
