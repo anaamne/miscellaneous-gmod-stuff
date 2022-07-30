@@ -8,6 +8,8 @@
 		lepaint_getdata - Prints the draw data to console
 ]]
 
+include("includes/util/Draw.lua")
+
 -- Numbers
 
 local ONE_FIFTH = 1 / 5
@@ -42,16 +44,6 @@ local Stuff = {
 		} 
 	},
 
-	Materials = {
-		Corners = {
-			tex_corner8	= "gui/corner8",
-			tex_corner16 = "gui/corner16",
-			tex_corner32 = "gui/corner32",
-			tex_corner64 = "gui/corner64",
-			tex_corner512 = "gui/corner512"
-		}
-	},
-
 	DrawColor = nil,
 	DrawSize = 3,
 	DrawData = {},
@@ -79,23 +71,8 @@ Main.Paint = function(self, w, h)
 		Main._oPaint(self, w, h)
 	render.SetScissorRect(0, 0, 0, 0, false)
 
-	draw.BeginMask() -- Outter outline
-		render.PerformFullScreenStencilOperation()
-	draw.DeMask()
-		draw.DrawRoundedStencilBox(8, 1, 24, w - 2, h - 25, Stuff.Colors.White, false, false, true, true)
-	draw.DrawOp()
-		draw.DrawRoundedStencilBox(8, 0, 24, w, h - 24, Stuff.Colors.Outlines.Main.Outter, false, false, true, true)
-	draw.ReMask()
-		draw.RoundedBoxEx(8, 2, 24, w, h - 26, Stuff.Colors.Backing, false, false, true, true)
-	draw.FinishMask()
-
-	draw.BeginMask() -- Inner outline
-		render.PerformFullScreenStencilOperation()
-	draw.DeMask()
-		draw.DrawRoundedStencilBox(8, 2, 24, w - 4, h - 26, Stuff.Colors.White, false, false, true, true)
-	draw.DrawOp()
-		draw.DrawRoundedStencilBox(8, 1, 24, w - 2, h - 25, Stuff.Colors.Outlines.Main.Inner, false, false, true, true)
-	draw.FinishMask()
+	draw.OutlinedRoundedBoxEx(8, 0, 24, w, h - 24, Stuff.Colors.Outlines.Main.Outter, false, false, true, true)
+	draw.OutlinedRoundedBoxEx(8, 1, 24, w - 2, h - 25, Stuff.Colors.Outlines.Main.Inner, false, false, true, true)
 end
 
 local DrawPanel = vgui.Create("DPanel", Main)
@@ -135,13 +112,7 @@ DrawPanel.Think = function(self)
 end
 
 DrawPanel.Paint = function(self, w, h)
-	draw.BeginMask()
-		render.PerformFullScreenStencilOperation()
-	draw.DeMask()
-		draw.DrawRoundedStencilBox(8, 1, 1, w - 2, h - 2, Stuff.Colors.White, true, true, true, true)
-	draw.DrawOp()
-		draw.DrawRoundedStencilBox(8, 0, 0, w, h, Stuff.Colors.Outlines.DrawPanel.Outter, true, true, true, true)
-	draw.ReMask()
+	draw.ClipInRoundedBox(8, 0, 0, w, h, Stuff.Colors.Outlines.DrawPanel.Outter, function()
 		draw.RoundedBox(8, 0, 0, w, h, Stuff.Colors.Outlines.DrawPanel.Outter)
 
 		for _, v in ipairs(Stuff.DrawData) do
@@ -155,7 +126,7 @@ DrawPanel.Paint = function(self, w, h)
 			surface.SetDrawColor(Stuff.Colors.Black)
 			surface.DrawOutlinedRect(mx - (Stuff.DrawSize * 0.5), my - (Stuff.DrawSize * 0.5), Stuff.DrawSize, Stuff.DrawSize)
 		end
-	draw.FinishMask()
+	end)
 end
 
 DrawPanel.OnMousePressed = function(self, code)
@@ -294,113 +265,3 @@ end)
 concommand.Add("lepaint_getdata", function()
 	PrintTable(Stuff.DrawData)
 end)
-
--- Final setup
-
-do
-	function draw.SetMaskDraw(newState) -- https://github.com/2048khz-gachi-rmx/beizwors/blob/784c72a0bde378a6f8a6196bb19b744e55b0b130/addons/core_panellib/lua/moarpanels/exts/clipping.lua
-		if newState then
-			render.SetStencilCompareFunction(STENCIL_ALWAYS)
-			render.SetStencilPassOperation(STENCIL_REPLACE)
-		else
-			render.SetStencilCompareFunction(STENCIL_NEVER)
-			render.SetStencilFailOperation(STENCIL_REPLACE)
-		end
-	end
-	
-	function draw.BeginMask()
-		render.SetStencilPassOperation(STENCIL_KEEP)
-	
-		render.SetStencilEnable(true)
-	
-		render.ClearStencil()
-	
-		render.SetStencilTestMask(0xFF)
-		render.SetStencilWriteMask(0xFF)
-	
-		draw.SetMaskDraw(false)
-	
-		render.SetStencilReferenceValue(1)
-	end
-	
-	function draw.DeMask()
-		render.SetStencilReferenceValue(0)
-	end
-	
-	function draw.ReMask()
-		render.SetStencilReferenceValue(1)
-	end
-	
-	function draw.DrawOp(val)
-		render.SetStencilCompareFunction(STENCIL_NOTEQUAL)
-		render.SetStencilFailOperation(STENCIL_KEEP)
-		render.SetStencilPassOperation(STENCIL_KEEP)
-	
-		render.SetStencilReferenceValue(val or 0)
-	end
-	
-	function draw.FinishMask()
-		render.SetStencilEnable(false)
-	end
-	
-	function draw.DrawRoundedStencilBox(bordersize, x, y, w, h, color, tl, tr, bl, br) -- https://github.com/2048khz-gachi-rmx/beizwors/blob/784c72a0bde378a6f8a6196bb19b744e55b0b130/addons/core_panellib/lua/moarpanels/exts/draw.lua
-		surface.SetDrawColor(color:Unpack())
-	
-		if bordersize <= 0 then
-			surface.DrawRect(x, y, w, h)
-			return
-		end
-	
-		x = math.Round(x)
-		y = math.Round(y)
-		w = math.Round(w)
-		h = math.Round(h)
-		bordersize = math.min(math.Round(bordersize), math.floor(w * 0.5))
-	
-		surface.DrawRect(x + bordersize, y, w - bordersize * 2, h)
-		surface.DrawRect(x, y + bordersize, bordersize, h - bordersize * 2)
-		surface.DrawRect(x + w - bordersize, y + bordersize, bordersize, h - bordersize * 2)
-	
-		local tex = Stuff.Materials.Corners.tex_corner8
-		if bordersize > 8 then tex = Stuff.Materials.Corners.tex_corner16 end
-		if bordersize > 16 then tex = Stuff.Materials.Corners.tex_corner32 end
-		if bordersize > 32 then tex = Stuff.Materials.Corners.tex_corner64 end
-		if bordersize > 64 then tex = Stuff.Materials.Corners.tex_corner512 end
-	
-		surface.SetMaterial(tex)
-	
-		if tl then
-			surface.DrawTexturedRectUV(x, y, bordersize, bordersize, 0, 0, 1, 1)
-		else
-			surface.DrawRect(x, y, bordersize, bordersize)
-		end
-	
-		if tr then
-			surface.DrawTexturedRectUV(x + w - bordersize, y, bordersize, bordersize, 1, 0, 0, 1)
-		else
-			surface.DrawRect(x + w - bordersize, y, bordersize, bordersize)
-		end
-	
-		if bl then
-			surface.DrawTexturedRectUV(x, y + h -bordersize, bordersize, bordersize, 0, 1, 1, 0)
-		else
-			surface.DrawRect(x, y + h - bordersize, bordersize, bordersize)
-		end
-	
-		if br then
-			surface.DrawTexturedRectUV(x + w - bordersize, y + h - bordersize, bordersize, bordersize, 1, 1, 0, 0)
-		else
-			surface.DrawRect(x + w - bordersize, y + h - bordersize, bordersize, bordersize)
-		end
-	end
-
-	for name, mat in pairs(Stuff.Materials.Corners) do
-		Stuff.Materials.Corners[name] = CreateMaterial("alt05_" .. mat:gsub("gui/", ""), "UnlitGeneric", {
-			["$basetexture"] = mat,
-			["$alphatest"] = 1,
-			["$alphatestreference"] = 0.5,
-			["$vertexalpha"] = 1,
-			["$vertexcolor"] = 1
-		})
-	end
-end
