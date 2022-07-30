@@ -54,7 +54,8 @@ local Stuff = {
 
 	DrawColor = nil,
 	DrawSize = 3,
-	DrawData = {}
+	DrawData = {},
+	DrawStack = {}
 }
 
 Stuff.DrawColor = Stuff.Colors.Black
@@ -124,6 +125,9 @@ DrawPanel.Think = function(self)
 					size = Stuff.DrawSize
 				}
 
+				table.insert(Stuff.DrawStack[#Stuff.DrawStack], #Stuff.DrawData)
+--				print("added " .. #Stuff.DrawData .. ", new length: " .. #Stuff.DrawStack[#Stuff.DrawStack])
+
 				self._LastMouse.x = mx
 				self._LastMouse.y = my
 			end
@@ -158,16 +162,19 @@ end
 DrawPanel.OnMousePressed = function(self, code)
 	if code ~= MOUSE_LEFT then return end
 
+	Stuff.DrawStack[#Stuff.DrawStack + 1] = {}
 	self._IsDrawing = true
 end
 
 DrawPanel.OnMouseReleased = function(self, code)
-	if code ~= MOUSE_LEFT then return end
+	if not self._IsDrawing or code ~= MOUSE_LEFT then return end
 
 	self._IsDrawing = false
 end
 
 DrawPanel.OnCursorExited = function(self)
+	if not self._IsDrawing then return end
+
 	self._IsDrawing = false
 end
 
@@ -200,24 +207,40 @@ ToolColorPicker.Paint = function(self, w, h)
 	DisableClipping(oClip)
 end
 
+local ToolUndoButton = vgui.Create("DButton", ToolPanel)
+ToolUndoButton:SetSize((ToolColorPicker:GetWide() * 0.5) - 5, 24)
+ToolUndoButton:SetPos(ToolColorPicker:GetX(), ToolColorPicker:GetY() + ToolColorPicker:GetTall() + 10)
+ToolUndoButton:SetText("Undo")
+
+ToolUndoButton.DoClick = function()
+	local target = Stuff.DrawStack[#Stuff.DrawStack]
+	if not target then return end
+
+	for i = #Stuff.DrawData, (#Stuff.DrawData - #target) + 1, -1 do
+		table.remove(Stuff.DrawData, i)
+	end
+
+	table.remove(Stuff.DrawStack, #Stuff.DrawStack)
+end
+
+local ToolClearButton = vgui.Create("DButton", ToolPanel)
+ToolClearButton:SetSize(ToolUndoButton:GetSize())
+ToolClearButton:SetPos(ToolUndoButton:GetX() + ToolUndoButton:GetWide() + 10, ToolUndoButton:GetY())
+ToolClearButton:SetText("Clear")
+
+ToolClearButton.DoClick = function()
+	table.Empty(Stuff.DrawData)
+end
+
 local ToolSaveButton = vgui.Create("DButton", ToolPanel)
-ToolSaveButton:SetSize((ToolColorPicker:GetWide() * 0.5) - 5, 24)
-ToolSaveButton:SetPos(ToolColorPicker:GetX(), ToolColorPicker:GetY() + ToolColorPicker:GetTall() + 10)
+ToolSaveButton:SetSize(ToolColorPicker:GetWide(), ToolUndoButton:GetTall())
+ToolSaveButton:SetPos(ToolUndoButton:GetX(), ToolUndoButton:GetY() + ToolUndoButton:GetTall() + 10)
 ToolSaveButton:SetText("Save")
 
 ToolSaveButton.DoClick = function()
 	if not Stuff.SaveRequested then
 		Stuff.SaveRequested = true
 	end
-end
-
-local DrawClearButton = vgui.Create("DButton", ToolPanel)
-DrawClearButton:SetSize(ToolSaveButton:GetSize())
-DrawClearButton:SetPos(ToolSaveButton:GetX() + ToolSaveButton:GetWide() + 10, ToolSaveButton:GetY())
-DrawClearButton:SetText("Clear")
-
-DrawClearButton.DoClick = function()
-	table.Empty(Stuff.DrawData)
 end
 
 local ToolBrushSize = vgui.Create("DNumSlider", ToolPanel)
