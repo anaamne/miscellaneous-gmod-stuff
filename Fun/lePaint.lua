@@ -257,7 +257,7 @@ hook.Add("PostRender", "lePaint_PostRender", function()
 	Stuff.SaveRequested = false
 end)
 
--- ConCommand
+-- ConCommands
 
 concommand.Add("lepaint", function()
 	Main:SetVisible(true)
