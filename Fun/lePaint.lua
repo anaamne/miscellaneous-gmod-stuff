@@ -6,6 +6,8 @@
 	ConVars:
 		lepaint			- Opens the menu
 		lepaint_getdata - Prints the draw data to console
+
+	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/Util/Draw.lua
 ]]
 
 include("includes/util/Draw.lua")
