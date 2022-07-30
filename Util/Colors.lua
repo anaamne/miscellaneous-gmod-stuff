@@ -31,6 +31,7 @@ local IsColor = IsColor
 local _Registry = debug.getregistry()
 
 local meta_cl = _Registry.Color
+local meta_en = _Registry.Entity
 local meta_im = _Registry.IMaterial
 local meta_it = _Registry.ITexture
 local meta_pt = _Registry.ProjectedTexture
@@ -61,6 +62,19 @@ _ColorBackup = _ColorBackup or { -- Holds original functions
 		GetTextColor = surface.GetTextColor
 	}
 }
+
+meta_en.GetHealthColor = function(ent) -- Gets a color based off the entity's health; returns Color and a percentage
+	local max = ent:GetMaxHealth()
+	local health = math.Clamp(ent:Health(), 0, max)
+	local percent = health * (health / max)
+
+	if ent._LastHealth ~= health or not ent._LastHealthColor then
+		ent._LastHealth = health
+		ent._LastHealthColor = Color(255 - (percent * 2.55), percent * 2.55, 0)
+	end
+
+	return ent._LastHealthColor, percent / health
+end
 
 meta_im.GetColor = function(mat) -- Fix IMaterial:GetColor metatable issue
 	local col = _ColorBackup.meta_im.GetColor(mat)
