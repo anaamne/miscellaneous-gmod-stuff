@@ -1,1 +1,1 @@
-Place these files in `garrysmod/lua/includes/util`
+Place these files in `garrysmod/lua/includes/util` for proper inclusion with other scripts in this repository.
