@@ -1,13 +1,15 @@
 --[[
 	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
 
+	Has some quicker, easier ways to draw rounded boxes
+
 	Credit for masking and stencil box:
 		https://github.com/2048khz-gachi-rmx/beizwors/blob/784c72a0bde378a6f8a6196bb19b744e55b0b130/addons/core_panellib/lua/moarpanels/exts/clipping.lua
 		https://github.com/2048khz-gachi-rmx/beizwors/blob/784c72a0bde378a6f8a6196bb19b744e55b0b130/addons/core_panellib/lua/moarpanels/exts/draw.lua
 ]]
 
 draw.RoundedStencilCorners =  {
-	tex_corner8	= "gui/corner8",
+	tex_corner8 = "gui/corner8",
 	tex_corner16 = "gui/corner16",
 	tex_corner32 = "gui/corner32",
 	tex_corner64 = "gui/corner64",
@@ -122,6 +124,10 @@ function draw.DrawRoundedStencilBox(bordersize, x, y, w, h, color, tl, tr, bl, b
 	end
 end
 
+--[[
+	Example: draw.OutlinedRoundedBox(8, 50, 50, 100, 100, color_white)
+]]
+
 function draw.OutlinedRoundedBox(bordersize, x, y, w, h, col)
 	draw.BeginMask()
 		render.PerformFullScreenStencilOperation()
@@ -132,6 +138,10 @@ function draw.OutlinedRoundedBox(bordersize, x, y, w, h, col)
 	draw.FinishMask()
 end
 
+--[[
+	Example: draw.OutlinedRoundedBoxEx(8, 50, 50, 100, 100, color_white, false, false, true, true)
+]]
+
 function draw.OutlinedRoundedBoxEx(bordersize, x, y, w, h, col, tl, tr, bl, br)
 	draw.BeginMask()
 		render.PerformFullScreenStencilOperation()
@@ -139,5 +149,43 @@ function draw.OutlinedRoundedBoxEx(bordersize, x, y, w, h, col, tl, tr, bl, br)
 		draw.DrawRoundedStencilBox(bordersize, x + 1, y + 1, w - 2, h - 2, color_white, tl, tr, bl, br)
 	draw.DrawOp()
 		draw.DrawRoundedStencilBox(bordersize, x, y, w, h, col, tl, tr, bl, br)
+	draw.FinishMask()
+end
+
+--[[
+	Example: draw.ClipInRoundedBox(8, 50, 50, 100, 100, color_white, function(x, y, w, h)
+		surface.SetDrawColor(255, 0, 0, 255)
+		surface.DrawRect(x, y, w, h)
+	end)
+]]
+
+function draw.ClipInRoundedBox(bordersize, x, y, w, h, col, drawfunc)
+	draw.BeginMask()
+		render.PerformFullScreenStencilOperation()
+	draw.DeMask()
+		draw.DrawRoundedStencilBox(bordersize, x + 1, y + 1, w - 2, h - 2, color_white, true, true, true, true)
+	draw.DrawOp()
+		draw.DrawRoundedStencilBox(bordersize, x, y, w, h, col, true, true, true, true)
+	draw.ReMask()
+		drawfunc(x, y, w, h)
+	draw.FinishMask()
+end
+
+--[[
+	Example: draw.ClipInRoundedBoxEx(8, 50, 50, 100, 100, color_white, function(x, y, w, h)
+		surface.SetDrawColor(255, 0, 0, 255)
+		surface.DrawRect(x, y, w, h)
+	end, false, false, true, true)
+]]
+
+function draw.ClipInRoundedBoxEx(bordersize, x, y, w, h, col, drawfunc, tl, tr, bl, br)
+	draw.BeginMask()
+		render.PerformFullScreenStencilOperation()
+	draw.DeMask()
+		draw.DrawRoundedStencilBox(bordersize, x + 1, y + 1, w - 2, h - 2, color_white, tl, tr, bl, br)
+	draw.DrawOp()
+		draw.DrawRoundedStencilBox(bordersize, x, y, w, h, col, tl, tr, bl, br)
+	draw.ReMask()
+		drawfunc(x, y, w, h)
 	draw.FinishMask()
 end
