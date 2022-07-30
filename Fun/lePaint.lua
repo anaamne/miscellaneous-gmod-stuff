@@ -229,6 +229,7 @@ ToolClearButton:SetText("Clear")
 
 ToolClearButton.DoClick = function()
 	table.Empty(Stuff.DrawData)
+	table.Empty(Stuff.DrawStack)
 end
 
 local ToolSaveButton = vgui.Create("DButton", ToolPanel)
