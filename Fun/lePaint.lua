@@ -125,8 +125,7 @@ DrawPanel.Think = function(self)
 					size = Stuff.DrawSize
 				}
 
-				table.insert(Stuff.DrawStack[#Stuff.DrawStack], #Stuff.DrawData)
---				print("added " .. #Stuff.DrawData .. ", new length: " .. #Stuff.DrawStack[#Stuff.DrawStack])
+				table.insert(Stuff.DrawStack[#Stuff.DrawStack], #Stuff.DrawData) -- Icky table.insert
 
 				self._LastMouse.x = mx
 				self._LastMouse.y = my
