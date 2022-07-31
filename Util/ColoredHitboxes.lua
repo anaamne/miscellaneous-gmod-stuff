@@ -1,5 +1,7 @@
 --[[
 	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
+
+	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/Util/Render.lua
 ]]
 
 local Cache = {
@@ -12,17 +14,6 @@ local Cache = {
 		[HITGROUP_LEFTLEG] = Color(120, 255, 255),
 		[HITGROUP_RIGHTLEG] = Color(255, 255, 255), -- color_white
 		[HITGROUP_GENERIC] = Color(255, 255, 255) -- color_white
-	},
-
-	Materials = {
-		Color = CreateMaterial(tostring({}), "UnlitGeneric", {
-			["$alpha"] = 0.1,
-			["$basetexture"] = "color/white",
-			["$model"] = 1,
-			["$translucent"] = 1,
-			["$vertexalpha"] = 1,
-			["$vertexcolor"] = 1
-		})
 	},
 
 	Players = {}
@@ -79,8 +70,7 @@ local function DrawEntityHitboxes(ent)
 
 			local hitgroup = ent:GetHitBoxHitGroup(hitbox, set) or HITGROUP_GENERIC
 
-			render.DrawWireframeBox(pos, ang, mins, maxs, Cache.Colors[hitgroup], true)
-			render.DrawBox(pos, ang, mins, maxs, Cache.Colors[hitgroup])
+			render.DrawOutlinedBox(pos, ang, mins, maxs, Cache.Colors[hitgroup], ColorAlpha(Cache.Colors[hitgroup], 30), true)
 		end
 	end
 end
@@ -99,8 +89,6 @@ hook.Add("CreateClientsideRagdoll", "ColoredHitboxes_CreateClientsideRagdoll", f
 end)
 
 hook.Add("PreDrawEffects", "ColoredHitboxes_PreDrawEffects", function()
-	render.SetMaterial(Cache.Materials.Color)
-
 	for _, v in ipairs(GetSortedPlayers()) do
 		if v == LocalPlayer() then continue end
 
