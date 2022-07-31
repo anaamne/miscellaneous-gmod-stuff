@@ -9,7 +9,7 @@
 local Color = Color
 
 color_white = Color(255, 255, 255, 255) -- Already exists (usually) but why not
-color_black = Color(0, 0, 0, 255)
+color_black = Color(0, 0, 0, 255) -- Already exists (usually) but why not
 
 color_gray = Color(100, 100, 100, 255)
 color_darkgray = Color(50, 50, 50, 255)
