@@ -30,19 +30,21 @@ end
 ]]
 
 function render.DrawOutlinedBox(pos, ang, mins, maxs, outlineColor, fillColor, writez)
-	if writez then
-		render.SetColorMaterial()
-	else
-		render.SetColorMaterialIgnoreZ()
+	if not writez then
+		cam.IgnoreZ(true)
 	end
+
+	render.SetColorMaterial()
 
 	local oBlend = render.GetBlend()
 
 	render.SetBlend(fillColor.a / 255)
-
-	render.DrawBox(pos, ang, mins, maxs, fillColor)
-
+		render.DrawBox(pos, ang, mins, maxs, fillColor)
 	render.SetBlend(oBlend)
 
-	render.DrawWireframeBox(pos, ang, mins, maxs, outlineColor, writez)
+	render.DrawWireframeBox(pos, ang, mins, maxs, outlineColor, true)
+
+	if not writez then
+		cam.IgnoreZ(false)
+	end
 end
