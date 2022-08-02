@@ -1,0 +1,83 @@
+ --[[
+	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
+]]
+
+local table_Copy = table.Copy
+
+local assert = assert
+local getfenv = getfenv
+local rawget = rawget -- Avoid __index calls
+local setfenv = setfenv
+local type = type
+
+local LOCALIZED_DATA = {}
+
+function GetLocalTable()
+	return LOCALIZED_DATA
+end
+
+--[[
+	Properly localizes something from either the specified table or the global table.
+	Last two arguments are optional, although a second argument is recommended.
+
+	Example Usage:
+		local MyLocalizedVariables = {}
+
+		LocalizeGlobal("surface", MyLocalizedVariables, _G)
+]]
+
+function LocalizeGlobal(name, to, from)
+	assert(type(name) == "string", "Bad argument #1 to 'LocalizeGlobal' (string expected, got " .. type(name) .. ")")
+
+	if to ~= nil then
+		assert(type(to) == "table", "Bad argument #2 to 'LocalizeGlobal' (table expected, got " .. type(to) .. ")")
+	end
+
+	to = to or GetLocalTable()
+
+	if from ~= nil then
+		assert(type(from) == "table", "Bad argument #3 to 'LocalizeGlobal' (table expected, got " .. type(from) .. ")")
+	end
+
+	from = from or getfenv() -- _G
+
+	local Target = rawget(from[name])
+
+	if type(Target) == "table" then
+		to[name] = table_Copy(Target)
+	else
+		to[name] = Target
+	end
+end
+
+--[[
+	Registers a function into the specified local environment or the default one that is above.
+	Second argument is optional, but recommended.
+]]
+
+function SetFunctionInEnvironment(func, environment)
+	assert(type(func) == "function", "Bad argument #1 to 'SetFunctionInEnvironment' (function expected, got " .. type(func) .. ")")
+
+	if environment ~= nil then
+		assert(type(environment) == "table", "Bad argument #2 to 'SetFunctionInEnvironment' (table expected, got " .. type(environment) .. ")")
+	end
+
+	setfenv(func, environment)
+end
+
+--[[
+	Creates a function within the specified local environment or the default one that is above.
+	Third argument is optional, but recommended.
+]]
+
+function CreateFunctionInEnvironment(func, name, environment)
+	assert(type(func) == "function", "Bad argument #1 to 'CreateFunctionInEnvironment' (function expected, got " .. type(func) .. ")")
+	assert(type(name) == "string", "Bad argument #2 to 'CreateFunctionInEnvironment' (string expected, got " .. type(name) .. ")")
+
+	if environment ~= nil then
+		assert(type(environment) == "table", "Bad argument #3 to 'CreateFunctionInEnvironment' (table expected, got " .. type(environment) .. ")")
+	end
+
+	setfenv(func, environment)
+	environment[name] = func
+end
