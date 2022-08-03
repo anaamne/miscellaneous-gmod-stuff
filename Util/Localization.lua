@@ -14,9 +14,16 @@ local tostring = tostring
 local hook_Add = hook.Add
 
 local LOCALIZED_DATA = {}
+local LOCALIZED_REGISTRY = {}
+
+local _Registry = debug.getregistry()
 
 function GetLocalTable()
 	return LOCALIZED_DATA
+end
+
+function GetLocalRegistry()
+	return LOCALIZED_REGISTRY
 end
 
 --[[
@@ -49,6 +56,39 @@ function LocalizeGlobal(name, to, from)
 	local Target = rawget(from, name)
 
 	if type(Target) == "table" then
+		to[name] = table_Copy(Target)
+	else
+		to[name] = Target
+	end
+
+	return to[name]
+end
+
+--[[
+	Properly localizes something from either the specified registry or the default registry.
+	Law two arguments are optional, althought second is recommended.
+
+	Returns the localized copy of the registry.
+]]
+
+function LocalizeRegistry(name, to, from)
+	assert(type(name) == "string", "Bad argument #1 to 'LocalizeRegistry' (string expected, got " .. type(name) .. ")")
+
+	if to ~= nil then
+		assert(type(to) == "table", "Bad argument #2 to 'LocalizeRegistry' (table expected, got " .. type(to) .. ")")
+	end
+
+	to = to or GetLocalRegistry()
+
+	if from ~= nil then
+		assert(type(from) == "table", "Bad argument #3 to 'LocalizeRegistry' (table expected, got " .. type(from) .. ")")
+	end
+
+	from = from or _Registry
+
+	local Target = rawget(from, name)
+
+	if type(Target) == "table" then -- Registry objects are (usually) always tables but just in case there's some shenanigans going on I'll leave the check
 		to[name] = table_Copy(Target)
 	else
 		to[name] = Target
