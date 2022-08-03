@@ -10,6 +10,8 @@ local rawget = rawget -- Avoid __index calls
 local setfenv = setfenv
 local type = type
 
+local hook_Add = hook.Add
+
 local LOCALIZED_DATA = {}
 
 function GetLocalTable()
@@ -62,6 +64,8 @@ function SetFunctionInEnvironment(func, environment)
 		assert(type(environment) == "table", "Bad argument #2 to 'SetFunctionInEnvironment' (table expected, got " .. type(environment) .. ")")
 	end
 
+	environment = environment or GetLocalTable()
+
 	setfenv(func, environment)
 end
 
@@ -78,6 +82,28 @@ function CreateFunctionInEnvironment(func, name, environment)
 		assert(type(environment) == "table", "Bad argument #3 to 'CreateFunctionInEnvironment' (table expected, got " .. type(environment) .. ")")
 	end
 
+	environment = environment or GetLocalTable()
+
 	setfenv(func, environment)
 	environment[name] = func
+end
+
+--[[
+	Creates a hook whose function uses the specified local environment or the default one that is above.
+	Fouth argument is optional, but recommended.
+]]
+
+function CreateHookInEnvironment(htype, name, func, environment)
+	assert(type(htype) == "string", "Bad argument #1 to 'CreateHookInEnvironment' (string expected, got " .. type(htype) .. ")")
+	assert(type(name) == "string", "Bad argument #2 to 'CreateHookInEnvironment' (string expected, got " .. type(name) .. ")")
+	assert(type(func) == "function", "Bad argument #3 to 'CreateHookInEnvironment' (function expected, got " .. type(func) .. ")")
+
+	if environment ~= nil then
+		assert(type(environment) == "table", "Bad argument #4 to 'CreateHookInEnvironment' (table expected, got " .. type(environment) .. ")")
+	end
+
+	environment = environment or GetLocalTable()
+
+	setfenv(func, environment)
+	hook_Add(htype, name, func)
 end
