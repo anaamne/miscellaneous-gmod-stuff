@@ -614,7 +614,7 @@ local function CalculateAimAngle(pos, target)
 		end
 	end
 
-	return FixAngle((PredictPos(pos, target) - GetEyePos()):Angle())
+	return FixAngle((PredictPos(pos, target) - LocalPlayer():EyePos()):Angle())
 end
 
 hook.Add("Move", "", function()
