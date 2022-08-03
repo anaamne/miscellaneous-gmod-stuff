@@ -12,7 +12,7 @@ local CharRanges = {
 	{123, 126} -- { - ~
 }
 
-local function RandomString(len, symbols)
+function RandomString(len, symbols)
 	assert(type(len) == "number", "Bad argument #1 to RandomString (number expected, got )" .. type(len))
 	assert(len > 0, "Bad argument #1 to RandomString (number must be > 0)")
 
