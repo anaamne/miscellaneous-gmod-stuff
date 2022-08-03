@@ -22,6 +22,8 @@ end
 	Properly localizes something from either the specified table or the global table.
 	Last two arguments are optional, although a second argument is recommended.
 
+	Returns the localized copy of the global.
+
 	Example Usage:
 		local MyLocalizedVariables = {}
 
@@ -50,11 +52,15 @@ function LocalizeGlobal(name, to, from)
 	else
 		to[name] = Target
 	end
+
+	return to[name]
 end
 
 --[[
 	Registers a function into the specified local environment or the default one that is above.
 	Second argument is optional, but recommended.
+
+	Returns the modified function.
 ]]
 
 function SetFunctionInEnvironment(func, environment)
@@ -66,12 +72,14 @@ function SetFunctionInEnvironment(func, environment)
 
 	environment = environment or GetLocalTable()
 
-	setfenv(func, environment)
+	return setfenv(func, environment)
 end
 
 --[[
 	Creates a function within the specified local environment or the default one that is above.
 	Third argument is optional, but recommended.
+
+	Returns the modified function.
 ]]
 
 function CreateFunctionInEnvironment(func, name, environment)
@@ -84,13 +92,17 @@ function CreateFunctionInEnvironment(func, name, environment)
 
 	environment = environment or GetLocalTable()
 
-	setfenv(func, environment)
-	environment[name] = func
+	local nfunc = setfenv(func, environment) -- Dumb but whatever
+	environment[name] = nfunc
+
+	return nfunc
 end
 
 --[[
 	Creates a hook whose function uses the specified local environment or the default one that is above.
 	Fouth argument is optional, but recommended.
+
+	Returns the modified function.
 ]]
 
 function CreateHookInEnvironment(htype, name, func, environment)
@@ -104,6 +116,8 @@ function CreateHookInEnvironment(htype, name, func, environment)
 
 	environment = environment or GetLocalTable()
 
-	setfenv(func, environment)
-	hook_Add(htype, name, func)
+	local nfunc = setfenv(func, environment)
+	hook_Add(htype, name, nfunc)
+
+	return nfunc
 end
