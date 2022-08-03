@@ -9,6 +9,7 @@ local getfenv = getfenv
 local rawget = rawget -- Avoid __index calls
 local setfenv = setfenv
 local type = type
+local tostring = tostring
 
 local hook_Add = hook.Add
 
@@ -45,7 +46,7 @@ function LocalizeGlobal(name, to, from)
 
 	from = from or getfenv() -- _G
 
-	local Target = rawget(from[name])
+	local Target = rawget(from, name)
 
 	if type(Target) == "table" then
 		to[name] = table_Copy(Target)
@@ -77,14 +78,23 @@ end
 
 --[[
 	Creates a function within the specified local environment or the default one that is above.
-	Third argument is optional, but recommended.
+	Name is optional, but recommended.
+	Environment is optional, but recommended.
 
 	Returns the modified function.
 ]]
 
 function CreateFunctionInEnvironment(func, name, environment)
 	assert(type(func) == "function", "Bad argument #1 to 'CreateFunctionInEnvironment' (function expected, got " .. type(func) .. ")")
-	assert(type(name) == "string", "Bad argument #2 to 'CreateFunctionInEnvironment' (string expected, got " .. type(name) .. ")")
+
+	if name ~= nil then
+		if type(name) == "table" then -- Allows you to not need to specify a name for the function
+			environment = name
+			name = tostring(func)
+		else
+			assert(type(name) == "string", "Bad argument #2 to 'CreateFunctionInEnvironment' (string expected, got " .. type(name) .. ")")
+		end
+	end
 
 	if environment ~= nil then
 		assert(type(environment) == "table", "Bad argument #3 to 'CreateFunctionInEnvironment' (table expected, got " .. type(environment) .. ")")
