@@ -4,6 +4,8 @@
 	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/Util/Render.lua
 ]]
 
+include("includes/util/Render.lua")
+
 local Cache = {
 	Colors = {
 		[HITGROUP_HEAD] = Color(255, 120, 120),
