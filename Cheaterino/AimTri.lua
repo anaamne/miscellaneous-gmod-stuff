@@ -14,7 +14,8 @@ local stuff = {
 	CalcView = {
 		EyePos = EyePos(),
 		EyeAngles = EyeAngles(),
-		FOV = LocalPlayer():GetFOV()
+		FOV = LocalPlayer():GetFOV(),
+		ZNear = 2.6
 	},
 
 	NotGuns = { -- Funny classes
@@ -175,6 +176,10 @@ end
 
 local function GetFOV()
 	return stuff.CalcView.FOV
+end
+
+local function GetZNear()
+	return stuff.CalcView.ZNear
 end
 
 local function FixAngle(ang)
@@ -568,6 +573,7 @@ local function UpdateCalcViewData(data) -- Gets CalcView information because Eye
 	stuff.CalcView.EyePos = data.origin
 	stuff.CalcView.EyeAngles = data.angles
 	stuff.CalcView.FOV = data.fov
+	stuff.CalcView.ZNear = data.znear
 end
 
 local function FixMovement(cmd)
@@ -626,7 +632,7 @@ end)
 hook.Add("DrawOverlay", "", function()
 	local w = ScrW()
 	local x, y = w * 0.5, ScrH() * 0.5
-	local fovrad = (math.tan(math.rad(stuff.FOV)) / math.tan(math.rad(GetFOV() * 0.5)) * w) / 2.6 -- Converts FOV into radius that could be used to draw an FOV circle
+	local fovrad = (math.tan(math.rad(stuff.FOV)) / math.tan(math.rad(GetFOV() * 0.5)) * w) / GetZNear() -- Converts FOV into radius that could be used to draw an FOV circle
 
 	-- I don't understand this either, I just threw some shit together and it happened to work
 
