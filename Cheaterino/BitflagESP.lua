@@ -16,6 +16,7 @@ local IsValid = IsValid
 local LocalPlayer = LocalPlayer
 local Vector = Vector
 local ipairs = ipairs
+local pairs = pairs
 
 local ents_GetAll = ents.GetAll
 
@@ -45,6 +46,8 @@ local math_Round = math.Round
 local vgui_Create = vgui.Create
 
 local language_GetPhrase = language.GetPhrase
+
+local scripted_ents_GetList = scripted_ents.GetList
 
 -- Bitflags
 
@@ -490,6 +493,13 @@ do
 			if not Added[Class] then
 				self:AddLine(Class, Cache.ESP.iEntityClasses[Class] and "True" or "False")
 				Added[Class] = true
+			end
+		end
+
+		for k, _ in pairs(scripted_ents_GetList()) do
+			if not Added[k] then
+				self:AddLine(k, Cache.ESP.iEntityClasses[k] and "True" or "False")
+				Added[k] = true
 			end
 		end
 	end
