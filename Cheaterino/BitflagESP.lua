@@ -211,7 +211,7 @@ end
 local function IsFriend(Player)
 	if not IsValid(Player) then return false end
 
-	return Player:GetFriendStatus() == "friend" or Player:GetName() == "Bot01"
+	return Player:GetFriendStatus() == "friend"
 end
 
 local function GetESPColor(Entity)
