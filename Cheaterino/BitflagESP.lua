@@ -370,16 +370,21 @@ end)
 hook.Add("DrawOverlay", Cache.HookName, function()
 	Cache.LocalPlayer = Cache.LocalPlayer or LocalPlayer()
 
-	local DoFriend = BitflagHasValue(Cache.ESP.FriendFlags, ESP_ENABLED)
+	local PlayerFlags = Cache.ESP.PlayerFlags
+	local FriendFlags = Cache.ESP.FriendFlags
+	local EntityFlags = Cache.ESP.EntityFlags
 
-	if BitflagHasValue(Cache.ESP.PlayerFlags, ESP_ENABLED) or DoFriend then
+	local EntsThisFrame = {}
+	local DoFriend = BitflagHasValue(FriendFlags, ESP_ENABLED)
+
+	if BitflagHasValue(PlayerFlags, ESP_ENABLED) or DoFriend then
 		for i = 1, #Cache.PlayerList do
 			if Cache.PlayerList[i] == Cache.LocalPlayer then continue end
 
 			if DoFriend and IsFriend(Cache.PlayerList[i]) then
-				DoESP(Cache.PlayerList[i], Cache.ESP.FriendFlags)
+				EntsThisFrame[#EntsThisFrame + 1] = {Cache.PlayerList[i], FriendFlags}
 			else
-				DoESP(Cache.PlayerList[i], Cache.ESP.PlayerFlags)
+				EntsThisFrame[#EntsThisFrame + 1] = {Cache.PlayerList[i], PlayerFlags}
 			end
 		end
 	end
@@ -387,8 +392,18 @@ hook.Add("DrawOverlay", Cache.HookName, function()
 	if BitflagHasValue(Cache.ESP.EntityFlags, ESP_ENABLED) then
 		for i = 1, #Cache.EntityList do
 			if not IsValid(Cache.EntityList[i]) or Cache.EntityList[i]:IsPlayer() then continue end
-			DoESP(Cache.EntityList[i], Cache.ESP.EntityFlags)
+			EntsThisFrame[#EntsThisFrame + 1] = {Cache.EntityList[i], EntityFlags}
 		end
+	end
+
+	local lpos = Cache.LocalPlayer:GetPos()
+
+	table_sort(EntsThisFrame, function(a, b)
+		return a[1]:GetPos():DistToSqr(lpos) > b[1]:GetPos():DistToSqr(lpos)
+	end)
+
+	for i = 1, #EntsThisFrame do
+		DoESP(EntsThisFrame[i][1], EntsThisFrame[i][2])
 	end
 end)
 
