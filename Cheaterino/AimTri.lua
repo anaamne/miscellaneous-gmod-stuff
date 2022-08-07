@@ -2,7 +2,11 @@
 	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
 
 	leme's sub-par hitscan style aimbot with an FOV triangle
+
+	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/Includes/modules/md5.lua (For no spread)
 ]]
+
+include("includes/modules/md5.lua")
 
 local stuff = {
 	Order = { -- Scan in this order
@@ -55,7 +59,10 @@ local stuff = {
 		sv_client_max_interp_ratio = GetConVar("sv_client_max_interp_ratio"),
 		sv_gravity = GetConVar("sv_gravity"),
 
-		sensitivity = GetConVar("sensitivity")
+		sensitivity = GetConVar("sensitivity"),
+
+		m_pitch = GetConVar("m_pitch"),
+		m_yaw = GetConVar("m_yaw")
 	},
 
 	ExtraChecks = {
@@ -146,6 +153,8 @@ local stuff = {
 			return true
 		end
 	},
+
+	WeaponCones = {},
 
 	BuildModeNetVars = {
 		"BuildMode", -- Libby's
@@ -620,8 +629,41 @@ local function CalculateAimAngle(pos, target)
 		end
 	end
 
-	return FixAngle((PredictPos(pos, target) - LocalPlayer():EyePos()):Angle())
+	return (PredictPos(pos, target) - LocalPlayer():EyePos()):Angle()
 end
+
+local function CalculateNoSpread(weapon, cmdnbr, ang)
+	ang = ang or stuff.og
+	local weaponcone = stuff.WeaponCones[weapon:GetClass()]
+
+	if not md5 or not weaponcone then
+		return ang
+	end
+
+	local seed = md5.PseudoRandom(cmdnbr)
+
+	local x = md5.EngineSpread[seed][1]
+	local y = md5.EngineSpread[seed][2]
+
+	local forward = ang:Forward()
+	local right = ang:Right()
+	local up = ang:Up()
+
+	local spreadvector = forward + (x * weaponcone.x * right * -1) + (y * weaponcone.y * up * -1)
+	local spreadangle = spreadvector:Angle()
+	spreadangle:Normalize()
+
+	return spreadangle
+end
+
+hook.Add("EntityFireBullets", "", function(entity, data)
+	if entity ~= LocalPlayer() then return end
+
+	local weapon = entity:GetActiveWeapon()
+	if not IsValid(weapon) then return end
+
+	stuff.WeaponCones[weapon:GetClass()] = data.Spread
+end)
 
 hook.Add("Move", "", function()
 	if not IsFirstTimePredicted() then return end
@@ -658,32 +700,43 @@ end)
 hook.Add("CreateMove", "", function(cmd)
 	stuff.og = stuff.og or cmd:GetViewAngles()
 
-	if cmd:KeyDown(IN_USE) then
-		stuff.og = cmd:GetViewAngles() -- Half assed fix for prop rotating
-	else
-		local sensitivity = stuff.ConVars.sensitivity:GetFloat() / 256
-		stuff.og = FixAngle(stuff.og + Angle(cmd:GetMouseY() * sensitivity, cmd:GetMouseX() * (0 - sensitivity), 0))
-	end
+	stuff.og.pitch = stuff.og.pitch + (cmd:GetMouseY() * stuff.ConVars.m_pitch:GetFloat())
+	stuff.og.yaw = stuff.og.yaw - (cmd:GetMouseX() * stuff.ConVars.m_yaw:GetFloat())
+
+	stuff.og = FixAngle(stuff.og)
 
 	if cmd:CommandNumber() == 0 then
-		cmd:SetViewAngles(stuff.og)
+		if cmd:KeyDown(IN_USE) then
+			stuff.og = FixAngle(cmd:GetViewAngles())
+		else
+			cmd:SetViewAngles(stuff.og)
+		end
+
 		return
 	end
 
-	if input.IsButtonDown(stuff.AimKey) and WeaponCanShoot(LocalPlayer():GetActiveWeapon()) then
+	local Weapon = LocalPlayer():GetActiveWeapon()
+
+	if input.IsButtonDown(stuff.AimKey) and WeaponCanShoot(Weapon) then
 		local target = GetTarget()
+		if not IsValid(target) then return end
 
-		if IsValid(target) then
-			local pos = GetAimPosition(target)
-			
-			if pos then
-				cmd:SetViewAngles(CalculateAimAngle(pos, target))
-				FixMovement(cmd)
+		local pos = GetAimPosition(target)
+		if not pos then return end
 
-				if not cmd:KeyDown(IN_ATTACK) then
-					cmd:AddKey(IN_ATTACK)
-				end
-			end
+		local aimang = FixAngle(CalculateAimAngle(pos, target) - LocalPlayer():GetViewPunchAngles())
+		local spreadang = CalculateNoSpread(Weapon, cmd:CommandNumber(), aimang)
+
+		cmd:SetViewAngles(spreadang)
+		FixMovement(cmd)
+
+		cmd:AddKey(IN_ATTACK)
+	else
+		if cmd:KeyDown(IN_ATTACK) and IsValid(Weapon) then
+			local spreadang = CalculateNoSpread(Weapon, cmd:CommandNumber())
+
+			cmd:SetViewAngles(spreadang)
+			FixMovement(cmd)
 		end
 	end
 end)
