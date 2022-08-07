@@ -179,7 +179,7 @@ local function GetHealthColor(Entity)
 	local max = Entity:GetMaxHealth()
 	local health = math_Clamp(Entity:Health(), 0, max)
 	local percent = health * (health / max)
-
+	
 	if Entity._LastHealth ~= health or not Entity._LastHealthColor then
 		Entity._LastHealth = health
 		Entity._LastHealthColor = Color(255 - (percent * 2.55), percent * 2.55, 0)
@@ -321,7 +321,7 @@ local function DoESP(Entity, pFlags)
 	end
 
 	if BitflagHasValue(pFlags, ESP_NAME) then
-		local Name = Entity:IsPlayer() and Entity:GetName() or Entity:GetClass()
+		local Name = Entity:IsPlayer() and (Entity:GetName() or Entity:Name() or Entity:Nick()) --[[ Too many name functions for players ]] or Entity:GetClass()
 		local tw, th = surface_GetTextSize(Name)
 
 		surface_SetTextColor(Cache.Colors.White)
@@ -329,18 +329,16 @@ local function DoESP(Entity, pFlags)
 		surface_DrawText(Name)
 	end
 
-	if Entity:IsPlayer() then -- Player only part
-		if BitflagHasValue(pFlags, ESP_WEAPON) then
-			local Weapon = Entity:GetActiveWeapon()
+	if BitflagHasValue(pFlags, ESP_WEAPON) and Entity.GetActiveWeapon then
+		local Weapon = Entity:GetActiveWeapon()
 
-			if IsValid(Weapon) then
-				local Name = GetWeaponName(Weapon)
-				local tw, th = surface_GetTextSize(Name)
-				
-				surface_SetTextColor(Cache.Colors.White)
-				surface_SetTextPos(Left + (w / 2) - (tw / 2), Bottom)
-				surface_DrawText(Name)
-			end
+		if IsValid(Weapon) then
+			local Name = GetWeaponName(Weapon)
+			local tw, th = surface_GetTextSize(Name)
+			
+			surface_SetTextColor(Cache.Colors.White)
+			surface_SetTextPos(Left + (w / 2) - (tw / 2), Bottom)
+			surface_DrawText(Name)
 		end
 	end
 end
@@ -472,8 +470,9 @@ do
 	MakeCheckBox(EntityPanel, 50, 50, "Box", "EntityFlags", ESP_BOX)
 	MakeCheckBox(EntityPanel, 50, 75, "3D Box", "EntityFlags", ESP_BOX_TD)
 	MakeCheckBox(EntityPanel, 50, 100, "Name", "EntityFlags", ESP_NAME)
-	MakeCheckBox(EntityPanel, 50, 125, "Skeleton", "EntityFlags", ESP_SKELETON)
-	MakeCheckBox(EntityPanel, 50, 150, "Healthbar", "EntityFlags", ESP_HEALTHBAR)
+	MakeCheckBox(EntityPanel, 50, 125, "Weapon", "EntityFlags", ESP_WEAPON)
+	MakeCheckBox(EntityPanel, 50, 150, "Skeleton", "EntityFlags", ESP_SKELETON)
+	MakeCheckBox(EntityPanel, 50, 175, "Healthbar", "EntityFlags", ESP_HEALTHBAR)
 
 	local EntityListPanel = vgui_Create("DPanel", MainTabs)
 	MainTabs:AddSheet("Entity List", EntityListPanel)
