@@ -6,6 +6,7 @@
 ]]
 
 local BONE_USED_BY_HITBOX = BONE_USED_BY_HITBOX
+local OBS_MODE_NONE = OBS_MODE_NONE
 local TEAM_SPECTATOR = TEAM_SPECTATOR
 
 local angle_zero = angle_zero * 1
@@ -232,7 +233,7 @@ local function ShouldESP(Entity)
 		return Cache.ESP.iEntityClasses[Entity:GetClass()] or false
 	end
 
-	return Entity:Alive() and Entity:Team() ~= TEAM_SPECTATOR and Entity:GetObserverMode() == 0 and not Entity:IsDormant()
+	return Entity:Alive() and Entity:Team() ~= TEAM_SPECTATOR and Entity:GetObserverMode() == OBS_MODE_NONE and not Entity:IsDormant()
 end
 
 local function DoESP(Entity, pFlags)
