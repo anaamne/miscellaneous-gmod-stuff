@@ -138,13 +138,13 @@ local function GetCorners(Entity)
 
 	local Coords = {
 		Entity:LocalToWorld(Mins):ToScreen(),
-    	Entity:LocalToWorld(Vector(Mins.x, Maxs.y, Mins.z)):ToScreen(),
-    	Entity:LocalToWorld(Vector(Maxs.x, Maxs.y, Mins.z)):ToScreen(),
-    	Entity:LocalToWorld(Vector(Maxs.x, Mins.y, Mins.z)):ToScreen(),
-    	Entity:LocalToWorld(Maxs):ToScreen(),
-    	Entity:LocalToWorld(Vector(Mins.x, Maxs.y, Maxs.z)):ToScreen(),
-    	Entity:LocalToWorld(Vector(Mins.x, Mins.y, Maxs.z)):ToScreen(),
-    	Entity:LocalToWorld(Vector(Maxs.x, Mins.y, Maxs.z)):ToScreen()
+		Entity:LocalToWorld(Vector(Mins.x, Maxs.y, Mins.z)):ToScreen(),
+		Entity:LocalToWorld(Vector(Maxs.x, Maxs.y, Mins.z)):ToScreen(),
+		Entity:LocalToWorld(Vector(Maxs.x, Mins.y, Mins.z)):ToScreen(),
+		Entity:LocalToWorld(Maxs):ToScreen(),
+		Entity:LocalToWorld(Vector(Mins.x, Maxs.y, Maxs.z)):ToScreen(),
+		Entity:LocalToWorld(Vector(Mins.x, Mins.y, Maxs.z)):ToScreen(),
+		Entity:LocalToWorld(Vector(Maxs.x, Mins.y, Maxs.z)):ToScreen()
 	}
 
 	local Left, Right, Top, Bottom = Coords[1].x, Coords[1].x, Coords[1].y, Coords[1].y
