@@ -381,7 +381,7 @@ hook.Add("DrawOverlay", Cache.HookName, function()
 
 	if BitflagHasValue(PlayerFlags, ESP_ENABLED) or DoFriend then
 		for i = 1, #Cache.PlayerList do
-			if Cache.PlayerList[i] == Cache.LocalPlayer then continue end
+			if Cache.PlayerList[i] == Cache.LocalPlayer or not IsValid(Cache.PlayerList[i]) then continue end
 
 			if DoFriend and IsFriend(Cache.PlayerList[i]) then
 				EntsThisFrame[#EntsThisFrame + 1] = {Cache.PlayerList[i], FriendFlags}
