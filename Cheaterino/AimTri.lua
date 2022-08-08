@@ -3,10 +3,15 @@
 
 	leme's sub-par hitscan style aimbot with an FOV triangle
 
-	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/Includes/modules/md5.lua (For no spread)
+	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/Includes/modules/md5.lua	(For no spread)
+	Requires Frozen2																								(Engine prediction)
 ]]
 
-include("includes/modules/md5.lua")
+pcall(include, "includes/modules/md5.lua")
+pcall(require, "frozen2")
+
+StartPrediction = StartPrediction or function() end
+EndPrediction = EndPrediction or function() end
 
 local stuff = {
 	Order = { -- Scan in this order
@@ -50,16 +55,8 @@ local stuff = {
 
 	ConVars = {
 		cl_interp = GetConVar("cl_interp"),
-		cl_updaterate = GetConVar("cl_updaterate"),
-		cl_interp_ratio = GetConVar("cl_interp_ratio"),
 
-		sv_minupdaterate = GetConVar("sv_minupdaterate"),
-		sv_maxupdaterate = GetConVar("sv_maxupdaterate"),
-		sv_client_min_interp_ratio = GetConVar("sv_client_min_interp_ratio"),
-		sv_client_max_interp_ratio = GetConVar("sv_client_max_interp_ratio"),
 		sv_gravity = GetConVar("sv_gravity"),
-
-		sensitivity = GetConVar("sensitivity"),
 
 		m_pitch = GetConVar("m_pitch"),
 		m_yaw = GetConVar("m_yaw")
@@ -545,37 +542,6 @@ local function GetTarget(quick) -- Gets the player whose aimbot points are close
 	return entity
 end
 
-local function GetLerp()
-	local cl_interp = stuff.ConVars.cl_interp:GetFloat()
-	local cl_updaterate = stuff.ConVars.cl_updaterate:GetFloat()
-	local cl_interp_ratio = stuff.ConVars.cl_interp_ratio:GetInt()
-
-	local sv_minupdaterate = stuff.ConVars.sv_minupdaterate:GetInt()
-	local sv_maxupdaterate = stuff.ConVars.sv_maxupdaterate:GetInt()
-	local sv_client_min_interp_ratio = stuff.ConVars.sv_client_min_interp_ratio:GetFloat()
-	local sv_client_max_interp_ratio = stuff.ConVars.sv_client_max_interp_ratio:GetFloat()
- 
-	local ratio = math.Clamp(cl_interp_ratio, sv_client_min_interp_ratio, sv_client_max_interp_ratio)
-	local rate = math.Clamp(cl_updaterate, sv_minupdaterate, sv_maxupdaterate)
- 
- 	local minlerp = sv_client_min_interp_ratio / sv_minupdaterate
-	local maxlerp = sv_client_max_interp_ratio / sv_maxupdaterate
-
-	local lerp = math.Clamp(ratio / rate, minlerp, maxlerp)
- 
-	return lerp
-end
-
-local function PredictPos(pos, target)
-	if not IsValid(target) then
-		return pos
-	end
-
-	pos = pos or vector_origin
-
-	return pos + (target:GetVelocity() * stuff.TickInterval * GetLerp()) - (LocalPlayer():GetVelocity() * stuff.TickInterval)
-end
-
 local function UpdateCalcViewData(data) -- Gets CalcView information because EyePos() and EyeAngles() are only reliable in certain situations
 	if not data then return end
 
@@ -629,7 +595,7 @@ local function CalculateAimAngle(pos, target)
 		end
 	end
 
-	return (PredictPos(pos, target) - LocalPlayer():EyePos()):Angle()
+	return (pos - LocalPlayer():EyePos()):Angle()
 end
 
 local function CalculateNoSpread(weapon, cmdnbr, ang)
@@ -724,13 +690,15 @@ hook.Add("CreateMove", "", function(cmd)
 		local pos = GetAimPosition(target)
 		if not pos then return end
 
-		local aimang = CalculateAimAngle(pos, target)
-		local spreadang = CalculateNoSpread(Weapon, cmd:CommandNumber(), aimang)
+		StartPrediction(cmd)
+			local aimang = CalculateAimAngle(pos, target)
+			local spreadang = CalculateNoSpread(Weapon, cmd:CommandNumber(), aimang)
 
-		cmd:SetViewAngles(FixAngle(spreadang))
-		FixMovement(cmd)
+			cmd:SetViewAngles(FixAngle(spreadang))
+			FixMovement(cmd)
 
-		cmd:AddKey(IN_ATTACK)
+			cmd:AddKey(IN_ATTACK)
+		EndPrediction(cmd)
 	else
 		if cmd:KeyDown(IN_ATTACK) and IsValid(Weapon) then
 			local spreadang = CalculateNoSpread(Weapon, cmd:CommandNumber())
