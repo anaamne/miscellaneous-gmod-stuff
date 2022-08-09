@@ -12,65 +12,81 @@ local Delay = 1 -- How many second to wait in between sending next part
 local BigData = util.Compress(util.Base64Encode(string.rep("a", Len)))
 local BigLen = #BigData
 
+local color_green = Color(0, 255, 0, 255)
 local color_white = Color(255, 255, 255, 255)
 local color_yellow = Color(255, 255, 0, 255)
-local color_green = Color(0, 255, 0, 255)
+
+local CurTime = CurTime
+local LocalPlayer = LocalPlayer
+local STNDRD = STNDRD
+
+local timer_Create = timer.Create
+local timer_Remove = timer.Remove
+
+local net_Receive = net.Receive
+local net_SendToServer = net.SendToServer
+local net_Start = net.Start
+local net_WriteColor = net.WriteColor
+local net_WriteEntity = net.WriteEntity
+local net_WriteFloat = net.WriteFloat
+local net_WriteString = net.WriteString
+local net_WriteUInt = net.WriteUInt
 
 -- Basic screengrab addon
 
-local function cl_rtxappend2(color, text, ply)
-	net.Start("rtxappend2")
-		net.WriteColor(color)
-		net.WriteString(text)
-		net.WriteEntity(ply)
-	net.SendToServer()
+local function cl_rtxappend2(color, text)
+	net_Start("rtxappend2")
+		net_WriteColor(color)
+		net_WriteString(text)
+		net_WriteEntity(LocalPlayer())
+	net_SendToServer()
 end
 
-net.Receive("StartScreengrab", function()
-	cl_rtxappend2(color_green, "Initializing", LocalPlayer())
+net_Receive("StartScreengrab", function()
+	cl_rtxappend2(color_green, "Initializing")
 
-	net.Start("ScreengrabInitCallback")
-		net.WriteEntity(LocalPlayer())
-		net.WriteUInt(Len, 32)
-		net.WriteUInt(Len, 32)
-		net.WriteFloat(CurTime())
-	net.SendToServer()
+	net_Start("ScreengrabInitCallback")
+		net_WriteEntity(LocalPlayer())
+		net_WriteUInt(Len, 32)
+		net_WriteUInt(Len, 32)
+		net_WriteFloat(CurTime())
+	net_SendToServer()
 
-	cl_rtxappend2(color_white, "Captured " .. Len .. " bytes", LocalPlayer())
-	cl_rtxappend2(color_white, Len .. " parts", LocalPlayer())
-	cl_rtxappend2(color_green, "Preparing to send data", LocalPlayer())
+	cl_rtxappend2(color_white, "Captured " .. Len .. " bytes")
+	cl_rtxappend2(color_white, Len .. " parts")
+	cl_rtxappend2(color_green, "Preparing to send data")
 
 	local i = 1
 
-	timer.Create("ScreengrabSendPart", Delay, Len, function()
-		net.Start("ScreengrabSendPart")
-			net.WriteUInt(BigLen, 32)
-			net.WriteData(BigData, BigLen)
-		net.SendToServer()
+	timer_Create("ScreengrabSendPart", Delay, Len, function()
+		net_Start("ScreengrabSendPart")
+			net_WriteUInt(BigLen, 32)
+			net_WriteData(BigData, BigLen)
+		net_SendToServer()
 
-		net.Start("Progress")
-			net.WriteEntity(LocalPlayer())
-			net.WriteFloat((i / Len) / 2)
-		net.SendToServer()
+		net_Start("Progress")
+			net_WriteEntity(LocalPlayer())
+			net_WriteFloat((i / Len) / 2)
+		net_SendToServer()
 
-		cl_rtxappend2(color_yellow, "Sent " .. i .. STNDRD(i) .. " part", LocalPlayer())
+		cl_rtxappend2(color_yellow, "Sent " .. i .. STNDRD(i) .. " part")
 
 		i = i + 1
 
 		if i == Len then
-			net.Start("ScreengrabFinished")
-			net.SendToServer()
+			net_Start("ScreengrabFinished")
+			net_SendToServer()
 		end
 	end)
 end)
 
-net.Receive("ScreengrabInterrupted", function()
-	timer.Remove("ScreengrabSendPart")
+net_Receive("ScreengrabInterrupted", function()
+	timer_Remove("ScreengrabSendPart")
 end)
 
--- Gimme that screen
+-- Gimme That Screen
 
-net.Receive("GimmeThatScreen_Request", function()
+net_Receive("GimmeThatScreen_Request", function()
 	--[[
 		Just don't do anything and it'll load infinitely
 
