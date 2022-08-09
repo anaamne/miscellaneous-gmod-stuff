@@ -71,7 +71,10 @@ end)
 -- Gimme that screen
 
 net.Receive("GimmeThatScreen_Request", function()
-	-- Just don't do anything and it'll load infinitely
-	-- GTS has an "Authed" check and if the screengrab wasn't authorized it won't screengrab
-	-- Doing nothing in here is the same as saying "That screengrab isn't authorized"
+	--[[
+		Just don't do anything and it'll load infinitely
+
+		GTS has an "Authed" check and if the screengrab wasn't authorized it won't screengrab
+		Doing nothing in here is the same as saying "That screengrab isn't authorized"
+	]]
 end)
