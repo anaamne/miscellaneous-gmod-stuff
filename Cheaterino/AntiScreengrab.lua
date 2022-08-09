@@ -27,6 +27,7 @@ local net_Receive = net.Receive
 local net_SendToServer = net.SendToServer
 local net_Start = net.Start
 local net_WriteColor = net.WriteColor
+local net_WriteData = net.WriteData
 local net_WriteEntity = net.WriteEntity
 local net_WriteFloat = net.WriteFloat
 local net_WriteString = net.WriteString
