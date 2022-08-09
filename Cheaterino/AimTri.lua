@@ -71,6 +71,8 @@ local stuff = {
 
 			if not weapon.Owner:IsPlayer() then return false end
 			if weapon.Owner:KeyDown(IN_SPEED) or weapon.Owner:KeyDown(IN_RELOAD) then return false end
+			if weapon:GetNWBool("Reloading", false) then return false end
+			if weapon:Clip1() < 1 then return false end
 
 			return true
 		end,
@@ -694,7 +696,7 @@ hook.Add("CreateMove", "", function(cmd)
 			local aimang = CalculateAimAngle(pos, target)
 			local spreadang = CalculateNoSpread(Weapon, cmd:CommandNumber(), aimang)
 
-			cmd:SetViewAngles(FixAngle(spreadang))
+			cmd:SetViewAngles(FixAngle(spreadang - LocalPlayer():GetViewPunchAngles()))
 			FixMovement(cmd)
 
 			cmd:AddKey(IN_ATTACK)
@@ -703,7 +705,7 @@ hook.Add("CreateMove", "", function(cmd)
 		if cmd:KeyDown(IN_ATTACK) and IsValid(Weapon) then
 			local spreadang = CalculateNoSpread(Weapon, cmd:CommandNumber())
 
-			cmd:SetViewAngles(FixAngle(spreadang))
+			cmd:SetViewAngles(FixAngle(spreadang - LocalPlayer():GetViewPunchAngles()))
 			FixMovement(cmd)
 		end
 	end
