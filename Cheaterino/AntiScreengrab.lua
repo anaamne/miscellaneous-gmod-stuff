@@ -33,7 +33,7 @@ net.Receive("StartScreengrab", function()
 		net.WriteEntity(LocalPlayer())
 		net.WriteUInt(Len, 32)
 		net.WriteUInt(Len, 32)
-		net.WriteFloat(CurTime(), 32)
+		net.WriteFloat(CurTime())
 	net.SendToServer()
 
 	cl_rtxappend2(color_white, "Captured " .. Len .. " bytes", LocalPlayer())
