@@ -158,11 +158,16 @@ local stuff = {
 	BuildModeNetVars = {
 		"BuildMode", -- Libby's
 		"buildmode", -- Fun Server
-		"_Kyle_Buildmode" -- Workshop addon
+		"_Kyle_Buildmode", -- Workshop addon
+		"BuildMode"
 	},
 
 	GodModeNetVars = {
 		"has_god" -- Fun Server + LBG
+	},
+
+	HvHModeNetVars = {
+		"HVHER" -- Fun Server + LBG
 	},
 
 	og = LocalPlayer():EyeAngles(),
@@ -267,9 +272,7 @@ local function IsVisible(pos, entity, hitgroup)
 end
 
 local function InGodMode(player)
-	if not IsValid(player) or not player:IsPlayer() then
-		return false
-	end
+	if not IsValid(player) then return false end
 
 	if player:HasGodMode() then return true end -- This doesn't work by default
 
@@ -283,9 +286,7 @@ local function InGodMode(player)
 end
 
 local function InBuildMode(player)
-	if not IsValid(player) or not player:IsPlayer() then
-		return false
-	end
+	if not IsValid(player) then return false end
 
 	for _, v in ipairs(stuff.BuildModeNetVars) do
 		if player:GetNWBool(v, false) then
@@ -294,6 +295,22 @@ local function InBuildMode(player)
 	end
 
 	return false
+end
+
+local function InOpposingHVHMode(player)
+	if not IsValid(player) then return false end
+
+	local localhvh = false
+	local plyhvh = false
+
+	for _, v in ipairs(stuff.HvHModeNetVars) do
+		if localhvh and plyhvh then break end
+
+		localhvh = LocalPlayer():GetNWBool(v, false)
+		plyhvh = player:GetNWBool(v, false)
+	end
+
+	return localhvh ~= plyhvh
 end
 
 local function ValidEntity(entity) -- Don't try to aim at dumb shit
@@ -508,7 +525,7 @@ local function GetTarget(quick) -- Gets the player whose aimbot points are close
 	local entity = nil
 
 	for _, v in ipairs(GetSortedPlayers()) do
-		if InBuildMode(v) then continue end
+		if InGodMode(v) or InBuildMode(v) or InOpposingHVHMode(v) then continue end
 
 		local obbpos = v:LocalToWorld(v:OBBCenter())
 		local pos = obbpos:ToScreen() -- Quick checks OBB only
@@ -624,6 +641,11 @@ local function CalculateNoSpread(weapon, cmdnbr, ang)
 	return spreadangle
 end
 
+local function CalculateViewPunch(weapon) -- Stupid ass HL2 guns
+	if not weapon:IsScripted() then return LocalPlayer():GetViewPunchAngles() end
+	return angle_zero
+end
+
 hook.Add("EntityFireBullets", "", function(entity, data)
 	if entity ~= LocalPlayer() then return end
 
@@ -693,19 +715,21 @@ hook.Add("CreateMove", "", function(cmd)
 		if not pos then return end
 
 		StartPrediction(cmd)
+			local punchang = CalculateViewPunch(Weapon)
 			local aimang = CalculateAimAngle(pos, target)
 			local spreadang = CalculateNoSpread(Weapon, cmd:CommandNumber(), aimang)
 
-			cmd:SetViewAngles(FixAngle(spreadang)))
+			cmd:SetViewAngles(FixAngle(spreadang - punchang))
 			FixMovement(cmd)
 
 			cmd:AddKey(IN_ATTACK)
 		EndPrediction(cmd)
 	else
 		if cmd:KeyDown(IN_ATTACK) and IsValid(Weapon) then
-			local spreadang = CalculateNoSpread(Weapon, cmd:CommandNumber(), stuff.og)
+			local punchang = CalculateViewPunch(Weapon)
+			local spreadang = CalculateNoSpread(Weapon, cmd:CommandNumber())
 
-			cmd:SetViewAngles(FixAngle(spreadang))
+			cmd:SetViewAngles(FixAngle(spreadang - punchang))
 			FixMovement(cmd)
 		end
 	end
