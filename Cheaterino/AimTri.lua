@@ -668,7 +668,7 @@ hook.Add("DrawOverlay", "", function()
 
 	-- I don't understand this either, I just threw some shit together and it happened to work
 
-	local t = fovrad * 2.33333333333333333
+	local t = fovrad * 2.3333333333333
 	local s = x - (t / 2)
 	local m = fovrad
 	local offset_y = 0 - (fovrad / 3)
