@@ -696,16 +696,16 @@ hook.Add("CreateMove", "", function(cmd)
 			local aimang = CalculateAimAngle(pos, target)
 			local spreadang = CalculateNoSpread(Weapon, cmd:CommandNumber(), aimang)
 
-			cmd:SetViewAngles(FixAngle(spreadang - LocalPlayer():GetViewPunchAngles()))
+			cmd:SetViewAngles(FixAngle(spreadang)))
 			FixMovement(cmd)
 
 			cmd:AddKey(IN_ATTACK)
 		EndPrediction(cmd)
 	else
 		if cmd:KeyDown(IN_ATTACK) and IsValid(Weapon) then
-			local spreadang = CalculateNoSpread(Weapon, cmd:CommandNumber())
+			local spreadang = CalculateNoSpread(Weapon, cmd:CommandNumber(), stuff.og)
 
-			cmd:SetViewAngles(FixAngle(spreadang - LocalPlayer():GetViewPunchAngles()))
+			cmd:SetViewAngles(FixAngle(spreadang))
 			FixMovement(cmd)
 		end
 	end
