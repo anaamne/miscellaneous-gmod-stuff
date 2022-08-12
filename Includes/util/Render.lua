@@ -42,9 +42,21 @@ function render.DrawOutlinedBox(pos, ang, mins, maxs, outlineColor, fillColor, w
 		render.DrawBox(pos, ang, mins, maxs, fillColor)
 	render.SetBlend(oBlend)
 
-	render.DrawWireframeBox(pos, ang, mins, maxs, outlineColor, true)
+	render.DrawWireframeBox(pos, ang, mins, maxs, outlineColor, writez)
 
 	if not writez then
 		cam.IgnoreZ(false)
 	end
+end
+
+function render.DrawOutlinedQuadEasy(pos, normal, width, height, fillColor, outlineColor, rotation)
+	render.DrawQuadEasy(pos, normal, width, height, fillColor, rotation)
+
+	local up = normal:Angle():Up() * (height / 2)
+	local right = normal:Angle():Right() * (width / 2) 
+
+	render.DrawLine(pos + up + right, pos + up - right, outlineColor, true)
+	render.DrawLine(pos + up + right, pos - up + right, outlineColor, true)
+	render.DrawLine(pos - up + right, pos - up - right, outlineColor, true)
+	render.DrawLine(pos - up - right, pos + up - right, outlineColor, true)
 end
