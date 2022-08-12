@@ -7,7 +7,6 @@
 include("Util.lua")
 
 local Isvalid = IsValid
-local tobool = tobool
 
 local bit_band = bit.band
 
