@@ -171,6 +171,12 @@ util.GetTableDifferenceKeys = function(one, two) -- Compares table one to table 
 	return differences
 end
 
+-- Material stuff
+
+util.MaterialIsValid = function(material)
+	return material ~= nil and type(material) == "IMaterial" and not material:IsError()
+end
+
 -- Client only stuff
 
 if not CLIENT then return end
