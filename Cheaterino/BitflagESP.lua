@@ -53,12 +53,13 @@ local scripted_ents_GetList = scripted_ents.GetList
 -- Bitflags
 
 local ESP_ENABLED = 	bit_lshift(1, 0)
-local ESP_BOX = 		bit_lshift(1, 1)
-local ESP_BOX_TD = 		bit_lshift(1, 2)
-local ESP_NAME = 		bit_lshift(1, 3)
-local ESP_WEAPON = 		bit_lshift(1, 4)
-local ESP_SKELETON = 	bit_lshift(1, 5)
-local ESP_HEALTHBAR = 	bit_lshift(1, 6)
+local ESP_BOX = 		bit_lshift(1, 1) -- 2D box
+local ESP_BOX_TD = 		bit_lshift(1, 2) -- 3D box
+local ESP_NAME = 		bit_lshift(1, 3) -- Username / Class
+local ESP_WEAPON = 		bit_lshift(1, 4) -- Active weapon
+local ESP_SKELETON = 	bit_lshift(1, 5) -- Bones
+local ESP_HEALTHBAR = 	bit_lshift(1, 6) -- Health
+local ESP_AVATAR =		bit_lshift(1, 7) -- Profile Picture
 
 local Cache = {
 	Menu = nil,
@@ -91,7 +92,9 @@ local Cache = {
 
 		PlayerColor = Color(255, 0, 0, 255),
 		FriendColor = Color(255, 255, 0, 255),
-		EntityColor = Color(200, 0, 255, 255)
+		EntityColor = Color(200, 0, 255, 255),
+
+		AvatarFrames = {}
 	}
 }
 
@@ -341,6 +344,20 @@ local function DoESP(Entity, pFlags)
 			surface_DrawText(Name)
 		end
 	end
+
+	if Entity:IsPlayer() then -- Player only part
+		if BitflagHasValue(pFlags, ESP_AVATAR) and IsValid(Cache.ESP.AvatarFrames[Entity:SteamID64() or "BOT"]) then
+			local x = Left + (w / 2) - 8
+			local y = Top - 24
+
+			if BitflagHasValue(pFlags, ESP_NAME) then
+				local tw, th = surface_GetTextSize(Entity:GetName() or Entity:Name() or Entity:Nick())
+				y = y - th
+			end
+
+			Cache.ESP.AvatarFrames[Entity:SteamID64() or "BOT"]:PaintAt(x, y)
+		end
+	end
 end
 
 -- Hooks
@@ -366,6 +383,21 @@ timer.Create(Cache.HookName, 0.3, 0, function()
 	
 	for i = 2, player_GetCount() + 1 do -- Faster than player.GetAll
 		Cache.PlayerList[#Cache.PlayerList + 1] = Cache.EntityList[i] or NULL
+	end
+
+	for i = 1, #Cache.PlayerList do
+		if BitflagHasValue(Cache.ESP.PlayerFlags, ESP_AVATAR) then
+			if not IsValid(Cache.ESP.AvatarFrames[Cache.PlayerList[i]:SteamID64() or "BOT"]) then
+				local pAvatar = vgui_Create("AvatarImage")
+
+				pAvatar:SetSize(16, 16)
+				pAvatar:SetVisible(false)
+				pAvatar:SetPaintedManually(true)
+				pAvatar:SetPlayer(Cache.PlayerList[i], 16)
+
+				Cache.ESP.AvatarFrames[Cache.PlayerList[i]:SteamID64() or "BOT"] = pAvatar
+			end
+		end
 	end
 end)
 
@@ -447,6 +479,7 @@ do
 	MakeCheckBox(PlayerPanel, 50, 125, "Weapon", "PlayerFlags", ESP_WEAPON)
 	MakeCheckBox(PlayerPanel, 50, 150, "Skeleton", "PlayerFlags", ESP_SKELETON)
 	MakeCheckBox(PlayerPanel, 50, 175, "Healthbar", "PlayerFlags", ESP_HEALTHBAR)
+	MakeCheckBox(PlayerPanel, 50, 200, "Avatar", "PlayerFlags", ESP_AVATAR)
 
 	local FriendPanel = vgui_Create("DPanel", MainTabs)
 	MainTabs:AddSheet("Friends", FriendPanel)
