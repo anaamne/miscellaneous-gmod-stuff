@@ -92,7 +92,7 @@ end)
 
 hook.Add("PreDrawEffects", "ColoredHitboxes_PreDrawEffects", function()
 	for _, v in ipairs(GetSortedPlayers()) do
-		if v == LocalPlayer() then continue end
+		if v == LocalPlayer() and not LocalPlayer():ShouldDrawLocalPlayer() then continue end
 
 		DrawEntityHitboxes(v)
 		DrawEntityHitboxes(v:GetActiveWeapon())
