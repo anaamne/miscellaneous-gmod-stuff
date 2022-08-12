@@ -10,7 +10,7 @@ meta_cl.__type = "Color"
 local assert = assert
 local type = type
 
-util.GetObjectType = function(object) -- Similar to type() but supports __type metafield
+function util.GetObjectType(object) -- Similar to type() but supports __type metafield
 	local objectmeta = getmetatable(object)
 
 	if objectmeta and objectmeta.__type then
@@ -24,7 +24,7 @@ util.GetObjectType = function(object) -- Similar to type() but supports __type m
 	return type(object)
 end
 
-util.TypeAssert = function(index, value, desired) -- Cleans up code a lot, checks if the given value is of the required type
+function util.TypeAssert(index, value, desired) -- Cleans up code a lot, checks if the given value is of the required type
 	assert(type(index) == "number", "Bad argument #1 to 'TypeAssert' (number expected, got " .. type(index) .. ")")
 
 	local dtype = util.GetObjectType(desired)
@@ -45,7 +45,7 @@ end
 
 -- Base HU conversion
 
-util.HUToFeet = function(units) -- Convert Hammer Units into Feet
+function util.HUToFeet(units) -- Convert Hammer Units into Feet
 	util.TypeAssert(1, units, "number")
 
 	return units / 16
@@ -53,43 +53,43 @@ end
 
 -- Unit conversions
 
-util.InchesToFeet = function(units)
+function util.InchesToFeet(units)
 	util.TypeAssert(1, units, "number")
 
 	return units / 12
 end
 
-util.FeetToInches = function(units) -- Convert Feet into Inches
+function util.FeetToInches(units) -- Convert Feet into Inches
 	util.TypeAssert(1, units, "number")
 
 	return units * 12
 end
 
-util.FeetToMeters = function(units) -- Convert Feet into Meters
+function util.FeetToMeters(units) -- Convert Feet into Meters
 	util.TypeAssert(1, units, "number")
 
 	return units / 3.280839895
 end
 
-util.MetersToFeet = function(units) -- Convert Meters into Feet
+function util.MetersToFeet(units) -- Convert Meters into Feet
 	util.TypeAssert(1, units, "number")
 
 	return units * 3.280839895
 end
 
-util.MetersToCentimeters = function(units) -- Convert Meters into Centimeters
+function util.MetersToCentimeters(units) -- Convert Meters into Centimeters
 	util.TypeAssert(1, units, "number")
 
 	return units * 100
 end
 
-util.InchesToMeters = function(units) -- Convert Inches into Meters
+function util.InchesToMeters(units) -- Convert Inches into Meters
 	util.TypeAssert(1, units, "number")
 
 	return util.FeetToMeters(util.InchesToFeet(units))
 end
 
-util.MetersToInches = function(units)
+function util.MetersToInches(units)
 	util.TypeAssert(1, units, "number")
 
 	return util.FeetToInches(util.MetersToFeet(units))
@@ -97,19 +97,19 @@ end
 
 -- Other HU conversions
 
-util.HUToInches = function(units) -- Convert Hammer Units into Inches
+function util.HUToInches(units) -- Convert Hammer Units into Inches
 	util.TypeAssert(1, units, "number")
 
 	return util.FeetToInches(util.HUToFeet(units))
 end
 
-util.HUToMeters = function(units) -- Convert Hammer Units into Meters
+function util.HUToMeters(units) -- Convert Hammer Units into Meters
 	util.TypeAssert(1, units, "number")
 
 	return util.FeetToMeters(util.HUToFeet(units))
 end
 
-util.HUToCentimeters = function(units) -- Convert Hammer Units into Centimeters
+function util.HUToCentimeters(units) -- Convert Hammer Units into Centimeters
 	util.TypeAssert(1, units, "number")
 
 	return util.MetersToCentimeters(util.HUToMeters(units))
@@ -117,7 +117,7 @@ end
 
 -- Number stuff
 
-util.GetDecimals = function(number) -- Returns how many decimal places a number has
+function util.GetDecimals(number) -- Returns how many decimal places a number has
 	util.TypeAssert(1, number, "number")
 
 	local decimals = tostring(number):Split(".")
@@ -127,7 +127,7 @@ end
 
 -- Color stuff
 
-util.FixColor = function(color) -- Fixes a color's R, G, B and A values
+function util.FixColor(color) -- Fixes a color's R, G, B and A values
 	util.TypeAssert(1, color, "Color")
 
 	color.r = math.min(tonumber(color.r) or 0, 255)
@@ -136,7 +136,7 @@ util.FixColor = function(color) -- Fixes a color's R, G, B and A values
 	color.a = math.min(tonumber(color.a) or 0, 255)
 end
 
-util.CopyColor = function(color) -- Returns a copy of the provided color
+function util.CopyColor(color) -- Returns a copy of the provided color
 	util.TypeAssert(1, color, "Color")
 
 	local newColor = Color(color:Unpack())
@@ -146,7 +146,7 @@ util.CopyColor = function(color) -- Returns a copy of the provided color
 	return newColor
 end
 
-util.TableToColor = function(color) -- Fixes a table to be of the color metatable
+function util.TableToColor(color) -- Fixes a table to be of the color metatable
 	if IsColor(color) then return end -- Already a color, do nothing
 
 	util.TypeAssert(1, color, "table")
@@ -156,7 +156,7 @@ end
 
 -- Table stuff
 
-util.GetTableDifferenceKeys = function(one, two) -- Compares table one to table two
+function util.GetTableDifferenceKeys(one, two) -- Compares table one to table two
 	util.TypeAssert(1, one, "table")
 	util.TypeAssert(2, two, "table")
 
@@ -173,7 +173,7 @@ end
 
 -- Material stuff
 
-util.MaterialIsValid = function(material)
+function util.MaterialIsValid(material)
 	return material ~= nil and type(material) == "IMaterial" and not material:IsError()
 end
 
@@ -181,7 +181,7 @@ end
 
 if not CLIENT then return end
 
-util.IsInWorld = function(position) -- Clientside version
+function util.IsInWorld(position) -- Clientside version
 	util.TypeAssert(1, position, "Vector")
 
 	return not util.TraceLine({
