@@ -33,6 +33,10 @@
 			Deathsay
 
 		Playerlist that doesn't do much of anything
+
+	Requires
+		Frozen2
+		https://github.com/Facepunch/garrysmod/pull/1590
 ]]
 
 include("includes/modules/outline.lua") -- https://github.com/Facepunch/garrysmod/pull/1590
