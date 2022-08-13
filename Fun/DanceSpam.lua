@@ -14,10 +14,13 @@ local meta_cd = debug.getregistry().CUserCmd
 local Backup = table.Copy(meta_cd)
 
 local IsValid = IsValid
+
 local debug_getinfo = debug.getinfo
+
 local drive_CalcView = drive.CalcView
+
 local player_manager_RunClass = player_manager.RunClass
-local table_Copy = table.Copy
+
 local timer_Simple = timer.Simple
 
 local GestureLookup = {
