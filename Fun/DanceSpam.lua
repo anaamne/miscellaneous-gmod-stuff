@@ -103,16 +103,6 @@ hook.Add("CalcView", "DanceSpam", function(ply, pos, ang, fov, zn, zf)
 		return hook.Run("CalcVehicleView", vehicle, ply, view)
 	end
 
-	local weapon = ply:GetActiveWeapon()
-
-	if IsValid(weapon) then
-		local wCalcView = weapon.CalcView
-
-		if wCalcView then
-			view.origin, view.angles, view.fov = wCalcView(weapon, ply, view.origin * 1, view.angles * 1, view.fov)
-		end
-	end
-
 	if drive_CalcView(ply, view) then return view end
 
 	-- Fix for taunt_camera breaking thirdperson camera with these detours in place
@@ -123,6 +113,16 @@ hook.Add("CalcView", "DanceSpam", function(ply, pos, ang, fov, zn, zf)
 	local offset = (pView.origin - view.origin):Length()
 
 	view.origin = view.origin - (view.angles:Forward() * offset)
+
+	local weapon = ply:GetActiveWeapon()
+
+	if IsValid(weapon) then
+		local wCalcView = weapon.CalcView
+
+		if wCalcView then
+			view.origin, view.angles, view.fov = wCalcView(weapon, ply, view.origin * 1, view.angles * 1, view.fov)
+		end
+	end
 
 	return view
 end)
