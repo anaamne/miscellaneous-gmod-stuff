@@ -3,9 +3,9 @@
 ]]
 
 local HSVToColor = HSVToColor
+local LocalPlayer = LocalPlayer
 local UnPredictedCurTime = UnPredictedCurTime
 local setmetatable = setmetatable
-local LocalPlayer = LocalPlayer
 
 local meta_cl = debug.getregistry().Color
 
