@@ -107,7 +107,7 @@ hook.Add("CalcView", "DanceSpam", function(ply, pos, ang, fov, zn, zf)
 
 	-- Fix for taunt_camera breaking thirdperson camera with these detours in place
 
-	local pView = { origin = view.origin }
+	local pView = { origin = view.origin * 1, angles = view.angles * 1 }
 	player_manager_RunClass(ply, "CalcView", pView)
 
 	local offset = (pView.origin - view.origin):Length()
