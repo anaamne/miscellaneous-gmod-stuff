@@ -210,7 +210,7 @@ local function GetBase(weapon)
 end
 
 local function WeaponCanShoot(weapon)
-	if not IsValid(weapon) or not (weapon.CanPrimaryAttack and weapon:CanPrimaryAttack() or true) then
+	if not IsValid(weapon) then
 		return false
 	end
 
