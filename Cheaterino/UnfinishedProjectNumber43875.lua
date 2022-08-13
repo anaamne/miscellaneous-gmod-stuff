@@ -12,7 +12,7 @@
 			Auto Wall
 
 		HvH:
-			Customizable Anti Aim
+			Customizable Anti Aim (Real and fake might be swapped I never actually tested it)
 			LBY breaker (But only sometimes for some reason)
 			Fakelag (Air + ground)
 
