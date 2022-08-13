@@ -2,6 +2,37 @@
 	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
 
 	I'm likely never going to finish this
+
+	Features:
+		Ragebot:
+			Aimbot
+			Silent Aim
+			Auto Shoot
+			Anti Recoil
+			Auto Wall
+
+		HvH:
+			Customizable Anti Aim
+			LBY breaker (But only sometimes for some reason)
+			Fakelag (Air + ground)
+
+		Visuals:
+			Box ESP
+			Name ESP
+			Weapon ESP
+			Skeleton ESP
+			Flags (Build, god, etc)
+			Outline
+			Health (Bar + amount)
+			(Chams never got done)
+
+		Miscellaneous:
+			Killsound (Always on, bonk sound that you probably don't have)
+			BHop
+			Autostrafe
+			Deathsay
+
+		Playerlist that doesn't do much of anything
 ]]
 
 include("includes/modules/outline.lua") -- https://github.com/Facepunch/garrysmod/pull/1590
