@@ -594,10 +594,11 @@ fguitable.Objects = {
 	
 				local children = self:GetChildren()
 	
-				local label = children[3]
-	
-				label:GetChildren()[1]:SetEnabled(false) -- Disable that stupid popup panel
-				label:SetTextColor(fguitable.Colors.white) -- Setup label
+				self.Label:SetVisible(false)
+
+				local label = vgui.Create("DLabel", self)
+				label:Dock(LEFT)
+				label:SetTextColor(fguitable.Colors.white)
 				label:SetFont(MPData.Font)
 	
 				local bar = children[2]
