@@ -3,9 +3,11 @@
 
 	ConVars:
 		dancespam_gesture	-	Controls the gesture to spam (Default: "dance")
+		dancespam_fixview	-	Controls if the CalcView hook should account for offsets (Default: 1 (true))
 ]]
 
 local Act = CreateClientConVar("dancespam_gesture", "dance", true, false, "")
+local FixView = CreateClientConVar("dancespam_fixview", 1, true, false, "", 0, 1)
 
 local Wait = false
 local Gamemode = engine.ActiveGamemode()
@@ -61,36 +63,31 @@ meta_cd.SetViewAngles = function(...)
 end
 
 hook.Add("Tick", "DanceSpam", function()
+	if Wait then return end
+
 	local Gesture = Act:GetString()
 
 	local dGesture = GestureLookup[Gesture]
 	if not dGesture then return end
 
+	local sID, sLen = LocalPlayer():LookupSequence(LocalPlayer():GetSequenceName(LocalPlayer():SelectWeightedSequence(dGesture)))
+	if not sID or not sLen then return end
+
 	if Gamemode == "darkrp" then
-		if Wait then return end
-
 		LocalPlayer():ConCommand("_DarkRP_DoAnimation " .. dGesture)
-
-		local sID, sLen = LocalPlayer():LookupSequence(LocalPlayer():GetSequenceName(LocalPlayer():SelectWeightedSequence(dGesture)))
-		if not sID or not sLen then return end
-
-		Wait = true
-
-		timer_Simple(sLen, function()
-			Wait = false
-		end)
 	else
-		if LocalPlayer():IsPlayingTaunt() then
-			Wait = true
-		else
-			LocalPlayer():ConCommand("act " .. Gesture)
-			Wait = false
-		end
+		LocalPlayer():ConCommand("act " .. Gesture)
 	end
+
+	Wait = true
+
+	timer_Simple(sLen + 0.3, function()
+		Wait = false
+	end)
 end)
 
 hook.Add("CalcView", "DanceSpam", function(ply, pos, ang, fov, zn, zf)
-	if not IsValid(ply) or not Wait then return end
+	if not IsValid(ply) or (not Wait and not ply:IsPlayingTaunt()) or not FixView:GetBool()  then return end
 
 	local view = {
 		origin = pos,
