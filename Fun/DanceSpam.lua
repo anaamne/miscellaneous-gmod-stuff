@@ -63,7 +63,7 @@ meta_cd.SetViewAngles = function(...)
 end
 
 hook.Add("Tick", "DanceSpam", function()
-	if Wait then return end
+	if not LocalPlayer():Alive() or Wait then return end
 
 	local Gesture = Act:GetString()
 
