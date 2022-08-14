@@ -386,7 +386,7 @@ timer.Create(Cache.HookName, 0.3, 0, function()
 	end
 
 	for i = 1, #Cache.PlayerList do
-		if BitflagHasValue(Cache.ESP.PlayerFlags, ESP_AVATAR) then
+		if BitflagHasValue(Cache.ESP.PlayerFlags, ESP_AVATAR) or BitflagHasValue(Cache.ESP.FriendFlags, ESP_AVATAR) then
 			if not IsValid(Cache.ESP.AvatarFrames[Cache.PlayerList[i]:SteamID64() or "BOT"]) then
 				local pAvatar = vgui_Create("AvatarImage")
 
@@ -493,6 +493,7 @@ do
 	MakeCheckBox(FriendPanel, 50, 125, "Weapon", "FriendFlags", ESP_WEAPON)
 	MakeCheckBox(FriendPanel, 50, 150, "Skeleton", "FriendFlags", ESP_SKELETON)
 	MakeCheckBox(FriendPanel, 50, 175, "Healthbar", "FriendFlags", ESP_HEALTHBAR)
+	MakeCheckBox(FriendPanel, 50, 200, "Avatar", "FriendFlags", ESP_AVATAR)
 
 	local EntityPanel = vgui_Create("DPanel", MainTabs)
 	MainTabs:AddSheet("Entities", EntityPanel)
@@ -521,6 +522,8 @@ do
 		local Added = {}
 
 		for i = 1, #Cache.EntityList do
+			if not IsValid(Cache.EntityList[i]) then continue end
+
 			local Class = Cache.EntityList[i]:GetClass()
 
 			if not Added[Class] then
