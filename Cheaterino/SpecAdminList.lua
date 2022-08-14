@@ -2,6 +2,21 @@
 	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
 ]]
 
+local OBS_MODE_NONE = OBS_MODE_NONE
+
+local IsValid = IsValid
+local ipairs = ipairs
+local pairs = pairs
+
+local surface_DrawText = surface.DrawText
+local surface_GetTextSize = surface.GetTextSize
+local surface_SetFont = surface.SetFont
+local surface_SetTextColor = surface.SetTextColor
+local surface_SetTextPos = surface.SetTextPos
+
+local table_Count = table.Count
+local table_sort = table.sort
+
 local ULXAdminCommands = {
 	"ulx ban",
 	"ulx kick",
@@ -11,7 +26,8 @@ local ULXAdminCommands = {
 
 local Cache = {
 	Colors = {
-		Red = Color(255, 0, 0, 255)
+		Red = Color(255, 0, 0, 255),
+		White = Color(255, 255, 255, 255)
 	},
 
 	Spectators = {},
@@ -37,7 +53,7 @@ local function GetRankCount() -- Gets the number of ranks
 	local rCount = 0
 	
 	if sam then
-		rCount = rCount + table.Count(sam.ranks.get_ranks())
+		rCount = rCount + table_Count(sam.ranks.get_ranks())
 	end
 	
 	if ulx then
@@ -98,6 +114,10 @@ local function IsSpectating(spectator, ply) -- Checks if a spectator is spectati
 	if not IsValid(spectator) or not IsValid(ply) then
 		return false
 	end
+
+	if not spectator:IsPlayer() or not ply:IsPlayer() then
+		return false
+	end
 	
 	if spectator:GetObserverMode() == OBS_MODE_NONE then
 		return false
@@ -131,23 +151,23 @@ timer.Create("@", 0.3, 0, function()
 		end
 	end
 	
-	table.sort(Cache.Spectators, function(a) -- Show people spectating you at the top
+	table_sort(Cache.Spectators, function(a) -- Show people spectating you at the top
 		return IsSpectating(a, LocalPlayer())
 	end)
 end)
 
 hook.Add("DrawOverlay", "@", function()
-	surface.SetFont("BudgetLabel")
-	surface.SetTextColor(color_white)
+	surface_SetFont("BudgetLabel")
+	surface_SetTextColor(Cache.Colors.White)
 	
 	local ScrW = ScrW()
 	local ty = 0
 	
 	local title = "--Spectators (" .. #Cache.Spectators .. ")--"
-	local tw, th = surface.GetTextSize(title)
+	local tw, th = surface_GetTextSize(title)
 	
-	surface.SetTextPos(ScrW - tw - 2, ty)
-	surface.DrawText(title)
+	surface_SetTextPos(ScrW - tw - 2, ty)
+	surface_DrawText(title)
 	
 	ty = ty + th
 	
@@ -156,26 +176,26 @@ hook.Add("DrawOverlay", "@", function()
 			continue
 		end
 		
-		surface.SetTextColor(IsSpectating(v, LocalPlayer()) and Cache.Colors.Red or color_white)
+		surface_SetTextColor(IsSpectating(v, LocalPlayer()) and Cache.Colors.Red or Cache.Colors.White)
 		
 		local name = v:GetName()
-		tw, th = surface.GetTextSize(name)
+		tw, th = surface_GetTextSize(name)
 		
-		surface.SetTextPos(ScrW - tw - 2, ty)
-		surface.DrawText(name)
+		surface_SetTextPos(ScrW - tw - 2, ty)
+		surface_DrawText(name)
 		
 		ty = ty + th
 	end
 	
 	ty = ty + th
 	
-	surface.SetTextColor(color_white)
+	surface_SetTextColor(Cache.Colors.White)
 	
 	title = "--Admins (" .. #Cache.Admins .. ")--"
-	tw, th = surface.GetTextSize(title)
+	tw, th = surface_GetTextSize(title)
 	
-	surface.SetTextPos(ScrW - tw - 2, ty)
-	surface.DrawText(title)
+	surface_SetTextPos(ScrW - tw - 2, ty)
+	surface_DrawText(title)
 	
 	ty = ty + th
 	
@@ -185,10 +205,10 @@ hook.Add("DrawOverlay", "@", function()
 		end
 		
 		local name = v:GetName()
-		tw, th = surface.GetTextSize(name)
+		tw, th = surface_GetTextSize(name)
 		
-		surface.SetTextPos(ScrW - tw - 2, ty)
-		surface.DrawText(name)
+		surface_SetTextPos(ScrW - tw - 2, ty)
+		surface_DrawText(name)
 		
 		ty = ty + th
 	end
