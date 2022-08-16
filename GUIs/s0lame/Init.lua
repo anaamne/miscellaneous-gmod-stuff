@@ -124,7 +124,8 @@ s0lame.LoadOrder = {
 	"sLabelSlider",
 	"sDropDown",
 	"sScrollBar",
-	"sTextBox"
+	"sTextBox",
+	"sBinder"
 }
 
 s0lame.Elements = {}
@@ -231,8 +232,11 @@ s0lame.KeyBoard = {
 		[MOUSE_LEFT] = true,
 		[MOUSE_RIGHT] = true,
 		[MOUSE_MIDDLE] = true,
-		[KEY_ESCAPE] = true,
 		[KEY_ENTER] = true
+	},
+
+	HardExitChars = {
+		[KEY_ESCAPE] = true
 	}
 }
 
@@ -668,13 +672,23 @@ function s0lame.GetKeyCode(Code)
 end
 
 --[[
+	Checks if a key code is a hard exit key
+]]
+
+function s0lame.IsHardExitKeyCode(Code)
+	s0lame.CheckValueType(1, Code, "number")
+
+	return s0lame.KeyBoard.HardExitChars[Code] ~= nil
+end
+
+--[[
 	Checks if a key code is an exit key
 ]]
 
 function s0lame.IsExitKeyCode(Code)
 	s0lame.CheckValueType(1, Code, "number")
 
-	return s0lame.KeyBoard.ExitChars[Code] ~= nil
+	return s0lame.KeyBoard.ExitChars[Code] ~= nil or s0lame.IsHardExitKeyCode(Code)
 end
 
 --[[
