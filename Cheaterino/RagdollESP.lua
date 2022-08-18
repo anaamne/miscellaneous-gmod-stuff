@@ -11,11 +11,11 @@ local color_blue = Color(0, 255, 255)
 
 local pEnts = {}
 
-hook.Add("PreDrawHalos", "outlines", function()
+hook.Add("PreDrawHalos", "rgd_Outline", function()
 	outline.Add(pEnts, color_red, OUTLINE_MODE_BOTH)
 end)
 
-hook.Add("HUDPaint", "ergwthy", function()
+hook.Add("HUDPaint", "rgd_Skeleton", function()
 	for i = #pEnts, 1, -1 do
 		if not IsValid(pEnts[i]) then
 			table.remove(pEnts, i)
@@ -53,6 +53,6 @@ hook.Add("HUDPaint", "ergwthy", function()
 	end
 end)
 
-hook.Add("CreateClientsideRagdoll", "rgd_ESP", function(_, ragdoll)
+hook.Add("CreateClientsideRagdoll", "rgd_Setup", function(_, ragdoll)
 	pEnts[#pEnts + 1] = ragdoll
 end)
