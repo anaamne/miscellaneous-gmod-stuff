@@ -87,7 +87,7 @@ hook.Add("Tick", "DanceSpam", function()
 end)
 
 hook.Add("CalcView", "DanceSpam", function(ply, pos, ang, fov, zn, zf)
-	if not IsValid(ply) or (not Wait and not ply:IsPlayingTaunt()) or not FixView:GetBool()  then return end
+	if not IsValid(ply) or (not Wait and not ply:IsPlayingTaunt()) then return end
 
 	local view = {
 		origin = pos,
@@ -103,16 +103,18 @@ hook.Add("CalcView", "DanceSpam", function(ply, pos, ang, fov, zn, zf)
 		return hook.Run("CalcVehicleView", vehicle, ply, view)
 	end
 
-	if drive_CalcView(ply, view) then return view end
+	if FixView:GetBool() then
+		if drive_CalcView(ply, view) then return view end
 
-	-- Fix for taunt_camera breaking thirdperson camera with these detours in place
+		-- Fix for taunt_camera breaking thirdperson camera with these detours in place
 
-	local pView = { origin = view.origin * 1, angles = view.angles * 1 }
-	player_manager_RunClass(ply, "CalcView", pView)
+		local pView = { origin = view.origin * 1, angles = view.angles * 1 }
+		player_manager_RunClass(ply, "CalcView", pView)
 
-	local offset = (pView.origin - view.origin):Length()
+		local offset = (pView.origin - view.origin):Length()
 
-	view.origin = view.origin - (view.angles:Forward() * offset)
+		view.origin = view.origin - (view.angles:Forward() * offset)
+	end
 
 	local weapon = ply:GetActiveWeapon()
 
