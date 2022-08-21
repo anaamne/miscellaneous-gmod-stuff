@@ -2,6 +2,22 @@
 	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
 
 	Made for INFERNO (http://steamcommunity.com/profiles/76561198935068541)
+
+	ConVars:
+		inferno_fov_enabled					-	Controls custom FOV						(Default: 0)
+		inferno_fov							-	Controls custom FOV amount				(Default: 75)
+		inferno_viewmodel_fov_enabled		-	Controls custom viewmodel FOV			(Default: 0)
+		inferno_viewmodel_fov				-	Controls custom viewmodel FOV amount	(Default: 54)
+		inferno_viewmodel_offsets_enabled	-	Controls viewmodel offsets				(Default: 0)
+		inferno_viewmodel_offsets_x			-	Controls viewmodel x offset				(Default: 0)
+		inferno_viewmodel_offsets_y			-	Controls viewmodel y offset				(Default: 0)
+		inferno_viewmodel_offsets_z			-	Controls viewmodel z offset				(Default: 0)
+		inferno_viewmodel_offsets_pitch		-	Controls viewmodel pitch offset			(Default: 0)
+		inferno_viewmodel_offsets_yaw		-	Controls viewmodel yaw offset			(Default: 0)
+		inferno_viewmodel_offsets_roll		-	Controls viewmodel roll offset			(Default: 0)
+
+	ConCommands:
+		inferno_menu						-	Opens the menu
 ]]
 
 --------------------------- Localization ---------------------------
@@ -305,6 +321,8 @@ do
 
 	Cache.Menu = Main
 end
+
+--------------------------- ConCommand ---------------------------
 
 concommand.Add("inferno_menu", function()
 	if IsValid(Cache.Menu) then
