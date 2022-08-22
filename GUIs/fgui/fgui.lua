@@ -593,13 +593,9 @@ fguitable.Objects = {
 				end
 	
 				local children = self:GetChildren()
-	
-				self.Label:SetVisible(false)
 
-				local label = vgui.Create("DLabel", self)
-				label:Dock(LEFT)
-				label:SetTextColor(fguitable.Colors.white)
-				label:SetFont(MPData.Font)
+				self.Label:SetFont(MPData.Font)
+				self.Label:SetTextColor(fguitable.Colors.white)
 	
 				local bar = children[2]
 	
