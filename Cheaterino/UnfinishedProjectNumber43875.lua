@@ -37,6 +37,7 @@
 	Requires
 		Frozen2
 		https://github.com/Facepunch/garrysmod/pull/1590
+		https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/GUIs/fgui/fgui.lua
 ]]
 
 include("includes/modules/outline.lua") -- https://github.com/Facepunch/garrysmod/pull/1590
@@ -1232,7 +1233,7 @@ local function WeaponCanPenetrate(weapon, tracedata)
 	if not AmmoPen then return false end
 	
 	local HitPos = tracedata.HitPos
-	local Forward = Cache.LocalPlayer:GetForward()
+	local Forward = tracedata.Normal
 	local EndPos
 	
 	local pTraceData = {}
