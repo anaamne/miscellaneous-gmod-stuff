@@ -44,6 +44,8 @@ local function PlayerHasULXCommand(ply, cmd) -- Checks if a player has access to
 		return false
 	end
 	
+	if not ULib.ucl.authed[ply:UniqueID()] then return false end
+
 	local access, _ = ULib.ucl.query(ply, cmd)
 	
 	return access or false
