@@ -66,7 +66,7 @@ function PANEL:Paint(Width, Height)
 	ty = ty + (th / 2)
 
 	surface.SetDrawColor(self:GetOutlineColor())
-	surface.DrawLine(0, ty, tx, ty)
+	surface.DrawLine(0, ty, tx - 2, ty)
 	surface.DrawLine(tx + tw, ty, Width, ty)
 	surface.DrawLine(Width, ty, Width, Height)
 	surface.DrawLine(Width, Height, 0, Height)
