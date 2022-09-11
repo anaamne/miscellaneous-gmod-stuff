@@ -1,7 +1,7 @@
 --[[
 	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
 
-	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/Util/Render.lua
+	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/includes/extensions/Render_Ext.lua
 ]]
 
 include("includes/util/Render.lua")

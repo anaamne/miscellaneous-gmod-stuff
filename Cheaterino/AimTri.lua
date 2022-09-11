@@ -3,7 +3,7 @@
 
 	leme's sub-par hitscan style aimbot with an FOV triangle
 
-	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/Includes/modules/md5.lua	(For no spread)
+	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/includes/modules/md5.lua	(For no spread)
 	Requires Frozen2																								(Engine prediction)
 ]]
 

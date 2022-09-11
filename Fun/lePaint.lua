@@ -7,7 +7,7 @@
 		lepaint			- Opens the menu
 		lepaint_getdata - Prints the draw data to console
 
-	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/Includes/util/Draw.lua
+	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/includes/extensions/Draw_Ext.lua
 ]]
 
 include("includes/util/Draw.lua")

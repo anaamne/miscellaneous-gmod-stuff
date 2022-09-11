@@ -1,7 +1,7 @@
 --[[
 	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
 
-	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/Includes/util/RandomString.lua
+	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/includes/util/RandomString.lua
 ]]
 
 local RunConsoleCommand = RunConsoleCommand
