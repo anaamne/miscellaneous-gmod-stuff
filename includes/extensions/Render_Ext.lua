@@ -4,7 +4,7 @@
 	Requires https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/includes/extensions/Util_Ext.lua
 ]]
 
-include("Util.lua")
+include("Util_Ext.lua")
 
 local Isvalid = IsValid
 

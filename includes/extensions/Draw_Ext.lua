@@ -1,7 +1,7 @@
 --[[
 	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
 
-	Has some quicker, easier ways to draw rounded boxes
+	More drawing functions
 
 	Credit for masking and stencil box:
 		https://github.com/2048khz-gachi-rmx/beizwors/blob/784c72a0bde378a6f8a6196bb19b744e55b0b130/addons/core_panellib/lua/moarpanels/exts/clipping.lua
@@ -188,4 +188,20 @@ function draw.ClipInRoundedBoxEx(bordersize, x, y, w, h, col, drawfunc, tl, tr, 
 	draw.ReMask()
 		drawfunc(x, y, w, h)
 	draw.FinishMask()
+end
+
+--[[
+	draw.SimpleText but with newline (\n) support
+]]
+
+function draw.LinedText(Text, Font, X, Y, Color, XAlign, YAlign)
+	local Lines = string.Split(Text, "\n")
+
+	local _, th = 0, 0
+
+	for i = 1, #Lines do
+		_, th = surface.GetTextSize(Lines[i])
+		draw.SimpleText(Lines[i], Font, X, Y, Color, XAlign, YAlign)
+		Y = Y + th
+	end
 end
