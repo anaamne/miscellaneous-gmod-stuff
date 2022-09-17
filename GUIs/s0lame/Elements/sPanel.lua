@@ -267,8 +267,16 @@ function PANEL:IsValid()
 	return self ~= nil and not self.Deleted
 end
 
-function PANEL:Remove()
+function PANEL:Remove() -- This needs improved
+	if not IsValid(self) then return end
+
+	self:SetVisible(false)
+	
 	self.Deleted = true
+
+	for _, v in ipairs(self:GetChildren()) do
+		v:Remove()
+	end
 end
 
 function PANEL:UpdateChildrenPositions(OldX, OldY, IsScroll)
@@ -310,6 +318,10 @@ function PANEL:Init()
 end
 
 function PANEL:PostInit()
+	-- For internal override
+end
+
+function PANEL:PostParentInit()
 	-- For internal override
 end
 

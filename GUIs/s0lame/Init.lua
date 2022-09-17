@@ -18,40 +18,10 @@ MOUSE_WHEEL_UP = MOUSE_WHEEL_UP or 112
 MOUSE_WHEEL_DOWN = MOUSE_WHEEL_DOWN or 113
 
 STENCIL_NEVER = STENCIL_NEVER or 1
-STENCIL_LESS = STENCIL_LESS or 2
 STENCIL_EQUAL = STENCIL_EQUAL or 3
-STENCIL_LESSEQUAL = STENCIL_LESSEQUAL or 4
-STENCIL_GREATER = STENCIL_GREATER or 5
-STENCIL_NOTEQUAL = STENCIL_NOTEQUAL or 6
-STENCIL_GREATEREQUAL = STENCIL_GREATEREQUAL or 7
-STENCIL_ALWAYS = STENCIL_ALWAYS or 8
 
 STENCIL_KEEP = STENCIL_KEEP or 1
-STENCIL_ZERO = STENCIL_ZERO or 2
 STENCIL_REPLACE = STENCIL_REPLACE or 3
-STENCIL_INCRSAT = STENCIL_INCRSAT or 4
-STENCIL_DECRSAT = STENCIL_DECRSAT or 5
-STENCIL_INVERT = STENCIL_INVERT or 6
-STENCIL_INCR = STENCIL_INCR or 7
-STENCIL_DECR = STENCIL_DECR or 8
-
-STENCILOPERATION_KEEP = STENCILOPERATION_KEEP or 1
-STENCILOPERATION_ZERO = STENCILOPERATION_ZERO or 2
-STENCILOPERATION_REPLACE = STENCILOPERATION_REPLACE or 3
-STENCILOPERATION_INCRSAT = STENCILOPERATION_INCRSAT	 or 4
-STENCILOPERATION_DECRSAT = STENCILOPERATION_DECRSAT or 5
-STENCILOPERATION_INVERT = STENCILOPERATION_INVERT or 6
-STENCILOPERATION_INCR = STENCILOPERATION_INCR or 7
-STENCILOPERATION_DECR = STENCILOPERATION_DECR or 8
-
-STENCILCOMPARISONFUNCTION_NEVER = STENCILCOMPARISONFUNCTION_NEVER or 1
-STENCILCOMPARISONFUNCTION_LESS = STENCILCOMPARISONFUNCTION_LESS or 2
-STENCILCOMPARISONFUNCTION_EQUAL = STENCILCOMPARISONFUNCTION_EQUAL or 3
-STENCILCOMPARISONFUNCTION_LESSEQUAL = STENCILCOMPARISONFUNCTION_LESSEQUAL or 4
-STENCILCOMPARISONFUNCTION_GREATER = STENCILCOMPARISONFUNCTION_GREATER or 5
-STENCILCOMPARISONFUNCTION_NOTEQUAL = STENCILCOMPARISONFUNCTION_NOTEQUAL or 6
-STENCILCOMPARISONFUNCTION_GREATEREQUAL = STENCILCOMPARISONFUNCTION_GREATEREQUAL	or 7
-STENCILCOMPARISONFUNCTION_ALWAYS = STENCILCOMPARISONFUNCTION_ALWAYS or 8
 
 MENU_DLL = MENU_DLL or false
 
@@ -114,6 +84,13 @@ s0lame.Colors = {
 	Error = Color(255, 222, 102)
 }
 
+s0lame.Materials = {
+	Gradients = {
+		Right = Material("vgui/gradient-r"),
+		Down = Material("vgui/gradient-d")
+	}
+}
+
 s0lame.LoadOrder = {
 	"sPanel",
 	"sLabel",
@@ -125,7 +102,13 @@ s0lame.LoadOrder = {
 	"sDropDown",
 	"sScrollBar",
 	"sTextBox",
-	"sBinder"
+	"sBinder",
+	"sList",
+	"sListRow",
+	"sColorHueBar",
+	"sColorAlphaBar",
+	"sColorPicker",
+	"sColorButton"
 }
 
 s0lame.Elements = {}
@@ -133,6 +116,8 @@ s0lame.Elements = {}
 s0lame.RenderStack = {}
 
 s0lame.SuppressErrors = false
+s0lame.FocusedObject = nil
+s0lame.LastObjectID = 0
 
 s0lame.Mouse = {
 	CanClickThisFrame = false,
@@ -306,6 +291,8 @@ end
 ]]
 
 function s0lame.Error(Message, Halt)
+	Message = Message .. "\n"
+
 	if s0lame.GetSuppressErrors() then
 		MsgC(s0lame.Colors.Error, Message)
 	else -- Regular erroring
@@ -343,6 +330,13 @@ end
 function s0lame.RegisterElement(ElementName, ElementMeta, InheritName)
 	s0lame.CheckValueType(1, ElementName, "string")
 	s0lame.CheckValueType(2, ElementMeta, "table")
+
+	ElementMeta.__eq = function(A, B)
+		if A._UID == nil or B._UID == nil then return false end
+		return A._UID == B._UID
+	end
+
+	s0lame.LastObjectID = s0lame.LastObjectID + 1
 
 	ElementMeta.__sName = ElementName
 	ElementMeta.__type = s0lame.GetType()
@@ -399,7 +393,11 @@ function s0lame.Create(ElementType, ElementParent)
 	if not s0lame.Assert(ElementMeta ~= nil, "Bad argument #1 to 'CreateObject' (Invalid element specified)") then return end
 	if not s0lame.Assert(ElementMeta.__type == s0lame.GetType(), "Bad argument #1 to 'CreateObject' (Invalid element specified)") then return end
 
-	local NewElement = setmetatable({}, ElementMeta)
+	local NewElement = setmetatable({
+		_UID = s0lame.LastObjectID
+	}, ElementMeta)
+
+	s0lame.LastObjectID = s0lame.LastObjectID + 1
 
 	for k, v in pairs(ElementMeta) do
 		if type(v) == "table" then
@@ -412,6 +410,7 @@ function s0lame.Create(ElementType, ElementParent)
 
 	if IsValid(ElementParent) then
 		NewElement:SetParent(ElementParent)
+		NewElement:PostParentInit(ElementParent)
 	end
 
 	return NewElement
@@ -700,6 +699,26 @@ function s0lame.ResetTyping()
 	s0lame.SetTypingObject(nil)
 end
 
+--[[
+	Sets focused object
+]]
+
+function s0lame.SetFocusedObject(Object)
+	if Object ~= nil then
+		s0lame.CheckValueType(1, Object, s0lame.GetType())
+	end
+
+	s0lame.FocusedObject = Object
+end
+
+--[[
+	Gets focused object
+]]
+
+function s0lame.GetFocusedObject()
+	return s0lame.FocusedObject
+end
+
 --------------------------- Final Setup ---------------------------
 
 do
@@ -785,6 +804,8 @@ do
 		end
 
 		if IsValid(s0lame.Mouse.ClickedThisFrame) then
+			s0lame.SetFocusedObject(s0lame.Mouse.ClickedThisFrame)
+
 			if LeftDown then
 				s0lame.Mouse.ClickedThisFrame:OnLeftClick()
 			end
@@ -803,7 +824,7 @@ do
 				if s0lame.Mouse.Scroll.Down then
 					s0lame.Mouse.ClickedThisFrame.ScrollBar:SetValue(ScrollOrigin + 30)
 				end
-			end			
+			end
 		end
 
 		for i = 1, #Invalid do
