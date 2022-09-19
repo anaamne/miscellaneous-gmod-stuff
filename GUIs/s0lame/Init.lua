@@ -103,8 +103,8 @@ s0lame.LoadOrder = {
 	"sScrollBar",
 	"sTextBox",
 	"sBinder",
-	"sList",
 	"sListRow",
+	"sList",
 	"sColorHueBar",
 	"sColorAlphaBar",
 	"sColorPicker",
@@ -117,7 +117,7 @@ s0lame.RenderStack = {}
 
 s0lame.SuppressErrors = false
 s0lame.FocusedObject = nil
-s0lame.LastObjectID = 0
+s0lame.LastObjectID = -2147483648
 
 s0lame.Mouse = {
 	CanClickThisFrame = false,
@@ -438,42 +438,88 @@ function s0lame.UpdateRenderState(Object, NewState)
 end
 
 --[[
+	Check if an object is within another
+]]
+
+function s0lame.ObjectInBounds(Object, pObject)
+	if Object:GetIgnoreParentBounds() or not IsValid(pObject) then return true end
+
+	s0lame.CheckValueType(1, Object, s0lame.GetType())
+	s0lame.CheckValueType(2, pObject, s0lame.GetType())
+
+	local XPos, YPos = Object:GetPos()
+	local Left, Top, _, _ = Object:GetMargin()
+
+	XPos = XPos + Left
+	YPos = YPos + Top
+
+	local pXPos, pYPos, pWidth, pHeight = pObject:GetX(), pObject:GetY(), pObject:GetWidth(), pObject:GetHeight()
+	local pLeft, pTop, pRight, pBottom = pObject:GetMargin()
+
+	pXPos = pXPos + pLeft
+	pYPos = pYPos + pTop
+
+	pWidth = pWidth - pRight
+	pHeight = pHeight - pBottom
+
+	return XPos >= pXPos and XPos <= pXPos + pWidth and YPos >= pYPos and YPos <= pYPos + pHeight
+end
+
+--[[
 	Used to safely render objects
 ]]
 
 function s0lame.RenderObject(Object, UpdateClipping)
 	if not IsValid(Object) then return false end
 	if not Object:GetVisible() then return false end
+
 	if not Object:ShouldPaint() then return true end -- Can't paint, but don't remove from render stack
+	if not s0lame.ObjectInBounds(Object, Object:GetParent()) then return true end
 
 	xpcall(function()
 		xOffset = xOffset or 0
 		yOffset = yOffset or 0
 
-		local xPos, yPos, Width, Height = Object:GetX(), Object:GetY(), Object:GetWidth(), Object:GetHeight()
-		local left, top, right, bottom = Object:GetMargin()
+		local XPos, YPos, Width, Height = Object:GetX(), Object:GetY(), Object:GetWidth(), Object:GetHeight()
+		local Left, Top, Right, Bottom = Object:GetMargin()
 
 		if UpdateClipping then
-			render_SetScissorRect(xPos, yPos, xPos + Width, yPos + Height, true) -- Can't have more than 1 of these at a time :(
+			render_SetScissorRect(XPos, YPos, XPos + Width, YPos + Height, true) -- Can't have more than 1 of these at a time :(
 		end
 
-		Object:PaintBackground(xPos, yPos, Width, Height)
-		Object:Paint(xPos, yPos, Width, Height)
-		Object:PaintOverlay(xPos, yPos, Width, Height)
+		local oPush = false
+		local pPush = false
+
+		if Object:GetHasStencil() then
+			oPush = true
+			Object:PushStencil()
+		end
+
+		if Object:GetParentHasStencil() then
+			pPush = true
+			Object:GetParent():PushStencil()
+		end
+
+		Object:PaintBackground(XPos, YPos, Width, Height)
+		Object:Paint(XPos, YPos, Width, Height)
+		Object:PaintOverlay(XPos, YPos, Width, Height)
+
+		if oPush then Object:PopStencil() end
+		if pPush then Object:GetParent():PopStencil() end
 		
 		if s0lame.Mouse.CanClickThisFrame and Object:GetClickable() and s0lame.CursorInObject(Object) then
 			s0lame.Mouse.ClickedThisFrame = Object
 		end
 
 		if UpdateClipping then
-			render_SetScissorRect(xPos + left, yPos + top, xPos + Width - right, yPos + Height - bottom, true)
+			render_SetScissorRect(XPos + Left, YPos + Top, XPos + Width - Right, YPos + Height - Bottom, true)
 		end
 
 		for _, v in ipairs(Object:GetChildren()) do
 			s0lame.RenderObject(v, false)
 		end
 
-		Object:NoClipPaint(xPos, yPos, Width, Height)
+		Object:NoClipPaint(XPos, YPos, Width, Height)
 
 		if UpdateClipping then
 			render_SetScissorRect(0, 0, 0, 0, false)
