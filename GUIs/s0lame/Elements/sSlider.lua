@@ -152,12 +152,9 @@ end
 
 function PANEL:PostInit()
 	self:SetSize(100, 15)
-
 	self:SetHandleX(0)
 	self:SetHandleWidth(3)
-
 	self:SetText("")
-
 	self:SetAutoSize(false)
 end
 

@@ -88,6 +88,7 @@ function PANEL:PostInit()
 	self.CloseButton:SetText("X")
 	self.CloseButton:SetScrollable(false)
 	self.CloseButton:SetBackgroundColor(s0lame.Colors.Red)
+	self.CloseButton:SetIgnoreParentBounds(true)
 
 	self.CloseButton.OnLeftClick = function()
 		self:SetVisible(false)

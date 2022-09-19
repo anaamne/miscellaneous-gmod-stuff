@@ -6,11 +6,8 @@ local PANEL = {}
 
 function PANEL:PostInit()
 	self:SetText("")
-
 	self:SetAutoSize(false)
-	
 	self:SetSize(100, 15)
-
 	self:SetBackgroundColor(s0lame.Colors.ControlMedium)
 end
 
@@ -25,25 +22,7 @@ function PANEL:Paint(x, y, w, h)
 	local tw, th = surface.GetTextSize(self:GetText())
 
 	-- Cheat to essentially get a 2nd scissor rect to clip the text
-	render.SetStencilWriteMask(0xFF)
-	render.SetStencilTestMask(0xFF)
-	render.SetStencilReferenceValue(0)
-	render.SetStencilPassOperation(STENCIL_KEEP)
-	render.SetStencilZFailOperation(STENCIL_KEEP)
-	render.ClearStencil()
-
-	render.SetStencilEnable(true)
-	render.SetStencilReferenceValue(1)
-	render.SetStencilCompareFunction(STENCIL_NEVER)
-	render.SetStencilFailOperation(STENCIL_REPLACE)
-
-	draw.NoTexture()
-	surface.SetDrawColor(s0lame.Colors.White)
-	surface.DrawRect(x, y, w, h)
-
-	render.SetStencilCompareFunction(STENCIL_EQUAL)
-	render.SetStencilFailOperation(STENCIL_KEEP)
-
+	self:PushStencil()
 	surface.SetDrawColor(self:GetOutlineColor())
 
 	local ty = y + (h / 2) - (th / 2)
@@ -56,7 +35,7 @@ function PANEL:Paint(x, y, w, h)
 		surface.DrawLine(lx, ty, lx, ty + th)
 	end
 
-	render.SetStencilEnable(false)
+	self:PopStencil()
 end
 
 function PANEL:PaintOverlay(x, y, w, h)
@@ -92,6 +71,31 @@ end
 
 function PANEL:OnLeftClick()
 	s0lame.RequestTyping(self)
+end
+
+function PANEL:PushStencil()
+	render.SetStencilWriteMask(0xFF)
+	render.SetStencilTestMask(0xFF)
+	render.SetStencilReferenceValue(0)
+	render.SetStencilPassOperation(STENCIL_KEEP)
+	render.SetStencilZFailOperation(STENCIL_KEEP)
+	render.ClearStencil()
+
+	render.SetStencilEnable(true)
+	render.SetStencilReferenceValue(1)
+	render.SetStencilCompareFunction(STENCIL_NEVER)
+	render.SetStencilFailOperation(STENCIL_REPLACE)
+
+	draw.NoTexture()
+	surface.SetDrawColor(s0lame.Colors.White)
+	surface.DrawRect(self:GetX(), self:GetY(), self:GetWidth(), self:GetHeight())
+
+	render.SetStencilCompareFunction(STENCIL_EQUAL)
+	render.SetStencilFailOperation(STENCIL_KEEP)
+end
+
+function PANEL:PopStencil()
+	render.SetStencilEnable(false)
 end
 
 return s0lame.RegisterElement("sTextBox", PANEL, "sButton")

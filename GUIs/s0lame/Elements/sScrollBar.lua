@@ -115,31 +115,31 @@ end
 
 function PANEL:PostInit()
 	self:SetText("")
-
 	self:SetAutoSize(false)
-
 	self:SetWidth(15)
-
 	self:SetBackgroundColor(s0lame.Colors.ControlMedium)
-
 	self:SetScrollable(false)
+	self:SetIgnoreParentBounds(true)
 end
 
 function PANEL:ShouldPaint()
 	return IsValid(self:GetParent())
 end
 
-function PANEL:PaintBackground(x, y, w, h)
+function PANEL:PaintBackground(x, y, w, h) end
+function PANEL:Paint(x, y, w, h) end
+function PANEL:PaintOverlay(x, y, w, h) end
+
+function PANEL:NoClipPaint(x, y, w, h) -- Don't clip scrollbars
+	-- Background
 	surface.SetDrawColor(self:GetBackgroundColor())
 	surface.DrawRect(x, y, w, h)
-end
 
-function PANEL:Paint(x, y, w, h)
+	-- Paint
 	surface.SetDrawColor(self:GetOutlineColor())
 	surface.DrawOutlinedRect(x, y, w, h)
-end
 
-function PANEL:PaintOverlay(x, y, w, h)
+	-- Overlay
 	local hy = self:GetHandleY()
 	local hh = self:GetHandleHeight()
 
@@ -169,16 +169,19 @@ function PANEL:OnParentChanged(OldParent, NewParent)
 
 	local _, offset, _, _ = NewParent:GetMargin()
 
+	print(NewParent:GetMargin())
+
 	self:SetHeight(NewParent:GetHeight() - offset)
-	self:SetPos(NewParent:GetWidth() - 15, offset)
+	self:SetPos(NewParent:GetWidth() - self:GetWidth(), offset)
 
 	NewParent.ScrollBar = self
 end
 
-function PANEL:OnParentSizeChanged(_, NewHeight)
+function PANEL:OnParentSizeChanged(NewWidth, NewHeight)
 	local _, offset, _, _ = self:GetParent():GetMargin()
 
 	self:SetHeight(NewHeight - offset)
+	self:SetPos(NewWidth - self:GetWidth(), offset)
 end
 
 function PANEL:Think()

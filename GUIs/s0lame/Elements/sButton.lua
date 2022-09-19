@@ -9,7 +9,6 @@ function PANEL:PostInit()
 	self:SetTextAlignment(TEXT_ALIGN_CENTER)
 
 	self:SetAutoSize(false)
-	
 	self:SetSize(100, 15)
 end
 

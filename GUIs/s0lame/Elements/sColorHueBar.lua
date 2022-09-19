@@ -38,7 +38,6 @@ end
 
 function PANEL:PostInit()
 	self:SetAutoSize(false)
-	
 	self:SetSize(20, 75)
 end
 

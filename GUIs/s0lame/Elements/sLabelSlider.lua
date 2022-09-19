@@ -43,9 +43,7 @@ end
 
 function PANEL:PostInit()
 	self:SetSize(200, 15)
-
 	self:SetText("sSlider")
-
 	self:SetAutoSize(false)
 
 	self.Slider = s0lame.Create("sSlider", self)

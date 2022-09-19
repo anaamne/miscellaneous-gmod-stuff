@@ -24,7 +24,6 @@ end
 
 function PANEL:PostInit()
 	self:SetText("sCheckBox")
-
 	self:SetAutoSize(true)
 
 	surface.SetFont(self:GetFont())

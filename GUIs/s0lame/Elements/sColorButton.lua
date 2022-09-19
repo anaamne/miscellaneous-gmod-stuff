@@ -22,9 +22,7 @@ end
 
 function PANEL:PostInit()
 	self:SetAutoSize(false)
-
 	self:SetSize(15, 15)
-
 	self:SetBackgroundColor(s0lame.Colors.ControlDark)
 
 	self.ColorPickerPanel = s0lame.Create("sPanel")

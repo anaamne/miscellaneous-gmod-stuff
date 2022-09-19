@@ -9,6 +9,8 @@ local PANEL = {
 	Height = 0,
 
 	Margin = nil,
+	IgnoreParentBounds = false,
+	HasStencil = false,
 
 	Visible = false,
 
@@ -25,7 +27,7 @@ local PANEL = {
 
 	Scroll = 0,
 	ScrollBar = nil,
-	Scrollable = true -- Kinda deceiving, actually controls of something should move when its parent is scrolled
+	Scrollable = true -- Kinda deceiving, actually controls if something should move when its parent is scrolled
 }
 
 --------------------------- Accessors ---------------------------
@@ -52,6 +54,24 @@ end
 
 function PANEL:GetMargin()
 	return self.Margin[1], self.Margin[2], self.Margin[3], self.Margin[4]
+end
+
+function PANEL:GetIgnoreParentBounds()
+	return self.IgnoreParentBounds
+end
+
+function PANEL:GetHasStencil()
+	return self.HasStencil
+end
+
+function PANEL:GetHasHiddenStencil() -- This isn't checked by the drawing hook
+	-- For override
+	return false
+end
+
+function PANEL:GetParentHasStencil()
+	local Parent = self:GetParent()
+	return IsValid(Parent) and (Parent:GetHasStencil() or Parent:GetHasHiddenStencil()) or false
 end
 
 function PANEL:GetSize()
@@ -179,6 +199,18 @@ function PANEL:SetMargin(a, b, c, d)
 	self.Margin[2] = math.Round(b)
 	self.Margin[3] = math.Round(c)
 	self.Margin[4] = math.Round(d)
+end
+
+function PANEL:SetIgnoreParentBounds(NewState)
+	s0lame.CheckValueType(1, NewState, "boolean")
+
+	self.IgnoreParentBounds = NewState
+end
+
+function PANEL:SetHasStencil(NewState)
+	s0lame.CheckValueType(1, NewState, "boolean")
+
+	self.HasStencil = NewState
 end
 
 function PANEL:SetVisible(v)
@@ -389,6 +421,14 @@ function PANEL:OnScroll(Delta)
 end
 
 function PANEL:OnParentChanged(OldParent, NewParent)
+	-- For override
+end
+
+function PANEL:PushStencil()
+	-- For override
+end
+
+function PANEL:PopStencil()
 	-- For override
 end
 
