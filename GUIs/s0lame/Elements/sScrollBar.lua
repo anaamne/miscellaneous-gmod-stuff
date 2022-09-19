@@ -169,8 +169,6 @@ function PANEL:OnParentChanged(OldParent, NewParent)
 
 	local _, offset, _, _ = NewParent:GetMargin()
 
-	print(NewParent:GetMargin())
-
 	self:SetHeight(NewParent:GetHeight() - offset)
 	self:SetPos(NewParent:GetWidth() - self:GetWidth(), offset)
 
