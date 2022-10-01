@@ -121,7 +121,8 @@ function PANEL:SetX(x)
 
 	local OldX = self:GetX()
 
-	local ParentX = IsValid(self:GetParent()) and self:GetParent():GetX() or 0
+	local Parent = self:GetParent()
+	local ParentX = IsValid(Parent) and Parent:GetX() or 0
 
 	self.X = math.Round(x + ParentX)
 
@@ -133,7 +134,8 @@ function PANEL:SetY(y)
 
 	local OldY = self:GetY()
 
-	local ParentY = IsValid(self:GetParent()) and self:GetParent():GetY() or 0
+	local Parent = self:GetParent()
+	local ParentY = IsValid(Parent) and Parent:GetY() + Parent:GetScroll() or 0
 
 	self.Y = math.Round(y + ParentY)
 
@@ -147,8 +149,9 @@ function PANEL:SetPos(x, y)
 	local OldX = self:GetX()
 	local OldY = self:GetY()
 
-	local ParentX = IsValid(self:GetParent()) and self:GetParent():GetX() or 0
-	local ParentY = IsValid(self:GetParent()) and self:GetParent():GetY() or 0
+	local Parent = self:GetParent()
+	local ParentX = IsValid(Parent) and Parent:GetX() or 0
+	local ParentY = IsValid(Parent) and Parent:GetY() + Parent:GetScroll() or 0
 
 	self.X = math.Round(x + ParentX)
 	self.Y = math.Round(y + ParentY)
@@ -316,6 +319,7 @@ function PANEL:UpdateChildrenPositions(OldX, OldY, IsScroll)
 		if IsScroll and not v:GetScrollable() then continue end
 
 		local ox, oy = v:GetPos()
+		if IsScroll then oy = oy - self:GetScroll() end
 
 		local OffsetX = ox - OldX
 		local OffsetY = oy - OldY

@@ -38,6 +38,18 @@ function PANEL:AddColumn(Label, Index)
 	table.insert(self.Columns, Index, tostring(Label))
 end
 
+function PANEL:ClearRows()
+	for i = 1, #self.Rows do
+		if IsValid(self.Rows[i]) then
+			self.Rows[i]:Remove()
+		end
+	end
+
+	table.Empty(self.Rows)
+
+	self:SetScroll(0)
+end
+
 --------------------------- Hooks ---------------------------
 
 function PANEL:PostInit()
