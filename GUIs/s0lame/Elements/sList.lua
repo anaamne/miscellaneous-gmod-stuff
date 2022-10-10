@@ -25,6 +25,8 @@ function PANEL:AddRow(...)
 	local NextIndex = #self.Rows + 1
 
 	self.Rows[NextIndex] = NewRow
+	self.ScrollBar:SetMaxValue(math.max((#self.Rows - math.Round((self:GetHeight() - 19) / 15)) * 15), 0)
+
 	NewRow:SetRowIndex(NextIndex)
 end
 
@@ -62,6 +64,7 @@ function PANEL:PostInit()
 	
 	self.ScrollBar = s0lame.Create("sScrollBar", self)
 	self.ScrollBar:SetVisible(true)
+	self.ScrollBar:SetMaxValue(0)
 
 	self:SetMargin(0, 0, self.ScrollBar:GetWidth(), 0)
 end

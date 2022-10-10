@@ -68,7 +68,7 @@ function PANEL:Paint(x, y, w, h)
 
 	_, th = surface.GetTextSize(self:GetValue())
 
-	draw.DrawText(self:GetValue(), self:GetFont(), x + self.Slider:GetWidth() + tw + 5, y + (h / 2) - (th / 2), self:GetTextColor(), self:GetTextAlignment())
+	draw.DrawText(tostring(self:GetValue()), self:GetFont(), x + self.Slider:GetWidth() + tw + 5, y + (h / 2) - (th / 2), self:GetTextColor(), self:GetTextAlignment())
 end
 
 function PANEL:PaintOverlay(x, y, w, h) end
