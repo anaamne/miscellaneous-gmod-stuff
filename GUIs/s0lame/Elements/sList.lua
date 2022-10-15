@@ -28,6 +28,8 @@ function PANEL:AddRow(...)
 	self.ScrollBar:SetMaxValue(math.max((#self.Rows - math.Round((self:GetHeight() - 19) / 15)) * 15), 0)
 
 	NewRow:SetRowIndex(NextIndex)
+
+	return NewRow
 end
 
 function PANEL:AddColumn(Label, Index)
