@@ -25,7 +25,7 @@ function PANEL:AddRow(...)
 	local NextIndex = #self.Rows + 1
 
 	self.Rows[NextIndex] = NewRow
-	self.ScrollBar:SetMaxValue(math.max((#self.Rows - math.Round((self:GetHeight() - 19) / 15)) * 15), 0)
+	self.ScrollBar:SetMaxValue(math.max((#self.Rows - math.Round((self:GetHeight() - 19) / 15)) * 15, 0))
 
 	NewRow:SetRowIndex(NextIndex)
 
