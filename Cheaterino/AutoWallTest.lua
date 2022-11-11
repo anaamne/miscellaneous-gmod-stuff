@@ -93,7 +93,7 @@ local function CWCanPenetrate(Weapon, TraceData)
 end
 
 local function GetWeaponMaxPenetration(Weapon, TraceData) -- It'd be nicer to make a function table indexed by bases but meh
-	if not Weapon:IsScripted() then return nil end -- Engine weapons can't penetrate anything
+	if not Weapon:IsScripted() then return 0, 1 end -- Engine weapons can't penetrate anything
 
 	if WeaponIsBase(Weapon, "bobs") then
 		if GetConVarBoolSafe(Cache.ConVars.Penetration.M9K) then
