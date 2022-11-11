@@ -27,7 +27,7 @@ local Cache = {
 		},
 
 		Materials = {
-			Multipliers = { -- Used for FA:S and SWB since they don't store it in a SWEP table like CW does
+			Multipliers = {
 				[MAT_SAND] = 0.5,
 				[MAT_DIRT] = 0.8,
 				[MAT_METAL] = 1.1,
@@ -78,7 +78,23 @@ local function GetWeaponAmmoName(Weapon)
 	end
 end
 
+-- Shorthand for CW based weapons and similar
+local function CWCanPenetrate(Weapon, TraceData)
+	if Cache.AmmoPen.Materials.NoPenetration[TraceData.MatType] or (Weapon.CanPenetrate ~= nil and not Weapon.CanPenetrate) then
+		return false
+	end
+
+	local Entity = TraceData.Entity
+	if IsValid(Entity) and (Entity:IsPlayer() or Entity:IsNPC()) then
+		return false
+	end
+
+	return -TraceData.Normal:Dot(TraceData.HitNormal) > 0.26
+end
+
 local function GetWeaponMaxPenetration(Weapon, TraceData) -- It'd be nicer to make a function table indexed by bases but meh
+	if not Weapon:IsScripted() then return nil end -- Engine weapons can't penetrate anything
+
 	if WeaponIsBase(Weapon, "bobs") then
 		if GetConVarBoolSafe(Cache.ConVars.Penetration.M9K) then
 			return nil
@@ -111,7 +127,7 @@ local function GetWeaponMaxPenetration(Weapon, TraceData) -- It'd be nicer to ma
 	-- Haven't quite worked out the penetration logic with these weapons yet
 	-- There's more to them than just distance, so some further logic will need implemented at some point
 	if WeaponIsBase(Weapon, "arccw") then
-		if not GetConVarBoolSafe(Cache.ConVars.Penetration.ArcCW) or not Weapon.Penetration then
+		if not GetConVarBoolSafe(Cache.ConVars.Penetration.ArcCW) then
 			return nil
 		end
 
@@ -120,43 +136,21 @@ local function GetWeaponMaxPenetration(Weapon, TraceData) -- It'd be nicer to ma
 	end
 
 	-- CW and FA:S also have retarded ammo names, so even though that logic may be better I don't feel like constructing that right now
+	if not CWCanPenetrate(Weapon, TraceData) then return nil end
+
 	if WeaponIsBase(Weapon, "cw") then
-		if not Weapon.CanPenetrate or not Weapon.PenStr then
-			return nil
-		end
-
-		if not Weapon:canPenetrate(TraceData, TraceData.Normal) then
-			return nil
-		end
-
 		local Strength = Weapon.PenStr * Weapon.PenMod
 		local Multiplier = Weapon.PenetrationMaterialInteraction and Weapon.PenetrationMaterialInteraction[TraceData.MatType] or 1
 		return math.pow(Strength, 2) + (Strength * Multiplier), 1
 	end
 
 	if WeaponIsBase(Weapon, "fas2") then
-		if not Weapon.PenetrationEnabled or not Weapon.PenStr then
-			return nil
-		end
-
-		if Cache.AmmoPen.Materials.NoPenetration[TraceData.MatType] then
-			return nil
-		end
-
 		local Strength = Weapon.PenStr * Weapon.PenMod
 		local Multiplier = Cache.AmmoPen.Materials.Multipliers[TraceData.MatType] or 1
 		return math.pow(Strength, 2) + (Strength * Multiplier), 1
 	end
 
 	if WeaponIsBase(Weapon, "swb") then
-		if not Weapon.CanPenetrate or not Weapon.PenStr then
-			return nil
-		end
-
-		if Cache.AmmoPen.Materials.NoPenetration[TraceData.MatType] then
-			return nil
-		end
-
 		local DataTable = Cache.AmmoPen.Max[GetWeaponAmmoName(Weapon)]
 		if not DataTable then return nil end
 
@@ -168,13 +162,6 @@ local function GetWeaponMaxPenetration(Weapon, TraceData) -- It'd be nicer to ma
 end
 
 local function WeaponCanPenetrate(Weapon, TraceData, Target, TargetPos)
-	if WeaponIsBase(Weapon, "fas2") or WeaponIsBase(Weapon, "cw") then
-		local Entity = TraceData.Entity
-		if IsValid(Entity) and (Entity:IsPlayer() or Entity:IsNPC()) then
-			return false
-		end
-	end
-
 	local MaxDistance, MaxTimes = GetWeaponMaxPenetration(Weapon, TraceData)
 	if not MaxDistance then return false end
 
