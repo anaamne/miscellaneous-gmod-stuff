@@ -93,8 +93,6 @@ local function CWCanPenetrate(Weapon, TraceData)
 end
 
 local function GetWeaponMaxPenetration(Weapon, TraceData) -- It'd be nicer to make a function table indexed by bases but meh
-	if not Weapon:IsScripted() then return 0, 1 end -- Engine weapons can't penetrate anything
-
 	if WeaponIsBase(Weapon, "bobs") then
 		if GetConVarBoolSafe(Cache.ConVars.Penetration.M9K) then
 			return nil
@@ -174,12 +172,16 @@ local function WeaponCanPenetrate(Weapon, TraceData, Target, TargetPos)
 		output = tr -- Optimization woo
 	}
 
-	local Mins, Maxs = Cache.DebugVectors.Mins, Cache.DebugVectors.Maxs
-
 	util.TraceLine(Trace)
+
+	if not Weapon:IsScripted() then -- Engine weapons can't penetrate anything
+		return TraceData.Entity == Target
+	end
 
 	local CurTimes = 1
 	local LastPos = tr.HitPos
+
+	local Mins, Maxs = Cache.DebugVectors.Mins, Cache.DebugVectors.Maxs
 
 	debugoverlay.Text(tr.HitPos, CurTimes, 0.1, false)
 	debugoverlay.Box(tr.HitPos, Mins, Maxs, 0.1, Cache.Colors.Orange)
@@ -291,7 +293,7 @@ hook.Add("CreateMove", "pentest", function(cmd)
 		end
 	end
 
-	if not IsValid(Target) then return end
+	if not IsValid(Target) or not Target:Alive() then return end
 
 	local StartPos = LocalPlayer():EyePos()
 	local EndPos = Target:WorldSpaceCenter()
@@ -319,5 +321,19 @@ hook.Add("CreateMove", "pentest", function(cmd)
 
 	cmd:SetViewAngles((EndPos - LocalPlayer():EyePos()):GetNormalized():Angle())
 
-	debugoverlay.Line(StartPos, tr.HitPos, 0.1, LineColor, true)
+	local NormalHitPos = tr.HitPos + tr.HitNormal
+
+	debugoverlay.Line(StartPos, NormalHitPos, 0.1, LineColor, true)
+
+	local NormalAngle = tr.HitNormal:Angle()
+	local Up = NormalAngle:Up() * 6
+	local Right = NormalAngle:Right() * 6
+
+	local Mins, Maxs = Cache.DebugVectors.Mins, Cache.DebugVectors.Maxs
+
+	debugoverlay.Box(NormalHitPos, Mins, Maxs, 0.1, LineColor)
+	debugoverlay.Box(NormalHitPos + Up, Mins, Maxs, 0.1, LineColor)
+	debugoverlay.Box(NormalHitPos - Up, Mins, Maxs, 0.1, LineColor)
+	debugoverlay.Box(NormalHitPos + Right, Mins, Maxs, 0.1, LineColor)
+	debugoverlay.Box(NormalHitPos - Right, Mins, Maxs, 0.1, LineColor)
 end)
