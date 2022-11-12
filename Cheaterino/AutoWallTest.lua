@@ -336,7 +336,7 @@ hook.Add("CreateMove", "pentest", function(cmd)
 
 	local NormalHitPos = tr.HitPos + tr.HitNormal
 
-	debugoverlay.Line(StartPos, NormalHitPos, 0.1, LineColor, true)
+	debugoverlay.Line(StartPos, NormalHitPos, 0.1, LineColor, true) -- For some reason rendering this debug stuff causes a good bit of fps drop, not sure why it's so intensive but oh well it's only for debugging
 
 	local NormalAngle = tr.HitNormal:Angle()
 	local Up = NormalAngle:Up() * 6
