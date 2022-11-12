@@ -6,6 +6,8 @@
 
 local Cache = {
 	ConVars = {
+		SetViewAngles = CreateClientConVar("autowall_setviewangles", 1, true, false, "", 0, 1),
+
 		Penetration = {
 			ArcCW = GetConVar("arccw_enable_penetration"),
 			M9K = GetConVar("M9KDisablePenetration"),
@@ -197,8 +199,15 @@ local function WeaponCanPenetrate(Weapon, TraceData, Target, TargetPos)
 		if tr.Entity ~= World then
 			if tr.Entity == Target then break end -- Success!
 
+			local Entity = tr.Entity
+
 			Trace.start = LastPos
-			Trace.filter[2] = tr.Entity
+
+			util.TraceLine(Trace)
+
+			Trace.start = tr.HitPos - TraceData.Normal
+			Trace.endpos = LastPos
+			Trace.filter[2] = Entity
 
 			util.TraceLine(Trace)
 		else
@@ -219,6 +228,8 @@ local function WeaponCanPenetrate(Weapon, TraceData, Target, TargetPos)
 
 			Trace.endpos = OriginalEndPos
 		end
+
+		debugoverlay.Line(Trace.start, tr.HitPos, 0.1, Cache.Colors.Purple, true)
 
 		local ThisDistance
 
@@ -319,7 +330,9 @@ hook.Add("CreateMove", "pentest", function(cmd)
 		LineColor = Cache.Colors.Green
 	end
 
-	cmd:SetViewAngles((EndPos - LocalPlayer():EyePos()):GetNormalized():Angle())
+	if Cache.ConVars.SetViewAngles:GetBool() then
+		cmd:SetViewAngles((EndPos - LocalPlayer():EyePos()):GetNormalized():Angle())
+	end
 
 	local NormalHitPos = tr.HitPos + tr.HitNormal
 
