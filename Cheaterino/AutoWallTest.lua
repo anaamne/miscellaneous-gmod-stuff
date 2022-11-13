@@ -273,7 +273,15 @@ local function WeaponCanPenetrate(Weapon, TraceData, Target, TargetPos)
 				debugoverlay.Text(LastPos, CurTimes, 0.1, false)
 				debugoverlay.Box(LastPos, Mins, Maxs, 0.1, Cache.Colors.Orange)
 			else -- At the end or in some kind of empty space
-				break
+				if IsTFA then
+					ThisDistance = tr.HitPos:Distance(LastPos) / 88.88
+				else
+					ThisDistance = math.floor(tr.HitPos:DistToSqr(LastPos))
+				end
+
+				if ThisDistance <= MaxDistance then -- This penetration is good
+					break
+				end
 			end
 		end
 	end
