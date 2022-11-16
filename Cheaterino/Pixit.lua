@@ -74,7 +74,7 @@ Cache.Stealer.Classes.spawned_money = function(cmd, Entity, TraceOutput) -- This
 
 	Cache.Stealer.Angles.Reset = true
 
-	return true
+	return true -- Return true to break out of the loop for this tick
 end
 
 Cache.Stealer.Classes.spawned_ammo = Cache.Stealer.Classes.spawned_money
@@ -155,7 +155,7 @@ end
 
 -- https://www.gmodstore.com/market/view/xenin-care-package-the-superior-airdrop-system
 Cache.Stealer.Classes.care_package = function(_, Entity)
-	if Cache.Stealer.ClaimCache[Entity] then return end -- I'd like a better way to do this but oh well
+	if Cache.Stealer.ClaimCache[Entity] then return false end -- I'd like a better way to do this but oh well
 
 	for i = 1, CarePackage.Config.ItemsPerDrop do
 		net.Start("CarePackage.Menu.Loot")
@@ -166,6 +166,8 @@ Cache.Stealer.Classes.care_package = function(_, Entity)
 	end
 
 	Cache.Stealer.ClaimCache[Entity] = true
+
+	return false
 end
 
 ---------------------- Hooks ----------------------
