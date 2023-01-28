@@ -1,18 +1,18 @@
 --[[
-	https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
-
-	I'm likely never going to finish this
+	Edit of https://github.com/awesomeusername69420/miscellaneous-gmod-stuff
 
 	Features:
 		Ragebot:
 			Aimbot
 			Silent Aim
+			NoSpread
+			Aim Triangle
 			Auto Shoot
 			Anti Recoil
 			Auto Wall
 
 		HvH:
-			Customizable Anti Aim (Real and fake might be swapped I never actually tested it)
+			Customizable Anti Aim
 			LBY breaker (But only sometimes for some reason)
 			Fakelag (Air + ground)
 
@@ -36,12 +36,23 @@
 
 	Requires
 		Frozen2
-		https://github.com/Facepunch/garrysmod/pull/1590
-		https://github.com/awesomeusername69420/miscellaneous-gmod-stuff/blob/main/GUIs/fgui/fgui.lua
+		https://github.com/anaamne/gary-mod/tree/main/chet/cheat_modules
 ]]
 
-include("includes/modules/outline.lua") -- https://github.com/Facepunch/garrysmod/pull/1590
-include("fgui.lua")
+local function LoadModules(Directory)
+	if not file.Exists(Directory, "MOD") and not file.IsDir(Directory, "MOD") then return end
+
+	local files = file.Find(string.format("%s/*", Directory), "MOD")
+	
+	for _, v in next, files do
+		local code = file.Read(string.format("%s/%s", Directory, v), "MOD")	
+		RunString(code)
+		
+		print("Loaded " .. v)
+	end
+end
+
+LoadModules("lua/cheat_modules")
 
 local fgui = fgui.Hide()
 
@@ -69,6 +80,16 @@ local Cache = {
 	FakeLagTick = 0,
 	BhopStickTick = 0,
 
+    HookName = tostring({}),
+
+    Hooks = {
+        Local = {}
+    },
+
+	TraceOutput = {},
+
+	LastUpdate = 0,
+
 	DeathSays = {
 		[DEATHSAY_MODE_HACKUSATE] = {
 			"Nice hacks, kid",
@@ -88,6 +109,25 @@ local Cache = {
 	
 	Entities = {},
 	Players = {},
+
+	Skyboxes = {},
+	SkyTextures = {},
+
+	FOVTri = {
+		{x = 0, y = 0},
+		{x = 0, y = 0},
+		{x = 0, y = 0},
+	},
+
+	ScreenData = {
+		ScrW = ScrW(),
+		ScrH = ScrH(),
+		
+		Centers = {
+			X = math.floor(ScrW() / 2),
+			Y = math.floor(ScrH() / 2)
+		}
+	},
 
 	CalcView = {
 		EyePos = LocalPlayer():EyePos(),
@@ -135,8 +175,28 @@ local Cache = {
 		m_pitch = GetConVar("m_pitch"),
 		m_yaw = GetConVar("m_yaw"),
 
+		cl_interp = GetConVar("cl_interp"),
+
+		sv_minupdaterate = GetConVar("sv_minupdaterate"),
+		sv_maxupdaterate = GetConVar("sv_maxupdaterate"),
+		
+		cl_updaterate = GetConVar("cl_updaterate"),
+		
+		cl_interp_ratio = GetConVar("cl_interp_ratio"),
+		sv_client_min_interp_ratio  = GetConVar("sv_client_min_interp_ratio"),
+		sv_client_max_interp_ratio = GetConVar("sv_client_max_interp_ratio"),
+		
+		cl_interpolate = GetConVar("cl_interpolate"),
+
 		cl_sidespeed = GetConVar("cl_sidespeed"),
 		cl_forwardspeed = GetConVar("cl_forwardspeed"),
+		
+		sv_tfa_recoil_legacy = GetConVar("sv_tfa_recoil_legacy"),
+		
+		cl_interp_ratio = GetConVar("cl_interp_ratio"),
+		
+		ai_shot_bias_min = GetConVar("ai_shot_bias_min"),
+		ai_shot_bias_max = GetConVar("ai_shot_bias_max"),
 
 		Penetration = {
 			ArcCW = GetConVar("arccw_enable_penetration"),
@@ -234,6 +294,8 @@ local Cache = {
 		end
 	},
 
+	WeaponCones = {},
+
 	AmmoPenetration = {
 		M9K = {
 			["357"] = 144,
@@ -259,20 +321,87 @@ local Cache = {
 		Protected = {
 			"LibbyProtectedSpawn" -- Libby's
 		}
+	},
+
+	FreeCam = {
+		Speeds = {
+			Normal = 150,
+			Sprint = 250,
+			Walk = 75
+		},
+	
+		Position = LocalPlayer():EyePos(),
+		Angle = angle_zero * 1,
+		PreAngle = angle_zero * 1
 	}
+}
+
+Cache.WeaponConeFunctions = {
+	tfa = function(Weapon, _, WeaponCone, ForwardAngle)
+		local Cone, Recoil = Weapon:CalculateConeRecoil()
+	
+		local Yaw, Pitch = Weapon:ComputeBulletDeviation(1, 1, Cone)
+	
+		local WeaponAngle = Angle(ForwardAngle)
+		local BulletAngle = Angle(WeaponAngle)
+	
+		if Cache.ConVars.sv_tfa_recoil_legacy:GetBoolSafe() then
+			WeaponAngle:Add(Cache.LocalPlayer:GetViewPunchAngles())
+		elseif Weapon:HasRecoilLUT() then
+			WeaponAngle:Add(Weapon:GetRecoilLUTAngle())
+		else
+			local PitchPunch = Weapon:GetViewPunchP()
+			local YawPunch = Weapon:GetViewPunchY()
+	
+			PitchPunch = PitchPunch - PitchPunch * Cache.TickInterval
+			YawPunch = YawPunch - YawPunch * Cache.TickInterval
+	
+			WeaponAngle.pitch = WeaponAngle.pitch + PitchPunch
+			WeaponAngle.yaw = WeaponAngle.yaw + YawPunch
+		end
+	
+		WeaponAngle:Normalize()
+	
+		local Up = BulletAngle:Up()
+		local Right = BulletAngle:Right()
+	
+		BulletAngle:RotateAroundAxis(Up, Yaw)
+		BulletAngle:RotateAroundAxis(Right, Pitch)
+	
+		local Difference = WeaponAngle - BulletAngle
+	
+		ForwardAngle:Sub(Difference)
+	
+		return true
+	end,
+		
+	cw = function(Weapon, Command, _, ForwardAngle)
+		local Cone = Weapon.CurCone
+	
+		math.randomseed(Command:CommandNumber())
+		ForwardAngle:Add(Angle(-math.Rand(-Cone, Cone), -math.Rand(-Cone, Cone), 0) * 25)
+	
+		return true
+	end
 }
 
 local Vars = {
 	Aimbot = {
-		Enabled = false,
+		Enabled = true,
 		
-		Key = KEY_NONE,
+		Key = KEY_F,
 		Silent = false,
-		AutoShoot = false,
-		AntiRecoil = false,
+		AutoShoot = true,
+		NoSpread = true,
+		AntiRecoil = true,
 		AutoWall = false,
 		IgnoreFriends = false,
 		QuickScan = false,
+
+		AimCone = {
+			Enabled = false,
+			FOV = 16
+		},
 		
 		Classes = {},
 		Friends = {},
@@ -321,20 +450,20 @@ local Vars = {
 	
 	Visuals = {
 		ESP = {
-			Enabled = false,
+			Enabled = true,
 		
-			Box = false,
-			Name = false,
+			Box = true,
+			Name = true,
 			Weapon = false,
 			Skeleton = false,
-			Flags = false,
+			Flags = true,
 			Outline = false,
 			
 			Health = {
-				Enabled = false,
+				Enabled = true,
 
 				Bar = false,
-				Amount = false
+				Amount = true
 			},
 
 			Chams = {
@@ -393,10 +522,23 @@ local Vars = {
 					}
 				}
 			}
+		},
+	
+		ChinaHat = {
+			Enabled = false, 
+			Pitch = 25,
+			Length = 15, 
+			Color = Color(255, 255, 0, 75)
 		}
 	},
 
 	Miscellaneous = {
+		FreeCam = {
+			Enabled = false,
+			Speed = 15
+		},
+		
+		
 		KillSound = {
 			Enabled = false,
 			Path = "pSounds/bonk.mp3"
@@ -426,6 +568,65 @@ local meta_en_g = _Registry.Entity
 local meta_pl_g = _Registry.Player
 local meta_wn_g = _Registry.Weapon
 
+do
+	local CurrSky = GetConVar("sv_skyname"):GetString()
+
+	if not CurrSky then
+		return error("Failed to get sky name") -- Black magic
+	end
+
+	local SkyboxTypes = {"lf", "ft", "rt", "bk", "dn", "up"} -- Retarded
+
+	for i = 1, #SkyboxTypes do
+		Cache.SkyTextures[i] = Material("skybox/".. CurrSky.. SkyboxTypes[i]) -- Get the current sky materials
+	end
+
+	local files, _ = file.Find("materials/skybox/*", "GAME") -- Get list of skyboxes
+
+	if #files < 1 then
+		return error("No skybox files found") -- Sad times
+	end
+
+	local parsed = {}
+
+	for _, v in next, files do
+		local name = v:sub(1, #v - 6) -- Remove file extension and stupid 2 letters at the end
+		
+		if parsed[name] then continue end
+		
+		local temp = {}
+		local breakouter = false
+		
+		for i = 1, #SkyboxTypes do
+			local mat = Material("skybox/" .. name .. SkyboxTypes[i]) -- This is very laggy the first time the script is loaded
+			
+			if not mat or mat:IsError() then -- No bueno
+				breakouter = true
+				break
+			end
+			
+			local texture = mat:GetTexture("$basetexture")
+			
+			if not texture or texture:IsError() or texture:IsErrorTexture() then -- No bueno
+				breakouter = true
+				break
+			end
+			
+			temp[#temp + 1] = texture -- Bueno!!
+		end
+		
+		parsed[name] = true
+		
+		if breakouter then continue end
+		
+		Cache.Skyboxes[name] = table.Copy(temp)
+	end
+
+	if table.Count(Cache.Skyboxes) < 1 then
+		return error("No skyboxes found") -- Sadder times
+	end
+end
+
 --[[
 	Panel setup
 ]]
@@ -435,7 +636,7 @@ MainFrame:SetVisible(false)
 MainFrame:SetTitle("Best cheat you've ever seen")
 MainFrame:SetSize(600, 700)
 MainFrame:SetDeleteOnClose(false)
-MainFrame:SetX((ScrW() / 2) - MainFrame:GetWide() - 10)
+MainFrame:SetX((Cache.ScreenData.ScrW / 2) - MainFrame:GetWide() - 10)
 MainFrame:CenterVertical()
 
 MainFrame._OldPerformLayout = MainFrame.PerformLayout
@@ -490,6 +691,14 @@ MainFrame.PerformLayout = function(self, w, h)
 	AimbotQuickScan:SetPos(50, 200)
 	AimbotQuickScan:SetText("Quick Scan")
 	AimbotQuickScan:SetVarTable(Vars.Aimbot, "QuickScan")
+
+	local AimbotAdjustAimConeFov = fgui.Create("FHSlider", AimbotPanel)
+	AimbotAdjustAimConeFov:SetText("Cone Fov")
+	AimbotAdjustAimConeFov:SetPos(50, 225)
+	AimbotAdjustAimConeFov:SetWide(400)
+	AimbotAdjustAimConeFov:SetMinMax(0, 60)
+	AimbotAdjustAimConeFov:SetDecimals(0)
+	AimbotAdjustAimConeFov:SetVarTable(Vars.Aimbot.AimCone, "FOV")
 
 	local HvHPanel = MainTabs[2]
 
@@ -622,6 +831,38 @@ MainFrame.PerformLayout = function(self, w, h)
 	VisualsESPOutline:SetPos(30, 240)
 	VisualsESPOutline:SetText("Outline")
 	VisualsESPOutline:SetVarTable(Vars.Visuals.ESP, "Outline")
+	
+	local VisualHatSection = fgui.Create("FHSection", VisualPanel)
+	VisualHatSection:SetSize(560, 160)
+	VisualHatSection:SetPos(5, 270)
+	VisualHatSection:SetTitle("China Hat")
+	
+	local VisualsHatEnabled = fgui.Create("FHCheckBox", VisualHatSection)
+	VisualsHatEnabled:SetPos(25, 25)
+	VisualsHatEnabled:SetText("Enabled")
+	VisualsHatEnabled:SetVarTable(Vars.Visuals.ChinaHat, "Enabled")
+	
+	local VisualsHatPitch = fgui.Create("FHSlider", VisualHatSection)
+	VisualsHatPitch:SetText("Pitch")
+	VisualsHatPitch:SetPos(30, 40)
+	VisualsHatPitch:SetWide(400)
+	VisualsHatPitch:SetMinMax(-89, 89)
+	VisualsHatPitch:SetDecimals(0)
+	VisualsHatPitch:SetVarTable(Vars.Visuals.ChinaHat, "Pitch")
+	
+	local VisualsHatLength = fgui.Create("FHSlider", VisualHatSection)
+	VisualsHatLength:SetText("Length")
+	VisualsHatLength:SetPos(30, 65)
+	VisualsHatLength:SetWide(400)
+	VisualsHatLength:SetMinMax(1, 80)
+	VisualsHatLength:SetDecimals(0)
+	VisualsHatLength:SetVarTable(Vars.Visuals.ChinaHat, "Length")
+	
+	local VisualsHatColor = fgui.Create("FHColorButton", VisualHatSection)
+	VisualsHatColor:SetPos(20, 100)
+	VisualsHatColor:SetSize(100, 25)
+	VisualsHatColor:SetText("Hat Color")
+	VisualsHatColor:SetVarTable(Vars.Visuals.ChinaHat, "Color")
 
 	local MiscellaneousPanel = MainTabs[4]
 
@@ -665,6 +906,38 @@ MainFrame.PerformLayout = function(self, w, h)
 	MiscellaneousDeathSayMode.FHOnSelect = function(self, index, value, data)
 		Vars.Miscellaneous.DeathSay.Mode = data
 	end
+
+	local MiscellaneousSkyboxChanger = fgui.Create("FHDropDown", MiscellaneousPanel)
+	MiscellaneousSkyboxChanger:SetSize(100, 20)
+	MiscellaneousSkyboxChanger:SetPos(50, 195)
+	MiscellaneousSkyboxChanger:SetText("Skybox Changer")
+
+	for k, _ in pairs(Cache.Skyboxes) do
+		MiscellaneousSkyboxChanger:AddChoice(k)
+	end
+
+	MiscellaneousSkyboxChanger.FHOnSelect = function(self, index, value) 
+		if not Cache.Skyboxes[value] then return end
+
+		SelectedSky = value
+			
+		for i = 1, #Cache.SkyTextures do
+			Cache.SkyTextures[i]:SetTexture("$basetexture", Cache.Skyboxes[SelectedSky][i])
+		end 
+	end
+
+	local MiscellaneousFreeCam = fgui.Create("FHCheckBox", MiscellaneousPanel)
+	MiscellaneousFreeCam:SetPos(25, 225)
+	MiscellaneousFreeCam:SetText("Free Cam")
+	MiscellaneousFreeCam:SetVarTable(Vars.Miscellaneous.FreeCam, "Enabled")
+	
+	local MiscellaneousFreeCamSpeed = fgui.Create("FHSlider", MiscellaneousPanel)
+	MiscellaneousFreeCamSpeed:SetText("Cam Speed")
+	MiscellaneousFreeCamSpeed:SetPos(25, 250)
+	MiscellaneousFreeCamSpeed:SetWide(400)
+	MiscellaneousFreeCamSpeed:SetMinMax(1, 120)
+	MiscellaneousFreeCamSpeed:SetDecimals(0)
+	MiscellaneousFreeCamSpeed:SetVarTable(Vars.Miscellaneous.FreeCam, "Speed")
 end
 
 -- Env list
@@ -675,7 +948,7 @@ EnvFrame:SetTitle("Environment List")
 EnvFrame:SetSize(700, 600)
 EnvFrame:ShowCloseButton(false)
 EnvFrame:SetDeleteOnClose(false)
-EnvFrame:SetX((ScrW() / 2) + 10)
+EnvFrame:SetX((Cache.ScreenData.ScrW / 2) + 10)
 EnvFrame:CenterVertical()
 
 EnvFrame._OldPerformLayout = EnvFrame.PerformLayout
@@ -752,7 +1025,7 @@ EnvFrame.PerformLayout = function(self, w, h)
 		local name = valid and ply:GetName() or ""
 		local id64 = valid and (ply:SteamID64() or "BOT") or ""
 		local origin = valid and ply:GetPos() or vector_origin
-		local angles = (valid and ply:EyeAngles() or angle_zero):GetFixed()
+		local angles = (valid and ply:EyeAngles() or angle_zero)
 		local velocity = valid and ply:GetVelocity():Length() or 0
 
 		origin = table.concat({
@@ -857,10 +1130,6 @@ end)
 
 -- Metatable functions
 
-meta_an_g.GetFixed = function(self)
-	return Angle(math.Clamp(math.NormalizeAngle(self.pitch), -89, 89), math.NormalizeAngle(self.yaw), math.NormalizeAngle(self.roll))
-end
-
 meta_pl_g.IsProtected = function(self)
 	for i = 1, #Cache.NetVars.Protected do
 		if self:GetNWBool(Cache.NetVars.Protected[i], false) then
@@ -939,7 +1208,7 @@ meta_en_g.GetScreenCorners = function(self)
 
 	local left, right, top, bottom = coords[1].x, coords[1].x, coords[1].y, coords[1].y
 
-	for _, v in ipairs(coords) do
+	for _, v in next, coords do
 		if left > v.x then
 			left = v.x
 		end
@@ -1012,42 +1281,6 @@ meta_wn_g.IsBasedOnShort = function(self, base)
 	return self:GetBase() == base
 end
 
-meta_wn_g.CanShoot = function(self)
-	local name = self:GetPrintName():lower()
-
-	for _, v in ipairs(Cache.NotGuns) do
-		if name == v then
-			return false
-		end
-
-		if name:find(v) then
-			local breakouter = false
-
-			for _, t in ipairs(Cache.ActuallyGuns) do
-				if name:find(t) then
-					breakouter = true
-					break
-				end
-			end
-
-			if breakouter then
-				continue
-			end
-
-			return false
-		end
-	end
-
-	local base = self:GetBase() or "UNKNOWN"
-	local ExtraCheck = true 
-
-	if Cache.ExtraWeaponChecks[base] then
-		ExtraCheck = Cache.ExtraWeaponChecks[base](self)
-	end
-
-	return Cache.ServerTime >= self:GetNextPrimaryFire() and ExtraCheck
-end
-
 meta_wn_g.GetNiceName = function(self)
 	local name = self:GetClass()
 	
@@ -1095,6 +1328,107 @@ end
 
 -- Normal lame functions
 
+local function GetEyePos()
+	return Cache.CalcView.EyePos
+end
+
+local function GetEyeAngles()
+	return Cache.CalcView.EyeAngles
+end
+
+local function GetFOV()
+	return Cache.CalcView.FOV
+end
+
+local function GetZNear()
+	return Cache.CalcView.ZNear
+end
+
+local function UpdateCalcViewData(data)
+	if not data then return end
+
+	Cache.CalcView.EyePos = data.origin
+	Cache.CalcView.EyeAngles = data.angles
+	Cache.CalcView.FOV = data.fov
+	Cache.CalcView.ZNear = data.znear
+end
+
+local function AddHook(Type, Function)
+	local Name = Cache.HookName
+
+	Cache.Hooks.Local[#Cache.Hooks.Local + 1] = {Type, Name}
+	
+	print(string.format("Hook Added! %s %s", Type, Name))
+	
+	hook.Add(Type, Name, Function)
+end
+
+local function FixAngle(Angle)
+    Angle.pitch = math.Clamp(math.NormalizeAngle(Angle.pitch), -89, 89)
+    Angle.yaw = math.NormalizeAngle(Angle.yaw)
+    Angle.roll = math.NormalizeAngle(Angle.roll)
+end
+
+local function TickToTime(Tick)
+	return Cache.TickInterval * Tick
+end
+
+-- Gets the CurTime of the server
+local function GetServerTime()
+	return TickToTime(Cache.LocalPlayer:GetInternalVariable("m_nTickBase"))
+end
+
+local function CanShoot()
+	local Weapon = Cache.LocalPlayer:GetActiveWeapon()
+	if not IsValid(Weapon) then return false end
+
+	local WeaponName = string.lower(Weapon.PrintName or Weapon:GetPrintName())
+	
+	for i = 1, #Cache.NotGuns do
+		if string.find(WeaponName, Cache.NotGuns[i]) then
+			local BreakOuter = false
+	
+			for i = 1, #Cache.ActuallyGuns do
+				if string.find(WeaponName, Cache.ActuallyGuns[i]) then
+					BreakOuter = true
+					break
+				end
+			end
+	
+			if BreakOuter then continue end
+	
+			return false
+		end
+	end
+	
+	local Base = Weapon:GetBase()
+	local BaseCheck = Cache.ExtraWeaponChecks[Base] and Cache.ExtraWeaponChecks[Base](Weapon) or true
+	
+	return GetServerTime() >= Weapon:GetNextPrimaryFire() and BaseCheck	
+end
+
+local function GetLerpTime()
+	if not Cache.ConVars.cl_interpolate:GetBoolSafe() then
+		return 0
+	end
+	
+	if Cache.ConVars.sv_minupdaterate and Cache.ConVars.sv_maxupdaterate then
+		Cache.ConVars.cl_updaterate = Cache.ConVars.sv_maxupdaterate:GetInt()
+	end
+
+	local ratio = Cache.ConVars.cl_interp_ratio:GetFloatSafe()
+	if ratio == 0 then
+		ratio = 1
+	end
+
+	local lerp = Cache.ConVars.cl_interp:GetFloatSafe()
+	if Cache.ConVars.sv_client_max_interp_ratio and Cache.ConVars.sv_client_max_interp_ratio and Cache.ConVars.sv_client_min_interp_ratio:GetFloatSafe() ~= 1 then
+		ratio = math.Clamp(ratio, Cache.ConVars.sv_client_min_interp_ratio:GetFloatSafe(), Cache.ConVars.sv_client_max_interp_ratio:GetFloatSafe())
+	end
+
+	return math.max(lerp, ratio / Cache.ConVars.cl_updaterate)
+end
+
 local function ToggleMenu()
 	local stat = not MainFrame:IsVisible()
 	
@@ -1126,11 +1460,8 @@ local function UpdateEntityCache()
 end
 
 local function UpdateCachedPlayers()
-	Cache.Players = {}
-
-	for i = 2, player.GetCount() + 1 do -- Faster than player.GetAll
-		Cache.Players[#Cache.Players + 1] = Cache.Entities[i] or NULL
-	end
+    table.Empty(Cache.Players)
+	table.Merge(Cache.Players, player.GetAll())
 end
 
 local function UpdatePlayerList()
@@ -1267,52 +1598,114 @@ local function WeaponCanPenetrate(weapon, tracedata)
 	return false
 end
 
-local function IsVisible(pos, entity, hitgroup)
-	pos = pos or vector_origin
-	
-	local td = {
+local function IsVisible(Position, Entity)
+	local Trace = {
+		output = Cache.TraceOutput,
+
 		start = Cache.LocalPlayer:EyePos(),
-		endpos = pos,
+		endpos = Position,
 		filter = Cache.LocalPlayer,
-		mask = MASK_SHOT,
-		ignoreworld = false
+		mask = MASK_SHOT
 	}
 
-	local tr = util.TraceLine(td)
-	
-	local result = false
+	util.TraceLine(Trace)
 
-	if IsValid(entity) then
-		if hitgroup then
-			result = tr.Entity == entity and tr.HitGroup == hitgroup
-		else
-			result = tr.Entity == entity
+	if Cache.TraceOutput.Entity == Entity then
+		return true, 0, Cache.TraceOutput.Fraction
+	elseif Vars.Aimbot.AutoWall then
+		local Weapon = Cache.LocalPlayer:GetActiveWeapon()
+		if not IsValid(Weapon) then
+			return false, 0, Cache.TraceOutput.Fraction
 		end
+
+		local Hit, Penetrations = WeaponCanPenetrate(Weapon, Cache.TraceOutput, Entity, Position)
+		Hit = Hit or false
+		Penetrations = Penetrations or 0
+
+		return Hit, Penetrations, Cache.TraceOutput.Fraction
 	else
-		result = tr.Fraction == 1
+		return false, 0, Cache.TraceOutput.Fraction
+	end
+end
+
+---- new aim functions
+
+local function Sign(p1, p2, p3)
+	if not p1 or not p2 or not p3 then return 0 end
+
+	return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y)
+end
+
+local function IsPointInTriangle(pt, tri)
+	if not pt or not tri then return false end
+
+	local v1, v2, v3 = tri[1], tri[2], tri[3]
+	local n, p
+
+	local test1 = Sign(pt, v1, v2)
+	local test2 = Sign(pt, v2, v3)
+	local test3 = Sign(pt, v3, v1)
+
+	n = test1 < 0 or test2 < 0 or test3 < 0
+	p = test1 > 0 or test2 > 0 or test3 > 0
+
+	return not (n and p)
+end
+
+local function CalculateAntiRecoil(Weapon)
+	if Weapon:GetClass() == "weapon_pistol" then
+		return angle_zero
 	end
 
-	if not result and Vars.Aimbot.AutoWall then
-		CanPen, PenPos = WeaponCanPenetrate(Cache.LocalPlayer:GetActiveWeapon(), tr)
-			
-		if PenPos then
-			td.start = PenPos
-		end
-		
-		tr = util.TraceLine(td)
-
-		if IsValid(entity) then
-			if hitgroup then
-				result = CanPen and tr.Entity == entity and tr.HitGroup == hitgroup
-			else
-				result = CanPen and tr.Entity == entity
-			end
-		else
-			result = CanPen and tr.Fraction == 1
+	if Weapon:IsScripted() then
+		if Weapon:GetBase() ~= "cw" and Weapon:GetBase() ~= "fas2" then
+			return angle_zero
 		end
 	end
 
-	return result
+	return Cache.LocalPlayer:GetViewPunchAngles()
+end
+
+local function CalculateNoSpread(Weapon, cmd, ForwardAngle)
+	if not Vars.Aimbot.NoSpread then return end
+
+	local WeaponCone = Cache.WeaponCones[Weapon:GetClass()]
+	if not WeaponCone then return end
+
+	if type(WeaponCone) == "function" then
+		WeaponCone = WeaponCone(Weapon, cmd)
+	end
+	
+	if Cache.WeaponConeFunctions[Weapon:GetBase()] then
+		Cache.WeaponConeFunctions[Weapon:GetBase()](Weapon, cmd, WeaponCone, ForwardAngle)
+		return
+	end
+
+	local Seed = md5.PseudoRandom(cmd:CommandNumber())
+
+	local X = md5.EngineSpread[Seed].X
+	local Y = md5.EngineSpread[Seed].Y
+
+	local Forward = ForwardAngle:Forward()
+	local Right = ForwardAngle:Right()
+	local Up = ForwardAngle:Up()
+
+	local SpreadVector = Forward + (X * WeaponCone.x * Right * -1) + (Y * WeaponCone.y * Up * -1)
+	ForwardAngle:Set(SpreadVector:Angle())
+end
+
+local function PredictTargetPosition(Position, Entity)
+	if not Cache.ConVars.cl_interpolate:GetBoolSafe() then return end
+
+	local Velocity = Entity:GetAbsVelocity()
+	if Velocity:IsZero() then return end
+
+	local FrameTime = RealFrameTime()
+	--local InterpolationTime = GetInterpolationTime()
+	--local Difference = math.max(FrameTime, InterpolationTime) - math.min(FrameTime, InterpolationTime)
+
+	Velocity:Mul(FrameTime)
+	Position:Add(Velocity)
 end
 
 local function GetHitBoxPositions(entity) -- Scans hitboxes for aim points
@@ -1320,7 +1713,7 @@ local function GetHitBoxPositions(entity) -- Scans hitboxes for aim points
 		return nil
 	end
 
-	local IsNull = true
+	local null = true
 
 	local data = {
 		[HITGROUP_HEAD] = {},
@@ -1331,16 +1724,20 @@ local function GetHitBoxPositions(entity) -- Scans hitboxes for aim points
 	for hitset = 0, entity:GetHitboxSetCount() - 1 do
 		for hitbox = 0, entity:GetHitBoxCount(hitset) - 1 do
 			local hitgroup = entity:GetHitBoxHitGroup(hitbox, hitset)
-			if not hitgroup or not data[hitgroup] then continue end
+
+			if not hitgroup or not data[hitgroup] then continue end -- Should be impossible but just in case
 
 			local bone = entity:GetHitBoxBone(hitbox, hitset)
 			local mins, maxs = entity:GetHitBoxBounds(hitbox, hitset)
+
 			if not bone or not mins or not maxs then continue end
 
 			local bmatrix = entity:GetBoneMatrix(bone)
+
 			if not bmatrix then continue end
 
 			local pos, ang = bmatrix:GetTranslation(), bmatrix:GetAngles()
+
 			if not pos or not ang then continue end
 
 			mins:Rotate(ang)
@@ -1348,14 +1745,18 @@ local function GetHitBoxPositions(entity) -- Scans hitboxes for aim points
 
 			data[hitgroup][#data[hitgroup] + 1] = pos + ((mins + maxs) * 0.5)
 
-			IsNull = false
+			null = false
 		end
 	end
 
-	return IsNull and nil or data
+	if null then
+		return nil -- No hitboxes found
+	end
+
+	return data
 end
 
-local function GetBoneDataPosition(bonename)
+local function GetBoneDataPosition(bonename) -- Turns bone names into hitgroups so I don't have to do some dumb if-else shit
 	if not bonename then
 		return nil
 	end
@@ -1366,7 +1767,7 @@ local function GetBoneDataPosition(bonename)
 		return HITGROUP_HEAD
 	end
 
-	if bonename:find("spine") then
+	if bonename:find("spine") then -- Due to the nature of this, bone scanning will have more points than hitbox scanning, but bones aren't centered to the hitbox
 		return HITGROUP_CHEST
 	end
 
@@ -1377,15 +1778,15 @@ local function GetBoneDataPosition(bonename)
 	return nil
 end
 
-local function GetBonePositions(entity)
+local function GetBonePositions(entity) -- Scans bones
 	if not IsValid(entity) then
 		return nil
 	end
 
-	entity:InvalidateBoneCache()
+	entity:InvalidateBoneCache() -- Prevent some matrix issues
 	entity:SetupBones()
 
-	local IsNull = true
+	local null = true
 
 	local data = {
 		[HITGROUP_HEAD] = {},
@@ -1395,7 +1796,8 @@ local function GetBonePositions(entity)
 
 	for bone = 0, entity:GetBoneCount() - 1 do
 		local name = entity:GetBoneName(bone)
-		if not name or name == "__INVALIDBONE__" then continue end
+
+		if not name or name == "__INVALIDBONE__" then continue end -- Fuck you and your retarded models
 
 		name = name:lower()
 
@@ -1409,19 +1811,22 @@ local function GetBonePositions(entity)
 		if not pos then continue end
 
 		data[boneloc][#data[boneloc] + 1] = pos
+		--table.insert(data[boneloc], pos)
 
-		IsNull = false
+		null = false
 	end
 
-	return IsNull and nil or data
+	if null then return nil end
+
+	return data
 end
 
-local function GetAimbotPositions(entity)
+local function GetAimPositions(entity)
 	if not IsValid(entity) then
 		return nil
 	end
 
-	local data = GetHitBoxPositions(entity) or GetBonePositions(entity) or {
+	local data = GetHitBoxPositions(entity) or GetBonePositions(entity) or { -- OBBCenter fallback (For error models and whatnot)
 		[HITGROUP_HEAD] = {
 			entity:LocalToWorld(entity:OBBCenter())
 		}
@@ -1430,14 +1835,14 @@ local function GetAimbotPositions(entity)
 	return data
 end
 
-local function GetAimbotPosition(entity)
+local function GetAimPosition(entity)
 	if not IsValid(entity) then
 		return nil
 	end
 
-	local data = GetAimbotPositions(entity)
+	local data = GetAimPositions(entity)
 
-	for _, set in ipairs(Vars.Aimbot.HitboxOrder) do
+	for _, set in ipairs(Vars.Aimbot.HitboxOrder) do -- Scans through the positions to find visible ones
 		if not data[set] then continue end
 
 		for _, v in ipairs(data[set]) do
@@ -1450,31 +1855,28 @@ local function GetAimbotPosition(entity)
 	return nil
 end
 
-local function GetAimbotTarget(quick)
-	quick = quick or false
-
-	local x, y = ScrW() * 0.5, ScrH() * 0.5
+local function GetTarget(quick) -- Gets the player whose aimbot points are closest to the center of the screen
+	local x, y = Cache.ScreenData.ScrW * 0.5, Cache.ScreenData.ScrH * 0.5
 
 	local best = math.huge
 	local entity = nil
 
-	for _, v in ipairs(player.GetCached(true)) do
-		if not v:IsTargettable() then continue end
+	for _, v in ipairs(player.GetSorted()) do
 		if v:IsInGodMode() or v:IsInBuildMode() or v:IsProtected() or (Vars.Aimbot.IgnoreFriends and v:IsFriend()) or IsValid(v:GetVehicle()) then continue end
 
 		local obbpos = v:LocalToWorld(v:OBBCenter())
-		local pos = obbpos:ToScreen()
+		local pos = obbpos:ToScreen() -- Quick checks OBB only
 	
 		local cur = math.Dist(pos.x, pos.y, x, y)
 	
-		if IsVisible(obbpos, v) and cur < best then
+		if IsVisible(obbpos, v) and cur < best and IsPointInTriangle(pos, Cache.FOVTri) then -- Closest player inside the FOV triangle
 			best = cur
 			entity = v
 		end
 
 		if quick then continue end
 
-		local data = GetAimbotPositions(v)
+		local data = GetAimPositions(v)
 
 		for _, set in ipairs(Vars.Aimbot.HitboxOrder) do
 			if not data[set] then continue end
@@ -1485,7 +1887,7 @@ local function GetAimbotTarget(quick)
 				pos = d:ToScreen()
 				cur = math.Dist(pos.x, pos.y, x, y)
 
-				if cur < best then
+				if cur < best and IsPointInTriangle(pos, Cache.FOVTri) then
 					best = cur
 					entity = v
 				end
@@ -1496,9 +1898,46 @@ local function GetAimbotTarget(quick)
 	return entity
 end
 
-local function FixMovement(cmd)
-	if not cmd then return end
+local function Aimbot(cmd)
+	local Weapon = Cache.LocalPlayer:GetActiveWeapon()
+	
+	local KeyDown = input.IsButtonDown(Vars.Aimbot.Key)
 
+	if Vars.Aimbot.Enabled and (KeyDown or cmd:KeyDown(IN_ATTACK)) and (IsValid(Weapon) and CanShoot()) then
+		if not KeyDown then
+			local NewForward = Angle(Cache.FacingAngle)
+
+			if Vars.Aimbot.NoSpread then CalculateNoSpread(Weapon, cmd, NewForward) end
+			if Vars.Aimbot.AntiRecoil then NewForward:Sub(CalculateAntiRecoil(Weapon)) end
+			FixAngle(NewForward)
+
+			cmd:SetViewAngles(NewForward)
+
+			return 
+		end
+
+		local Target = GetTarget()
+		if not IsValid(Target) then return end
+
+		local Position = GetAimPosition(Target)
+		if not Position then return end
+		
+		PredictTargetPosition(Position, Target)
+		
+		local Direction = (Position - Cache.LocalPlayer:EyePos()):Angle()
+
+		if not Vars.Aimbot.Silent then Cache.FacingAngle = Angle(Direction) end
+		if Vars.Aimbot.NoSpread then CalculateNoSpread(Weapon, cmd, Direction) end
+		if Vars.Aimbot.AntiRecoil then Direction:Sub(CalculateAntiRecoil(Weapon)) end
+		FixAngle(Direction)
+
+		cmd:SetViewAngles(Direction)
+		
+		if Vars.Aimbot.Enabled then cmd:AddKey(IN_ATTACK) end
+	end
+end
+
+local function FixMovement(cmd)
 	local MovementVector = Vector(cmd:GetForwardMove(), cmd:GetSideMove(), 0)
 
 	local CMDAngle = cmd:GetViewAngles()
@@ -1546,19 +1985,15 @@ end
 
 local function ShouldAntiAim(cmd)
 	local Weapon = Cache.LocalPlayer:GetActiveWeapon()
-	local CanShoot = false
 
-	if IsValid(Weapon) then
-		CanShoot = Weapon:CanShoot()
-	end
-	
-	return Cache.LocalPlayer:Alive() and Cache.LocalPlayer:GetObserverMode() == OBS_MODE_NONE and Cache.LocalPlayer:Team() ~= TEAM_SPECTATOR and not ((cmd and cmd:KeyDown(IN_ATTACK) or Cache.LocalPlayer:KeyDown(IN_ATTACK)) and CanShoot) and not (cmd and cmd:KeyDown(IN_USE) or Cache.LocalPlayer:KeyDown(IN_USE)) and Cache.LocalPlayer:GetMoveType() == MOVETYPE_WALK and not IsValid(Cache.LocalPlayer:GetVehicle()) and Cache.LocalPlayer:WaterLevel() < 2
+	return Cache.LocalPlayer:Alive() and Cache.LocalPlayer:GetObserverMode() == OBS_MODE_NONE and Cache.LocalPlayer:Team() ~= TEAM_SPECTATOR and not ((cmd and cmd:KeyDown(IN_ATTACK) or Cache.LocalPlayer:KeyDown(IN_ATTACK)) and CanShoot()) and not (cmd and cmd:KeyDown(IN_USE) or Cache.LocalPlayer:KeyDown(IN_USE)) and Cache.LocalPlayer:GetMoveType() == MOVETYPE_WALK and not IsValid(Cache.LocalPlayer:GetVehicle()) and Cache.LocalPlayer:WaterLevel() < 2
 end
 
 local function RenderReal(ply)
 	if not Vars.HvH.AntiAim.Enabled or Vars.HvH.AntiAim.ForceOff then return end
 
-	local rAngle = Angle(0, Cache.FacingAngle.yaw + Vars.HvH.AntiAim.Yaw.Real + (Vars.HvH.AntiAim.Breaker.Active and Vars.HvH.AntiAim.Breaker.Delta or 0), 0):GetFixed()
+	local rAngle = Angle(0, Cache.FacingAngle.yaw + Vars.HvH.AntiAim.Yaw.Real + (Vars.HvH.AntiAim.Breaker.Active and Vars.HvH.AntiAim.Breaker.Delta or 0), 0)
+    FixAngle(rAngle)
 
 	ply:SetRenderAngles(rAngle)
 
@@ -1577,38 +2012,162 @@ local function RenderReal(ply)
 	ply:InvalidateBoneCache()
 end
 
---[[
-	Regular hooks (timers too)
-]]
-
-timer.Create("lemeUpdateEnts", 0.3, 0, function()
-	UpdateEntityCache()
-
-	local doUpdatePlayerList = false
-
-	if IsValid(Cache.Panels.EnvPlayerList) then
-		if #Cache.Players ~= #Cache.Panels.EnvPlayerList:GetLines() then
-			doUpdatePlayerList = true
-		end
+local function GetHeadPos(Entity)
+	if not Entity:IsValid() then
+		return Vector(0, 0, 0)
 	end
-
-	for i = 1, #Cache.Players do
-		if not IsValid(Cache.Players[i]) then -- Update Player List menu if a connect/disconnect was missed
-			doUpdatePlayerList = true
+	
+	local EntityPos = Entity:GetPos()
+	local HeadPos = Entity:EyePos()
+	
+	for i = 0, Entity:GetBoneCount() - 1 do
+		if string.find(string.lower(Entity:GetBoneName(i)), "head") then
+			HeadPos = Entity:GetBonePosition(i)
+			
+			if HeadPos == EntityPos then
+				HeadPos = Entity:GetBoneMatrix(i):GetTranslation()
+			end
 
 			break
 		end
 	end
+	
+	return HeadPos
+end
 
-	UpdateCachedPlayers()
-
-	if doUpdatePlayerList then
-		UpdatePlayerList()
+local function DrawChinaHat()
+	if not Vars.Visuals.ChinaHat.Enabled then return end
+	if Cache.LocalPlayer:ShouldDrawLocalPlayer() then
+		local base = GetHeadPos(Cache.LocalPlayer) + Vector(0, 0, 10)
+		local ang = Angle(Vars.Visuals.ChinaHat.Pitch, 0, 0)
+		
+		cam.Start3D()
+			for i = 1, 360 do
+				if panic then
+					cam.End3D()
+				end
+			
+				render.DrawLine(base, base + (ang:Forward() * Vars.Visuals.ChinaHat.Length), Vars.Visuals.ChinaHat.Color, false)
+				ang.y = ang.y + 1
+			end
+		cam.End3D()
 	end
-end)
+end
+
+local function FreeCam(cmd)
+	if not Vars.Miscellaneous.FreeCam.Enabled then return end
+
+	-- Movement
+	
+	local CamAng = Cache.FreeCam.Angle
+	local CamPos = Cache.FreeCam.Position
+
+	local Forward = Cache.FreeCam.Angle:Forward()
+	local Right = Cache.FreeCam.Angle:Right()
+	local Up = Cache.FreeCam.Angle:Up()
+
+	local Speed = 0
+
+	if cmd:KeyDown(IN_WALK) then
+		Speed = Cache.FreeCam.Speeds.Walk
+	elseif cmd:KeyDown(IN_SPEED) then
+		Speed = Cache.FreeCam.Speeds.Sprint
+	else
+		Speed = Cache.FreeCam.Speeds.Normal
+	end
+
+	Speed = Speed * (RealFrameTime() * Vars.Miscellaneous.FreeCam.Speed)
+	
+	if cmd:KeyDown(IN_JUMP) then
+		Cache.FreeCam.Position:Add(Up * Speed)
+	end
+	
+	if cmd:KeyDown(IN_DUCK) then
+		Cache.FreeCam.Position:Sub(Up * Speed)
+	end
+
+	if cmd:KeyDown(IN_FORWARD) then
+		Cache.FreeCam.Position:Add(Forward * Speed)
+	end
+
+	if cmd:KeyDown(IN_BACK) then
+		Cache.FreeCam.Position:Sub(Forward * Speed)
+	end
+
+	if cmd:KeyDown(IN_MOVERIGHT) then
+		Cache.FreeCam.Position:Add(Right * Speed)
+	end
+
+	if cmd:KeyDown(IN_MOVELEFT) then
+		Cache.FreeCam.Position:Sub(Right * Speed)
+	end
+
+	-- Camera
+
+	local MouseX = cmd:GetMouseX()
+	local MouseY = cmd:GetMouseY()
+
+	if MouseX ~= 0 or MouseY ~= 0 then
+		Cache.FreeCam.Angle = Cache.FacingAngle
+
+		cmd:SetMouseX(0)
+		cmd:SetMouseY(0)
+	end
+
+	cmd:ClearButtons()
+	cmd:ClearMovement()
+
+	cmd:SetViewAngles(Cache.FreeCam.PreAngle)	
+end
+
+--[[
+	Setup Nospread Seeds
+]]
+
+do
+	local RandomStream = CUniformRandomStream.New()
+
+	local ShotBiasMin = Cache.ConVars.ai_shot_bias_min:GetFloatSafe()
+	local ShotBiasMax = Cache.ConVars.ai_shot_bias_max:GetFloatSafe()
+	local ShotBiasDif = (ShotBiasMax - ShotBiasMin) + ShotBiasMin
+	local Flatness = math.abs(ShotBiasDif) / 2
+	local iFlatness = 1 - Flatness
+	
+	for Seed = 0, 255 do
+		RandomStream:SetSeed(Seed)
+	
+		local FirstRan = false
+		local X, Y, Z = 0, 0, 0
+	
+		while true do
+			if Z <= 1 and FirstRan then break end
+	
+			X = (RandomStream:RandomFloat(-1, 1) * Flatness) + (RandomStream:RandomFloat(-1, 1) * iFlatness)
+			Y = (RandomStream:RandomFloat(-1, 1) * Flatness) + (RandomStream:RandomFloat(-1, 1) * iFlatness)
+	
+			if ShotBiasDif < 0 then
+				X = X >= 0 and 1 - X or -1 - X
+				Y = Y >= 0 and 1 - Y or -1 - Y
+			end
+	
+			Z = (X * X) + (Y * Y)
+			FirstRan = true
+		end
+	
+		md5.EngineSpread[Seed] = {
+			X = X,
+			Y = Y,
+			Z = Z
+		}
+	end	
+end
+
+--[[
+	Hooks
+]]
 
 gameevent.Listen("player_connect_client")
-hook.Add("player_connect_client", "@@@@@@", function()
+AddHook("player_connect_client", function()
 	UpdateEntityCache()
 	UpdateCachedPlayers()
 
@@ -1616,7 +2175,7 @@ hook.Add("player_connect_client", "@@@@@@", function()
 end)
 
 gameevent.Listen("player_disconnect")
-hook.Add("player_disconnect", "@@@@@", function()
+AddHook("player_disconnect", function()
 	UpdateEntityCache()
 	UpdateCachedPlayers()
 
@@ -1624,21 +2183,12 @@ hook.Add("player_disconnect", "@@@@@", function()
 end)
 
 gameevent.Listen("entity_killed")
-hook.Add("entity_killed", "@@@@@", function(data)
+AddHook("entity_killed", function(data)
 	attacker = ents.GetByIndex(data.entindex_attacker) or NULL
 	victim = ents.GetByIndex(data.entindex_killed) or NULL
 
 	if not IsValid(attacker) or not IsValid(victim) or not victim:IsPlayer() or victim == attacker then return end
 
-	if victim == Cache.LocalPlayer then
-		if attacker:IsPlayer() then
-			if Vars.Miscellaneous.DeathSay then
-				Cache.LocalPlayer:Say(GetDeathSay(attacker))
-			end
-		end
-
-		return
-	end
 
 	if attacker == Cache.LocalPlayer and Vars.Miscellaneous.KillSound.Enabled then
 		timer.Simple(0, function()
@@ -1647,34 +2197,71 @@ hook.Add("entity_killed", "@@@@@", function(data)
 	end
 end)
 
-hook.Add("Move", "@@@@@", function()
-	if not IsFirstTimePredicted() then return end
+AddHook("EntityFireBullets", function(Player, Data)
+	if Player ~= Cache.LocalPlayer or not Data then return end
+	if not IsFirstTimePredicted() then return end 
+	
+	local Weapon = Player:GetActiveWeapon()
+	if not IsValid(Weapon) then return end
 
-	Cache.ServerTime = CurTime() + Cache.TickInterval
+	if isvector(Data.Spread) and not Data.Spread:IsZero() then
+		Cache.WeaponCones[Weapon:GetClass()] = Data.Spread
+	end
 end)
 
-hook.Add("CreateMove", "@@@@@", function(cmd)
-	local MouseX = cmd:GetMouseX()
-	local MouseY = cmd:GetMouseY()
+AddHook("Tick", function()
+	Cache.LocalPlayer = LocalPlayer()
 
-	Cache.LocalPlayer = Cache.LocalPlayer or LocalPlayer()
+	local CurTime = SysTime()
 
-	Cache.FacingAngle = Cache.FacingAngle or cmd:GetViewAngles()
+	if CurTime - Cache.LastUpdate >= 0.3 then
+		UpdateEntityCache()
 
-	Cache.FacingAngle.pitch = Cache.FacingAngle.pitch + (MouseY * Cache.ConVars.m_pitch:GetFloat())
-	Cache.FacingAngle.yaw = Cache.FacingAngle.yaw - (MouseX * Cache.ConVars.m_yaw:GetFloat())
+		local doUpdatePlayerList = false
 
-	Cache.FacingAngle = Cache.FacingAngle:GetFixed()
+		if IsValid(Cache.Panels.EnvPlayerList) then
+			if #Cache.Players ~= #Cache.Panels.EnvPlayerList:GetLines() then
+				doUpdatePlayerList = true
+			end
+		end
 
+		for i = 1, #Cache.Players do
+			if not IsValid(Cache.Players[i]) then -- Update Player List menu if a connect/disconnect was missed
+				doUpdatePlayerList = true
+
+				break
+			end
+		end
+
+		UpdateCachedPlayers()
+
+		if doUpdatePlayerList then
+			UpdatePlayerList()
+		end
+
+		Cache.LastUpdate = CurTime
+	end
+end)
+
+AddHook("InputMouseApply", function(cmd, MouseX, MouseY)
+	Cache.FacingAngle.p = Cache.FacingAngle.p + (MouseY * Cache.ConVars.m_pitch:GetFloatSafe())
+	Cache.FacingAngle.y = Cache.FacingAngle.y - (MouseX * Cache.ConVars.m_yaw:GetFloatSafe())
+
+	FixAngle(Cache.FacingAngle)
+end)
+
+AddHook("CreateMove", function(cmd)
 	if cmd:CommandNumber() == 0 then
 		if cmd:KeyDown(IN_USE) then
-			Cache.FacingAngle = cmd:GetViewAngles():GetFixed()
+			Cache.FacingAngle = cmd:GetViewAngles()
 		end
 
 		cmd:SetViewAngles(Cache.FacingAngle)
 
 		return
 	end
+	
+	FreeCam(cmd)
 
 	local Velocity = Cache.LocalPlayer:GetVelocity()
 	local Velocity2D = Velocity:Length2D()
@@ -1684,6 +2271,9 @@ hook.Add("CreateMove", "@@@@@", function(cmd)
 	local ForwardMove = cmd:GetForwardMove()
 	local MaxSideMove = Cache.ConVars.cl_sidespeed:GetFloatSafe()
 	local MaxForwardMove = Cache.ConVars.cl_forwardspeed:GetFloatSafe()
+	
+	local MouseX = cmd:GetMouseX()
+	local MouseY = cmd:GetMouseY()
 
 	if Vars.Miscellaneous.Movement.Bhop then
 		if cmd:KeyDown(IN_JUMP) then
@@ -1740,9 +2330,9 @@ hook.Add("CreateMove", "@@@@@", function(cmd)
 				end
 
 				Cache.AntiAimAngle.pitch = Vars.HvH.AntiAim.Pitch
-				Cache.AntiAimAngle.yaw = fYaw + (Vars.HvH.bSendPacket and Vars.HvH.AntiAim.Yaw.Real or Vars.HvH.AntiAim.Yaw.Fake)
+				Cache.AntiAimAngle.yaw = fYaw + (Vars.HvH.bSendPacket and Vars.HvH.AntiAim.Yaw.Fake or Vars.HvH.AntiAim.Yaw.Real)
 
-				Cache.AntiAimAngle = Cache.AntiAimAngle:GetFixed()
+				FixAngle(Cache.AntiAimAngle)
 
 				cmd:SetViewAngles(Cache.AntiAimAngle)
 			end
@@ -1766,30 +2356,11 @@ hook.Add("CreateMove", "@@@@@", function(cmd)
 	else
 		Vars.HvH.bSendPacket = true
 	end
-
+	
 	GetSendPacket(Vars.HvH.bSendPacket)
 
-	local LocalWeapon = Cache.LocalPlayer:GetActiveWeapon()
-
 	StartPrediction(cmd)
-		if Vars.Aimbot.Enabled and input.IsButtonDown(Vars.Aimbot.Key) and (IsValid(LocalWeapon) and LocalWeapon:CanShoot()) then
-			local target = GetAimbotTarget(Vars.Aimbot.QuickScan or false)
-			local pos = GetAimbotPosition(target)
-
-			if pos then
-				local AimAngle = (pos - Cache.LocalPlayer:EyePos()):Angle():GetFixed()
-
-				cmd:SetViewAngles(AimAngle)
-
-				if not Vars.Aimbot.Silent then
-					Cache.FacingAngle = AimAngle
-				end
-
-				if Vars.Aimbot.AutoShoot then
-					cmd:AddKey(IN_ATTACK)
-				end
-			end
-		end
+		Aimbot(cmd)
 	EndPrediction()
 
 	FixMovement(cmd)
@@ -1798,11 +2369,11 @@ hook.Add("CreateMove", "@@@@@", function(cmd)
 	cmd:SetForwardMove(math.Clamp(cmd:GetForwardMove(), MaxForwardMove * -1, MaxForwardMove))
 end)
 
-hook.Add("HUDPaint", "@@@@@", function()
+AddHook("HUDPaint", function()
 	if Vars.Visuals.ESP.Enabled then
 		surface.SetFont(fgui.FontName)
 
-		for _, v in ipairs(player.GetCached(true)) do
+		for _, v in next, player.GetCached(true) do
 			if not v:IsTargettable() then continue end
 
 			local OBBPos = v:LocalToWorld(v:OBBCenter()):ToScreen()
@@ -1892,7 +2463,7 @@ hook.Add("HUDPaint", "@@@@@", function()
 					local ypos = top
 					local _, th = surface.GetTextSize(pFlags[1])
 
-					for _, v in ipairs(pFlags) do
+					for _, v in next, pFlags do
 						surface.SetTextPos(right, ypos)
 						surface.DrawText(v)
 
@@ -1943,9 +2514,32 @@ hook.Add("HUDPaint", "@@@@@", function()
 			end
 		end
 	end
+
+	DrawChinaHat()
+
+	local x, y = Cache.ScreenData.ScrW * 0.5, Cache.ScreenData.ScrH * 0.5
+	local fovrad = (math.tan(math.rad(Vars.Aimbot.AimCone.FOV)) / math.tan(math.rad(GetFOV() * 0.5)) * Cache.ScreenData.ScrW) / GetZNear()
+
+	local t = fovrad * 2.3333333333333
+	local s = x - (t / 2)
+	local m = fovrad
+	local offset_y = 0 - (fovrad / 3)
+
+	Cache.FOVTri = {
+		{x = s, y = (y + m) + offset_y},
+		{x = s + t, y = (y + m) + offset_y},
+		{x = x, y = (y - m) + offset_y}
+	}
+
+	local v1, v2, v3 = Cache.FOVTri[1], Cache.FOVTri[2], Cache.FOVTri[3]
+
+	surface.SetDrawColor(color_white)
+	surface.DrawLine(v1.x, v1.y, v2.x, v2.y)
+	surface.DrawLine(v2.x, v2.y, v3.x, v3.y)
+	surface.DrawLine(v3.x, v3.y, v1.x, v1.y)
 end)
 
-hook.Add("PreDrawHalos", "@@@@@", function() -- Hah just kidding, these aren't actually halos
+AddHook("PreDrawHalos", function() -- Hah just kidding, these aren't actually halos
 	if Vars.Visuals.ESP.Enabled and Vars.Visuals.ESP.Outline then
 		local Outlined = {}
 
@@ -1959,29 +2553,30 @@ hook.Add("PreDrawHalos", "@@@@@", function() -- Hah just kidding, these aren't a
 	end
 end)
 
-hook.Add("CalcView", "@@@@@", function(ply, pos, ang, fov, zn, zf)
-	if not IsValid(ply) then return end
+AddHook("CalcView", function(ply, pos, ang, fov, zn, zf)
+	if ply ~= Cache.LocalPlayer then return end
 
-	ang = Cache.FacingAngle * 1
+	ang:Set(Cache.FacingAngle * 1)
 
 	if not Vars.Aimbot.AntiRecoil then
-		ang = (ang + ply:GetViewPunchAngles()):GetFixed()
+		ang:Add(ply:GetViewPunchAngles())
 	end
+	
+	local FreeCamEnabled = Vars.Miscellaneous.FreeCam.Enabled
 
 	local view = {
-		origin = pos,
-		angles = ang,
+		origin = FreeCamEnabled and Cache.FreeCam.Position or pos,
+		angles = FreeCamEnabled and Cache.FreeCam.Angle or ang, 
 		fov = fov,
 		znear = zn,
-		zfar = zf
+		zfar = zf,
+		drawviewer = FreeCamEnabled
 	}
-
+	
 	local Vehicle = ply:GetVehicle()
 	
 	if IsValid(Vehicle) then
-		Cache.CalcView.EyePos = view.origin
-		Cache.CalcView.EyeAngles = view.angles
-		Cache.CalcView.FOV = view.fov
+		UpdateCalcViewData(view)
 
 		return hook.Run("CalcVehicleView", Vehicle, ply, view)
 	end
@@ -2002,23 +2597,29 @@ hook.Add("CalcView", "@@@@@", function(ply, pos, ang, fov, zn, zf)
 		end
 	end
 
-	Cache.CalcView.EyePos = view.origin
-	Cache.CalcView.EyeAngles = view.angles
-	Cache.CalcView.FOV = view.fov
+	UpdateCalcViewData(view)
 
 	return view
 end)
 
-hook.Add("PrePlayerDraw", "@@@@@", function(ply)
+AddHook("PrePlayerDraw", function(ply)
 	if ply ~= Cache.LocalPlayer or not ShouldAntiAim() then return end
 
 	RenderReal(ply)
 end)
 
-hook.Add("PostPlayerDraw", "@@@@@", function(ply)
+AddHook("PostPlayerDraw", function(ply)
 	if ply ~= Cache.LocalPlayer or not ShouldAntiAim() then return end
 
 	RenderReal(ply)
+end)
+
+AddHook("OnScreenSizeChanged", function()
+	Cache.ScreenData.ScrW = ScrW()
+	Cache.ScreenData.ScrH = ScrH()
+
+	Cache.ScreenData.Center.X = math.floor(Cache.ScreenData.ScrW / 2)
+	Cache.ScreenData.Center.Y = math.floor(Cache.ScreenData.ScrH / 2)
 end)
 
 --[[
@@ -2027,6 +2628,23 @@ end)
 
 concommand.Add("pMenu_toggle", function()
 	ToggleMenu()
+end)
+
+concommand.Add("unload", function()
+	for i = 1, #Cache.Hooks.Local do
+		local CurrHook = Cache.Hooks.Local[i]
+		local Type, Name = CurrHook[1], CurrHook[2]
+		
+		print(string.format("Removed Hook! %s %s", Type, Name))
+
+		hook.Remove(Type, Name)
+	end
+
+	MainFrame:SetVisible(false)
+	EnvFrame:SetVisible(false)
+
+	concommand.Remove("pMenu_toggle")
+	concommand.Remove("unload")
 end)
 
 -- Kabo
